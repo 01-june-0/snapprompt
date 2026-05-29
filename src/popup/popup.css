@@ -1,6 +1,7 @@
 html, body { margin: 0; padding: 0; }
 body {
-  width: 400px; height: 600px;
+  /* 1.5× wider than the original 400px. Chrome caps popup height at 600px. */
+  width: 600px; height: 600px;
   font-family: var(--font-sans);
   font-size: var(--text-sm);
   color: var(--text-primary);
@@ -50,9 +51,24 @@ body {
 .pp-sort { margin-left: auto; font-size: var(--text-xs); color: var(--text-muted);
   background: transparent; border: none; cursor: pointer; }
 
+.pp-main { flex: 1; display: flex; min-height: 0; }
 .pp-body { flex: 1; overflow-y: auto; background: var(--bg-base); }
 .pp-body::-webkit-scrollbar { width: 8px; }
 .pp-body::-webkit-scrollbar-thumb { background: var(--border-default); border-radius: 4px; }
+
+.pp-sidebar { width: 216px; flex-shrink: 0; background: var(--bg-surface);
+  border-right: 1px solid var(--border-subtle); padding: 6px; overflow-y: auto; display: flex; flex-direction: column; gap: 1px; }
+.pp-sidebar::-webkit-scrollbar { width: 6px; }
+.pp-sidebar::-webkit-scrollbar-thumb { background: var(--border-default); border-radius: 3px; }
+.pp-folder { display: flex; align-items: center; gap: 6px; padding: 6px 8px; border-radius: var(--radius-sm);
+  font-size: var(--text-xs); color: var(--text-secondary); cursor: pointer; border: none; background: transparent;
+  text-align: left; width: 100%; white-space: nowrap; }
+.pp-folder:hover { background: var(--bg-subtle); }
+.pp-folder.active { background: var(--accent-soft); color: var(--text-accent); font-weight: var(--weight-semi); }
+.pp-folder .pp-fname { overflow: hidden; text-overflow: ellipsis; }
+.pp-folder svg { flex-shrink: 0; }
+.pp-fcount { margin-left: auto; font-size: 10px; color: var(--text-muted); font-family: var(--font-mono); }
+.pp-folder.active .pp-fcount { color: var(--text-accent); opacity: .8; }
 
 .pp-card {
   background: var(--bg-surface); border: 1px solid var(--border-subtle);
@@ -60,6 +76,38 @@ body {
 }
 .pp-card:last-child { margin-bottom: 12px; }
 .pp-card:hover { border-color: var(--border-accent); box-shadow: var(--shadow-sm); }
+.pp-card.selected { border-color: var(--accent); box-shadow: var(--shadow-focus); }
+.pp-card[draggable="true"]:active { cursor: grabbing; }
+
+/* selection checkbox */
+.pp-check {
+  width: 18px; height: 18px; border-radius: var(--radius-xs);
+  border: 1.5px solid var(--border-default); background: var(--bg-surface);
+  display: grid; place-items: center; cursor: pointer; flex-shrink: 0; padding: 0;
+  transition: background var(--duration-fast), border-color var(--duration-fast);
+}
+.pp-check:hover { border-color: var(--accent); }
+.pp-check.on { background: var(--accent); border-color: var(--accent); }
+
+/* selection bar */
+.pp-selbar {
+  display: flex; align-items: center; gap: 8px; padding: 8px 16px;
+  background: var(--accent-soft); border-bottom: 1px solid var(--border-subtle);
+  font-size: var(--text-xs); color: var(--text-accent); font-weight: var(--weight-medium);
+  flex-shrink: 0;
+}
+.pp-selbar button {
+  margin-left: auto; height: 24px; padding: 0 10px; border-radius: var(--radius-sm);
+  border: 1px solid var(--border-accent); background: var(--bg-surface);
+  color: var(--text-accent); font-size: 11px; cursor: pointer;
+}
+.pp-selbar button:hover { background: var(--bg-surface); filter: brightness(0.98); }
+
+/* drop target highlight */
+.pp-folder.drop {
+  background: var(--accent-soft-2); color: var(--text-accent);
+  outline: 2px dashed var(--accent); outline-offset: -2px;
+}
 .pp-card-head { display: flex; align-items: center; gap: 8px; }
 .pp-card-title { font-weight: var(--weight-semi); font-size: var(--text-sm); flex: 1;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }

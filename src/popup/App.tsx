@@ -1,14 +1,16 @@
 import { useEffect, useMemo, useState } from 'preact/hooks';
 import type { Prompt, Folder, SortMode } from '@shared/types';
 import {
-  getPrompts, getFolders, upsertPrompt, deletePrompt, subscribe,
+  getPrompts, setPrompts as persistPrompts, getFolders, upsertPrompt, deletePrompt, subscribe,
 } from '@shared/store';
 import { search, sortPrompts } from '@shared/search';
 import { extractVariables, substitute, hasVariables } from '@shared/variables';
 import { sendToActiveTab, sendToBackground } from '@shared/messaging';
+import { flattenTree, selfAndDescendants, countInFolder } from '@shared/folders';
 import { uuid } from '@shared/id';
 
 type Screen = { kind: 'list' } | { kind: 'edit'; prompt: Prompt; isNew: boolean };
+type FolderFilter = 'all' | 'none' | string;
 
 export function App() {
   const [prompts, setPrompts] = useState<Prompt[]>([]);
@@ -16,8 +18,12 @@ export function App() {
   const [query, setQuery] = useState('');
   const [favOnly, setFavOnly] = useState(false);
   const [sort, setSort] = useState<SortMode>('recent-used');
+  const [folderFilter, setFolderFilter] = useState<FolderFilter>('all');
+  const [showSidebar, setShowSidebar] = useState(false);
   const [screen, setScreen] = useState<Screen>({ kind: 'list' });
   const [toast, setToast] = useState<string | null>(null);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [dropTarget, setDropTarget] = useState<string | null>(null);
 
   async function reload() {
     const [p, f] = await Promise.all([getPrompts(), getFolders()]);
@@ -35,10 +41,22 @@ export function App() {
   }
 
   const visible = useMemo(() => {
-    let list = favOnly ? prompts.filter((p) => p.favorite) : prompts;
+    let list = prompts;
+    if (folderFilter === 'none') list = list.filter((p) => !p.folderId);
+    else if (folderFilter !== 'all') {
+      const ids = selfAndDescendants(folders, folderFilter);
+      list = list.filter((p) => p.folderId && ids.has(p.folderId));
+    }
+    if (favOnly) list = list.filter((p) => p.favorite);
     const searched = search(list, query).map((r) => r.prompt);
     return query.trim() ? searched : sortPrompts(searched, sort);
-  }, [prompts, query, favOnly, sort]);
+  }, [prompts, folders, query, favOnly, sort, folderFilter]);
+
+  const activeFolderLabel = useMemo(() => {
+    if (folderFilter === 'all') return '전체 폴더';
+    if (folderFilter === 'none') return '분류 없음';
+    return folders.find((f) => f.id === folderFilter)?.name ?? '전체 폴더';
+  }, [folderFilter, folders]);
 
   async function doCopy(p: Prompt) {
     const text = hasVariables(p.body)
@@ -62,6 +80,37 @@ export function App() {
   }
   async function toggleFav(p: Prompt) {
     await upsertPrompt({ ...p, favorite: !p.favorite, updatedAt: Date.now() });
+  }
+
+  function toggleSelect(id: string) {
+    setSelected((s) => {
+      const n = new Set(s);
+      if (n.has(id)) n.delete(id);
+      else n.add(id);
+      return n;
+    });
+    if (!showSidebar) setShowSidebar(true);
+  }
+
+  /** Move prompts to a folder (or null for uncategorized). Used by drag-and-drop. */
+  async function moveToFolder(ids: string[], folderId: string | null) {
+    if (ids.length === 0) return;
+    const all = await getPrompts();
+    const idSet = new Set(ids);
+    const now = Date.now();
+    await persistPrompts(all.map((p) => (idSet.has(p.id) ? { ...p, folderId, updatedAt: now } : p)));
+    setSelected(new Set());
+    flash(`${ids.length}개를 ${folderId ? '폴더로' : '분류 없음으로'} 옮겼어요`);
+  }
+
+  function dragIdsFor(p: Prompt): string[] {
+    return selected.has(p.id) && selected.size > 0 ? [...selected] : [p.id];
+  }
+  function onFolderDrop(e: DragEvent, folderId: string | null) {
+    e.preventDefault();
+    const ids = (e.dataTransfer?.getData('text/plain') || '').split(',').filter(Boolean);
+    void moveToFolder(ids, folderId);
+    setDropTarget(null);
   }
 
   if (screen.kind === 'edit') {
@@ -94,6 +143,10 @@ export function App() {
           <input value={query} placeholder="프롬프트 검색..." onInput={(e) => setQuery((e.target as HTMLInputElement).value)} />
         </div>
         <div class="pp-chips">
+          <button class={`pp-chip${showSidebar || folderFilter !== 'all' ? ' active' : ''}`} onClick={() => setShowSidebar((v) => !v)} title="폴더">
+            <FolderIcon size={11} /> {activeFolderLabel}
+            <ChevDown />
+          </button>
           <button class={`pp-chip${favOnly ? ' active' : ''}`} onClick={() => setFavOnly((v) => !v)}>
             <StarIcon size={11} /> 즐겨찾기
           </button>
@@ -106,34 +159,88 @@ export function App() {
         </div>
       </div>
 
-      <div class="pp-body">
-        {visible.length === 0 ? (
-          <div class="pp-empty">
-            <div class="ill"><SearchIcon size={28} /></div>
-            <h3>{query ? '검색 결과가 없어요' : '아직 저장된 프롬프트가 없어요'}</h3>
-            <p>{query ? '다른 키워드로 검색해보세요.' : '웹에서 텍스트를 선택해 우클릭하거나, 아래 버튼으로 추가하세요.'}</p>
-          </div>
-        ) : (
-          visible.map((p) => (
-            <div class="pp-card" key={p.id} onClick={() => setScreen({ kind: 'edit', prompt: p, isNew: false })}>
-              <div class="pp-card-head">
-                <button class={`pp-fav${p.favorite ? '' : ' off'}`} onClick={(e) => { e.stopPropagation(); void toggleFav(p); }}>
-                  <StarIcon size={13} filled={p.favorite} />
-                </button>
-                <div class="pp-card-title">{p.title}</div>
-                {p.variables.length > 0 && <span class="pp-vars">{p.variables.length} vars</span>}
-              </div>
-              <div class="pp-card-preview">{firstLine(p.body)}</div>
-              <div class="pp-card-meta">
-                {p.tags.slice(0, 3).map((t) => <span class="pp-tag" key={t}>{t}</span>)}
-                <div class="pp-card-actions">
-                  <button class="pp-action" onClick={(e) => { e.stopPropagation(); void doCopy(p); }}>복사</button>
-                  <button class="pp-action primary" onClick={(e) => { e.stopPropagation(); void doInsert(p); }}>삽입</button>
+      {selected.size > 0 && (
+        <div class="pp-selbar">
+          <span>{selected.size}개 선택됨 · 폴더로 드래그하세요</span>
+          <button onClick={() => setSelected(new Set())}>해제</button>
+        </div>
+      )}
+
+      <div class="pp-main">
+        {showSidebar && (
+          <aside class="pp-sidebar">
+            <button class={`pp-folder${folderFilter === 'all' ? ' active' : ''}`} onClick={() => setFolderFilter('all')}>
+              <FolderIcon size={12} /> 전체 <span class="pp-fcount">{prompts.length}</span>
+            </button>
+            {flattenTree(folders).map((f) => (
+              <button
+                key={f.id}
+                class={`pp-folder${folderFilter === f.id ? ' active' : ''}${dropTarget === f.id ? ' drop' : ''}`}
+                style={`padding-left:${8 + f.depth * 14}px`}
+                onClick={() => setFolderFilter(f.id)}
+                onDragOver={(e) => { e.preventDefault(); if (dropTarget !== f.id) setDropTarget(f.id); }}
+                onDragLeave={() => setDropTarget((t) => (t === f.id ? null : t))}
+                onDrop={(e) => onFolderDrop(e, f.id)}
+              >
+                <FolderIcon size={12} /> <span class="pp-fname">{f.name}</span>
+                <span class="pp-fcount">{countInFolder(folders, prompts.map((p) => p.folderId), f.id)}</span>
+              </button>
+            ))}
+            <button
+              class={`pp-folder${folderFilter === 'none' ? ' active' : ''}${dropTarget === 'none' ? ' drop' : ''}`}
+              onClick={() => setFolderFilter('none')}
+              onDragOver={(e) => { e.preventDefault(); if (dropTarget !== 'none') setDropTarget('none'); }}
+              onDragLeave={() => setDropTarget((t) => (t === 'none' ? null : t))}
+              onDrop={(e) => onFolderDrop(e, null)}
+            >
+              <DashIcon /> 분류 없음 <span class="pp-fcount">{prompts.filter((p) => !p.folderId).length}</span>
+            </button>
+          </aside>
+        )}
+
+        <div class="pp-body">
+          {visible.length === 0 ? (
+            <div class="pp-empty">
+              <div class="ill"><SearchIcon size={28} /></div>
+              <h3>{query ? '검색 결과가 없어요' : folderFilter !== 'all' ? '이 폴더가 비어 있어요' : '아직 저장된 프롬프트가 없어요'}</h3>
+              <p>{query ? '다른 키워드로 검색해보세요.' : '웹에서 텍스트를 선택해 우클릭하거나, 아래 버튼으로 추가하세요.'}</p>
+            </div>
+          ) : (
+            visible.map((p) => (
+              <div
+                class={`pp-card${selected.has(p.id) ? ' selected' : ''}`}
+                key={p.id}
+                draggable
+                onDragStart={(e) => {
+                  const ids = dragIdsFor(p);
+                  e.dataTransfer?.setData('text/plain', ids.join(','));
+                  if (e.dataTransfer) e.dataTransfer.effectAllowed = 'move';
+                  if (!showSidebar) setShowSidebar(true);
+                }}
+                onClick={() => setScreen({ kind: 'edit', prompt: p, isNew: false })}
+              >
+                <div class="pp-card-head">
+                  <button class={`pp-check${selected.has(p.id) ? ' on' : ''}`} title="선택" onClick={(e) => { e.stopPropagation(); toggleSelect(p.id); }}>
+                    {selected.has(p.id) && <CheckIcon />}
+                  </button>
+                  <button class={`pp-fav${p.favorite ? '' : ' off'}`} onClick={(e) => { e.stopPropagation(); void toggleFav(p); }}>
+                    <StarIcon size={13} filled={p.favorite} />
+                  </button>
+                  <div class="pp-card-title">{p.title}</div>
+                  {p.variables.length > 0 && <span class="pp-vars">{p.variables.length} vars</span>}
+                </div>
+                <div class="pp-card-preview">{firstLine(p.body)}</div>
+                <div class="pp-card-meta">
+                  {p.tags.slice(0, 3).map((t) => <span class="pp-tag" key={t}>{t}</span>)}
+                  <div class="pp-card-actions">
+                    <button class="pp-action" onClick={(e) => { e.stopPropagation(); void doCopy(p); }}>복사</button>
+                    <button class="pp-action primary" onClick={(e) => { e.stopPropagation(); void doInsert(p); }}>삽입</button>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))
-        )}
+            ))
+          )}
+        </div>
       </div>
 
       <footer class="pp-footer">
@@ -207,7 +314,7 @@ function Editor({
           <label class="pp-flabel">폴더</label>
           <select class="pp-select" value={folderId ?? ''} onChange={(e) => setFolderId((e.target as HTMLSelectElement).value || null)}>
             <option value="">분류 없음</option>
-            {folders.map((f) => <option key={f.id} value={f.id}>{f.name}</option>)}
+            {flattenTree(folders).map((f) => <option key={f.id} value={f.id}>{'  '.repeat(f.depth)}{f.name}</option>)}
           </select>
         </div>
         <div class="pp-field">
@@ -244,3 +351,6 @@ const StarIcon = ({ size = 13, filled = true }: { size?: number; filled?: boolea
 const CheckIcon = () => <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12" /></svg>;
 const ChevLeft = () => <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><polyline points="15 18 9 12 15 6" /></svg>;
 const TrashIcon = () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /></svg>;
+const FolderIcon = ({ size = 12 }: { size?: number }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" /></svg>;
+const ChevDown = () => <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="6 9 12 15 18 9" /></svg>;
+const DashIcon = () => <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9" /></svg>;

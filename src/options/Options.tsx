@@ -7,6 +7,7 @@ import {
 import { applyTheme } from '@shared/theme';
 import { buildBackup, downloadBackup, importBackup } from '@shared/backup';
 import { sendToBackground } from '@shared/messaging';
+import { flattenTree, wouldCycle } from '@shared/folders';
 import { uuid } from '@shared/id';
 
 type Tab = 'general' | 'folders' | 'tags' | 'backup' | 'shortcuts' | 'data' | 'about';
@@ -100,7 +101,7 @@ function General({ settings, patch, folders }: { settings: Settings; patch: (p: 
           <div class="op-setting-info"><div class="op-setting-label">기본 폴더</div><div class="op-setting-hint">저장 시 폴더 미선택이면 여기에 저장</div></div>
           <select class="op-select" value={settings.defaultFolderId ?? ''} onChange={(e) => patch({ defaultFolderId: (e.target as HTMLSelectElement).value || null })}>
             <option value="">분류 없음</option>
-            {folders.map((f) => <option key={f.id} value={f.id}>{f.name}</option>)}
+            {flattenTree(folders).map((f) => <option key={f.id} value={f.id}>{indent(f.depth)}{f.name}</option>)}
           </select>
         </div>
       </div>
@@ -111,32 +112,65 @@ function General({ settings, patch, folders }: { settings: Settings; patch: (p: 
 /* ---------- Folders ---------- */
 function Folders({ folders, onChange }: { folders: Folder[]; onChange: (f: Folder[]) => void }) {
   const [name, setName] = useState('');
+  const [parentId, setParentId] = useState<string | null>(null);
+  const flat = useMemo(() => flattenTree(folders), [folders]);
+
   function add() {
     const n = name.trim();
     if (!n) return;
-    onChange([...folders, { id: uuid(), name: n, parentId: null, createdAt: Date.now(), order: folders.length }]);
+    const siblings = folders.filter((f) => f.parentId === parentId);
+    onChange([...folders, { id: uuid(), name: n, parentId, createdAt: Date.now(), order: siblings.length }]);
     setName('');
+    setParentId(null);
   }
   function rename(id: string, newName: string) {
     onChange(folders.map((f) => (f.id === id ? { ...f, name: newName } : f)));
   }
-  function remove(id: string) {
-    onChange(folders.filter((f) => f.id !== id).map((f) => (f.parentId === id ? { ...f, parentId: null } : f)));
+  function reparent(id: string, newParent: string | null) {
+    if (wouldCycle(folders, id, newParent)) return; // ignore invalid move
+    onChange(folders.map((f) => (f.id === id ? { ...f, parentId: newParent } : f)));
   }
+  function remove(id: string) {
+    const node = folders.find((f) => f.id === id);
+    const promoteTo = node?.parentId ?? null; // children rise to grandparent
+    onChange(
+      folders
+        .filter((f) => f.id !== id)
+        .map((f) => (f.parentId === id ? { ...f, parentId: promoteTo } : f)),
+    );
+  }
+
   return (
     <>
       <h2 class="op-panel-title">폴더</h2>
-      <p class="op-panel-desc">계층 구조로 프롬프트를 정리하세요</p>
-      <div style="display:flex;gap:8px;margin-bottom:16px">
-        <input class="op-input" style="flex:1" value={name} placeholder="새 폴더 이름" onInput={(e) => setName((e.target as HTMLInputElement).value)} onKeyDown={(e) => e.key === 'Enter' && add()} />
-        <button class="op-btn primary sm" onClick={add}>추가</button>
+      <p class="op-panel-desc">계층 구조로 프롬프트를 정리하세요 (무제한 깊이)</p>
+
+      <div class="op-card" style="padding:16px;margin-bottom:16px">
+        <div style="display:flex;gap:8px;align-items:center">
+          <input class="op-input" style="flex:1" value={name} placeholder="새 폴더 이름" onInput={(e) => setName((e.target as HTMLInputElement).value)} onKeyDown={(e) => e.key === 'Enter' && add()} />
+          <select class="op-select" value={parentId ?? ''} onChange={(e) => setParentId((e.target as HTMLSelectElement).value || null)}>
+            <option value="">최상위</option>
+            {flat.map((f) => <option key={f.id} value={f.id}>{indent(f.depth)}{f.name}</option>)}
+          </select>
+          <button class="op-btn primary sm" onClick={add}>추가</button>
+        </div>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:8px">상위 폴더를 선택하면 하위 폴더로 만들어져요</div>
       </div>
+
       <div class="op-card">
         <div class="op-list">
-          {folders.length === 0 && <div class="op-row"><span class="op-row-title" style="color:var(--text-muted)">폴더가 없어요</span></div>}
-          {folders.map((f) => (
+          {flat.length === 0 && <div class="op-row"><span class="op-row-title" style="color:var(--text-muted)">폴더가 없어요</span></div>}
+          {flat.map((f) => (
             <div class="op-row" key={f.id}>
+              <span style={`width:${f.depth * 16}px;flex-shrink:0`} />
+              {f.depth > 0 && <span style="color:var(--text-disabled);flex-shrink:0">└</span>}
               <input class="op-input" style="flex:1" value={f.name} onChange={(e) => rename(f.id, (e.target as HTMLInputElement).value)} />
+              <select class="op-select" style="min-width:120px" value={f.parentId ?? ''} onChange={(e) => reparent(f.id, (e.target as HTMLSelectElement).value || null)}>
+                <option value="">최상위</option>
+                {flat.filter((o) => o.id !== f.id && !wouldCycle(folders, f.id, o.id)).map((o) => (
+                  <option key={o.id} value={o.id}>{indent(o.depth)}{o.name}</option>
+                ))}
+              </select>
               <button class="op-btn secondary sm" onClick={() => remove(f.id)}>삭제</button>
             </div>
           ))}
@@ -144,6 +178,10 @@ function Folders({ folders, onChange }: { folders: Folder[]; onChange: (f: Folde
       </div>
     </>
   );
+}
+
+function indent(depth: number): string {
+  return '  '.repeat(depth);
 }
 
 /* ---------- Tags ---------- */

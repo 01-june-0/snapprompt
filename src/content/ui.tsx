@@ -5,6 +5,7 @@ import type { Prompt, Folder, Variable } from '@shared/types';
 import { getPrompts, getFolders, upsertPrompt, getSettings } from '@shared/store';
 import { search, rankForPicker } from '@shared/search';
 import { extractVariables, substitute, mergeVariables } from '@shared/variables';
+import { flattenTree } from '@shared/folders';
 import { insertText, copyToClipboard, captureActiveElement } from './insertion';
 import { sendToBackground } from '@shared/messaging';
 import { uuid } from '@shared/id';
@@ -405,7 +406,7 @@ function SaveModal({ text, sourceUrl }: { text: string; sourceUrl: string }) {
             <div class="sp-label">폴더</div>
             <select class="sp-input" value={folderId ?? ''} onChange={(e) => setFolderId((e.target as HTMLSelectElement).value || null)}>
               <option value="">분류 없음</option>
-              {folders.map((f) => <option key={f.id} value={f.id}>{f.name}</option>)}
+              {flattenTree(folders).map((f) => <option key={f.id} value={f.id}>{'  '.repeat(f.depth)}{f.name}</option>)}
             </select>
           </div>
           <div class="sp-field">
