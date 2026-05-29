@@ -6,6 +6,7 @@ import {
 } from '@shared/store';
 import { applyTheme } from '@shared/theme';
 import { buildBackup, downloadBackup, importBackup } from '@shared/backup';
+import { sendToBackground } from '@shared/messaging';
 import { uuid } from '@shared/id';
 
 type Tab = 'general' | 'folders' | 'tags' | 'backup' | 'shortcuts' | 'data' | 'about';
@@ -207,6 +208,13 @@ function Backup({ settings, patch, flash, onRestore }: { settings: Settings; pat
           <select class="op-select" value={settings.backupFrequency} disabled={settings.backupFrequency === 'off'} onChange={(e) => patch({ backupFrequency: (e.target as HTMLSelectElement).value as BackupFrequency })}>
             <option value="daily">매일</option><option value="weekly">매주</option><option value="monthly">매월</option>
           </select>
+        </div>
+        <div class="op-setting">
+          <div class="op-setting-info"><div class="op-setting-label">지금 다운로드 백업</div><div class="op-setting-hint">자동 백업과 동일 경로로 즉시 다운로드 폴더(snapprompt/)에 저장</div></div>
+          <button class="op-btn secondary sm" onClick={async () => {
+            const res = await sendToBackground({ type: 'BACKUP_NOW' });
+            flash(res.ok ? '다운로드 폴더에 백업했어요' : (res.error ?? '백업 실패'));
+          }}>지금 백업</button>
         </div>
       </div>
 

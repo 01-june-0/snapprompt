@@ -18,16 +18,10 @@ function pad(n: number): string {
   return String(n).padStart(2, '0');
 }
 
-/** Download a backup now if the configured interval has elapsed. */
-export async function maybeAutoBackup(): Promise<void> {
-  const settings = await getSettings();
-  if (settings.backupFrequency === 'off') return;
-
-  const interval = INTERVAL_MS[settings.backupFrequency];
-  if (settings.lastBackupAt && Date.now() - settings.lastBackupAt < interval) return;
-
+/** Download a backup to the downloads folder via the service worker. Forced. */
+export async function runBackupDownload(): Promise<boolean> {
   const backup = await buildBackup();
-  if (backup.prompts.length === 0) return; // nothing to back up
+  if (backup.prompts.length === 0) return false; // nothing to back up
 
   const json = JSON.stringify(backup, null, 2);
   // data: URL handles unicode via encodeURIComponent (no btoa Latin1 issues).
@@ -38,7 +32,20 @@ export async function maybeAutoBackup(): Promise<void> {
   try {
     await chrome.downloads.download({ url, filename, saveAs: false, conflictAction: 'uniquify' });
     await setSettings({ lastBackupAt: Date.now() });
+    return true;
   } catch (e) {
-    console.warn('[SnapPrompt] auto-backup failed:', e);
+    console.warn('[SnapPrompt] backup download failed:', e);
+    return false;
   }
+}
+
+/** Download a backup only if the configured interval has elapsed. */
+export async function maybeAutoBackup(): Promise<void> {
+  const settings = await getSettings();
+  if (settings.backupFrequency === 'off') return;
+
+  const interval = INTERVAL_MS[settings.backupFrequency];
+  if (settings.lastBackupAt && Date.now() - settings.lastBackupAt < interval) return;
+
+  await runBackupDownload();
 }

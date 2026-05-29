@@ -168,6 +168,18 @@
   font-size: 12px; margin: 0 6px 6px 0;
 }
 
+/* Duplicate warning banner (save modal) */
+.sp-warn {
+  display: flex; align-items: flex-start; gap: 8px;
+  padding: 10px 12px; border-radius: var(--radius-md);
+  background: var(--warning-50); border: 1px solid var(--warning-500);
+  font-size: var(--text-xs); color: var(--warning-700); line-height: var(--lh-snug);
+}
+.sp-warn .ico { color: var(--warning-700); flex-shrink: 0; margin-top: 1px; }
+.sp-warn b { font-weight: var(--weight-semi); }
+[data-theme="dark"] .sp-warn { color: #FCD34D; }
+[data-theme="dark"] .sp-warn .ico { color: var(--warning-500); }
+
 /* Floating button */
 .sp-fab {
   position: fixed; z-index: 2147483646;

@@ -321,13 +321,22 @@ function SaveModal({ text, sourceUrl }: { text: string; sourceUrl: string }) {
   const [folders, setFolders] = useState<Folder[]>([]);
   const [folderId, setFolderId] = useState<string | null>(null);
   const [tagsInput, setTagsInput] = useState('');
+  const [existing, setExisting] = useState<Prompt[]>([]);
 
   useEffect(() => {
     getFolders().then(setFolders);
+    getPrompts().then(setExisting);
     getSettings().then((s) => setFolderId(s.defaultFolderId));
   }, []);
 
   const vars = useMemo(() => extractVariables(body), [body]);
+
+  // F1.7: detect a near-identical existing prompt (whitespace-normalized body).
+  const duplicate = useMemo(() => {
+    const norm = normalizeBody(body);
+    if (!norm) return null;
+    return existing.find((p) => normalizeBody(p.body) === norm) ?? null;
+  }, [existing, body]);
 
   async function save() {
     const now = Date.now();
@@ -368,6 +377,12 @@ function SaveModal({ text, sourceUrl }: { text: string; sourceUrl: string }) {
           <button class="sp-close" onClick={close}><IconClose /></button>
         </div>
         <div class="sp-modal-body">
+          {duplicate && (
+            <div class="sp-warn">
+              <svg class="ico" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" /><line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" /></svg>
+              <div>본문이 <b>"{duplicate.title}"</b>와(과) 거의 동일해요. 그래도 저장할까요?</div>
+            </div>
+          )}
           <div class="sp-field">
             <div class="sp-label">제목</div>
             <input class="sp-input" value={title} onInput={(e) => setTitle((e.target as HTMLInputElement).value)} />
@@ -408,7 +423,7 @@ function SaveModal({ text, sourceUrl }: { text: string; sourceUrl: string }) {
           <span style="font-size:11px;color:var(--text-muted)"><span class="sp-kbd">⌘</span><span class="sp-kbd">↵</span> 저장</span>
           <div class="sp-actions">
             <button class="sp-btn ghost" onClick={close}>취소</button>
-            <button class="sp-btn primary" onClick={() => void save()}>저장</button>
+            <button class="sp-btn primary" onClick={() => void save()}>{duplicate ? '어쨌든 저장' : '저장'}</button>
           </div>
         </div>
       </div>
@@ -440,6 +455,9 @@ function Backdrop({ position, children }: { position: 'top' | 'center'; children
 
 function firstLine(body: string): string {
   return body.replace(/\s+/g, ' ').trim().slice(0, 80);
+}
+function normalizeBody(body: string): string {
+  return body.replace(/\s+/g, ' ').trim();
 }
 function deriveTitle(text: string): string {
   const line = text.split('\n')[0].trim();

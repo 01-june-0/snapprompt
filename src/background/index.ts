@@ -8,7 +8,7 @@
  */
 import { ensureSchema, takeSnapshot, recordUsage } from '@shared/store';
 import { onMessage } from '@shared/messaging';
-import { maybeAutoBackup } from './autobackup';
+import { maybeAutoBackup, runBackupDownload } from './autobackup';
 import type { Message } from '@shared/types';
 
 const CTX_SAVE = 'snapprompt-save-selection';
@@ -73,7 +73,10 @@ onMessage((msg: Message, sender) => {
       return { ok: true as const };
     }
     case 'BACKUP_NOW':
-      return takeSnapshot().then(() => ({ ok: true as const }));
+      // snapshot (internal) + download a JSON backup to the downloads folder
+      return Promise.all([takeSnapshot(), runBackupDownload()]).then(
+        ([, ok]) => (ok ? { ok: true as const } : { ok: false as const, error: '백업할 프롬프트가 없어요' }),
+      );
     case 'PING':
       return { ok: true as const, data: 'pong' };
     default:
