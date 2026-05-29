@@ -1,0 +1,17 @@
+{
+  "appName": {
+    "message": "SnapPrompt",
+    "description": "확장 프로그램 이름."
+  },
+  "appDescription": {
+    "message": "웹서핑 중 발견한 LLM 프롬프트를 빠르게 저장하고 한 번에 꺼내 쓰세요.",
+    "description": "확장 프로그램 설명."
+  },
+  "save": { "message": "저장" },
+  "cancel": { "message": "취소" },
+  "insert": { "message": "삽입" },
+  "copy": { "message": "복사" },
+  "newPrompt": { "message": "새 프롬프트" },
+  "search": { "message": "프롬프트 검색..." },
+  "savedToast": { "message": "저장되었어요" }
+}

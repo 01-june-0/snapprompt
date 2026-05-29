@@ -1,0 +1,17 @@
+{
+  "appName": {
+    "message": "SnapPrompt",
+    "description": "The name of the extension."
+  },
+  "appDescription": {
+    "message": "Quickly save LLM prompts you find while browsing and reuse them in one click.",
+    "description": "The description of the extension."
+  },
+  "save": { "message": "Save" },
+  "cancel": { "message": "Cancel" },
+  "insert": { "message": "Insert" },
+  "copy": { "message": "Copy" },
+  "newPrompt": { "message": "New prompt" },
+  "search": { "message": "Search prompts..." },
+  "savedToast": { "message": "Saved" }
+}
