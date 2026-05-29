@@ -8,6 +8,7 @@ import { extractVariables, substitute, mergeVariables } from '@shared/variables'
 import { flattenTree } from '@shared/folders';
 import { insertText, copyToClipboard, captureActiveElement } from './insertion';
 import { sendToBackground } from '@shared/messaging';
+import { t } from '@shared/i18n';
 import { uuid } from '@shared/id';
 
 /* ---------------- view state (signals) ---------------- */
@@ -54,10 +55,10 @@ export async function applyPrompt(prompt: Prompt, mode: 'insert' | 'copy') {
   }
   if (mode === 'insert') {
     const res = await insertText(prompt.body);
-    showToast(res === 'inserted' ? '삽입되었어요' : '클립보드에 복사했어요');
+    showToast(res === 'inserted' ? t('content.toast.inserted') : t('content.toast.clipboard'));
   } else {
     await copyToClipboard(prompt.body);
-    showToast('클립보드에 복사했어요');
+    showToast(t('content.toast.clipboard'));
   }
   await sendToBackground({ type: 'PROMPT_USED', promptId: prompt.id });
   close();
@@ -114,7 +115,7 @@ function FloatingButton({ x, y }: { x: number; y: number }) {
     <button
       class="sp-fab"
       style={`left:${x}px;top:${y}px`}
-      title="SnapPrompt — 프롬프트 삽입"
+      title={t('content.fabTitle')}
       // prevent the editable from blurring when the button is pressed
       onMouseDown={(e) => e.preventDefault()}
       onClick={() => openPicker()}
@@ -162,19 +163,19 @@ function Picker() {
           <input
             ref={inputRef}
             value={query}
-            placeholder="프롬프트 검색하거나 ↑↓로 탐색..."
+            placeholder={t('content.pickerSearch')}
             onInput={(e) => setQuery((e.target as HTMLInputElement).value)}
           />
           <span class="sp-kbd">Esc</span>
         </div>
         <div class="sp-meta">
-          {query.trim() ? `검색 결과 · ${results.length}개` : '자주 사용 · 최근 사용'}
+          {query.trim() ? t('content.pickerMeta.search', [results.length]) : t('content.pickerMeta.default')}
         </div>
         <div class="sp-list">
           {results.length === 0 && (
             <div class="sp-empty">
-              <div class="sp-empty-title">결과가 없어요</div>
-              <div>다른 키워드로 검색해보세요.</div>
+              <div class="sp-empty-title">{t('content.pickerEmpty')}</div>
+              <div>{t('popup.empty.hintSearch')}</div>
             </div>
           )}
           {results.map((r, i) => (
@@ -200,9 +201,9 @@ function Picker() {
         <div class="sp-footer">
           <span>SnapPrompt</span>
           <span class="hints">
-            <span><span class="sp-kbd">↑</span><span class="sp-kbd">↓</span> 탐색</span>
-            <span><span class="sp-kbd">↵</span> 삽입</span>
-            <span><span class="sp-kbd">Esc</span> 닫기</span>
+            <span><span class="sp-kbd">↑</span><span class="sp-kbd">↓</span> {t('content.hint.navigate')}</span>
+            <span><span class="sp-kbd">↵</span> {t('content.hint.insert')}</span>
+            <span><span class="sp-kbd">Esc</span> {t('content.hint.close')}</span>
           </span>
         </div>
       </div>
@@ -241,10 +242,10 @@ function VariableModal({ prompt, mode }: { prompt: Prompt; mode: 'insert' | 'cop
     const text = substitute(prompt.body, values, vars);
     if (mode === 'insert') {
       const res = await insertText(text);
-      showToast(res === 'inserted' ? '삽입되었어요' : '클립보드에 복사했어요');
+      showToast(res === 'inserted' ? t('content.toast.inserted') : t('content.toast.clipboard'));
     } else {
       await copyToClipboard(text);
-      showToast('클립보드에 복사했어요');
+      showToast(t('content.toast.clipboard'));
     }
     if (remember) {
       const updatedVars = vars.map((v) => ({ ...v, lastValue: values[v.name] ?? v.lastValue ?? null }));
@@ -266,7 +267,7 @@ function VariableModal({ prompt, mode }: { prompt: Prompt; mode: 'insert' | 'cop
           <div class="sp-modal-head-icon"><IconVars /></div>
           <div style="flex:1">
             <h3>{prompt.title}</h3>
-            <div class="sub">{vars.length}개 변수 채우기</div>
+            <div class="sub">{t('content.varModalSub', [vars.length])}</div>
           </div>
           <button class="sp-close" onClick={close}><IconClose /></button>
         </div>
@@ -280,15 +281,15 @@ function VariableModal({ prompt, mode }: { prompt: Prompt; mode: 'insert' | 'cop
             />
           ))}
           <div class="sp-field">
-            <div class="sp-label">미리보기</div>
+            <div class="sp-label">{t('common.preview')}</div>
             <div class="sp-preview">{renderPreview(prompt.body, values, vars)}</div>
           </div>
         </div>
         <div class="sp-modal-foot">
           <div class="sp-actions">
-            <button class="sp-btn ghost" onClick={close}>취소</button>
+            <button class="sp-btn ghost" onClick={close}>{t('common.cancel')}</button>
             <button class="sp-btn primary" onClick={() => void apply()}>
-              {mode === 'insert' ? '삽입' : '복사'} <span class="sp-kbd">⌘↵</span>
+              {mode === 'insert' ? t('common.insert') : t('common.copy')} <span class="sp-kbd">⌘↵</span>
             </button>
           </div>
         </div>
@@ -304,7 +305,7 @@ function VarField({
     <div class="sp-field">
       <div class="sp-label">
         <span class="sp-name-tag">{`{{${variable.name}}}`}</span>
-        {variable.defaultValue && <span style="color:var(--text-muted);font-weight:400">기본값: {variable.defaultValue}</span>}
+        {variable.defaultValue && <span style="color:var(--text-muted);font-weight:400">{t('content.default', [variable.defaultValue])}</span>}
       </div>
       {variable.multiline ? (
         <textarea class="sp-textarea" value={value} onInput={(e) => onChange((e.target as HTMLTextAreaElement).value)} />
@@ -379,7 +380,7 @@ function SaveModal({ text, sourceUrl }: { text: string; sourceUrl: string }) {
     };
     await upsertPrompt(prompt);
     close();
-    showToast('저장되었어요');
+    showToast(t('content.toast.saved'));
   }
 
   function onKey(e: KeyboardEvent) {
@@ -393,8 +394,8 @@ function SaveModal({ text, sourceUrl }: { text: string; sourceUrl: string }) {
         <div class="sp-modal-head">
           <div class="sp-modal-head-icon"><IconVars /></div>
           <div style="flex:1">
-            <h3>프롬프트 저장</h3>
-            <div class="sub">선택한 텍스트가 본문에 채워졌어요</div>
+            <h3>{t('content.savePromptTitle')}</h3>
+            <div class="sub">{t('content.savePromptSub')}</div>
           </div>
           <button class="sp-close" onClick={close}><IconClose /></button>
         </div>
@@ -402,20 +403,20 @@ function SaveModal({ text, sourceUrl }: { text: string; sourceUrl: string }) {
           {duplicate && (
             <div class="sp-warn">
               <svg class="ico" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" /><line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" /></svg>
-              <div>본문이 <b>"{duplicate.title}"</b>와(과) 거의 동일해요. 그래도 저장할까요?</div>
+              <div>{t('content.dupWarn', [duplicate.title])}</div>
             </div>
           )}
           <div class="sp-field">
-            <div class="sp-label">제목</div>
+            <div class="sp-label">{t('common.title')}</div>
             <input class="sp-input" value={title} onInput={(e) => setTitle((e.target as HTMLInputElement).value)} />
           </div>
           <div class="sp-field">
-            <div class="sp-label">본문</div>
+            <div class="sp-label">{t('common.body')}</div>
             <textarea class="sp-textarea" value={body} onInput={(e) => setBody((e.target as HTMLTextAreaElement).value)} />
           </div>
           {vars.length > 0 && (
             <div class="sp-field">
-              <div class="sp-label">감지된 변수 {vars.length}개</div>
+              <div class="sp-label">{t('common.detectedVars', [vars.length])}</div>
               <div>
                 {vars.map((v) => (
                   <span key={v.name} class="sp-section-tag"><span class="sp-name-tag">{`{{${v.name}}}`}</span></span>
@@ -424,32 +425,32 @@ function SaveModal({ text, sourceUrl }: { text: string; sourceUrl: string }) {
             </div>
           )}
           <div class="sp-field">
-            <div class="sp-label">폴더</div>
+            <div class="sp-label">{t('common.folder')}</div>
             <select class="sp-input" value={folderId ?? ''} onChange={(e) => setFolderId((e.target as HTMLSelectElement).value || null)}>
-              <option value="">분류 없음</option>
+              <option value="">{t('common.uncategorized')}</option>
               {flattenTree(folders).map((f) => <option key={f.id} value={f.id}>{'  '.repeat(f.depth)}{f.name}</option>)}
             </select>
           </div>
           <div class="sp-field" style="position:relative">
-            <div class="sp-label">태그 <span style="font-weight:400;color:var(--text-muted)">쉼표로 구분</span></div>
+            <div class="sp-label">{t('common.tags')} <span style="font-weight:400;color:var(--text-muted)">{t('common.commaSeparated')}</span></div>
             <input
               class="sp-input"
               value={tagsInput}
-              placeholder="코딩, 리뷰"
+              placeholder={t('common.tagsPlaceholder')}
               onInput={(e) => setTagsInput((e.target as HTMLInputElement).value)}
               onFocus={() => setTagFocused(true)}
               onBlur={() => setTimeout(() => setTagFocused(false), 150)}
             />
             {tagSuggestions.length > 0 && (
               <div class="sp-ac">
-                {tagSuggestions.map((t) => (
+                {tagSuggestions.map((tag) => (
                   <div
-                    key={t}
+                    key={tag}
                     class="sp-ac-item"
                     onMouseDown={(e) => e.preventDefault()}
-                    onClick={() => completeTag(t)}
+                    onClick={() => completeTag(tag)}
                   >
-                    <span class="hash">#</span>{t}
+                    <span class="hash">#</span>{tag}
                   </div>
                 ))}
               </div>
@@ -457,16 +458,16 @@ function SaveModal({ text, sourceUrl }: { text: string; sourceUrl: string }) {
           </div>
           {sourceUrl && (
             <div class="sp-field">
-              <div class="sp-label">출처</div>
+              <div class="sp-label">{t('common.source')}</div>
               <div class="sp-section-tag" style="max-width:100%;overflow:hidden;text-overflow:ellipsis">{sourceUrl}</div>
             </div>
           )}
         </div>
         <div class="sp-modal-foot">
-          <span style="font-size:11px;color:var(--text-muted)"><span class="sp-kbd">⌘</span><span class="sp-kbd">↵</span> 저장</span>
+          <span style="font-size:11px;color:var(--text-muted)"><span class="sp-kbd">⌘</span><span class="sp-kbd">↵</span> {t('common.save')}</span>
           <div class="sp-actions">
-            <button class="sp-btn ghost" onClick={close}>취소</button>
-            <button class="sp-btn primary" onClick={() => void save()}>{duplicate ? '어쨌든 저장' : '저장'}</button>
+            <button class="sp-btn ghost" onClick={close}>{t('common.cancel')}</button>
+            <button class="sp-btn primary" onClick={() => void save()}>{duplicate ? t('content.saveAnyway') : t('common.save')}</button>
           </div>
         </div>
       </div>
@@ -504,7 +505,7 @@ function normalizeBody(body: string): string {
 }
 function deriveTitle(text: string): string {
   const line = text.split('\n')[0].trim();
-  return line.length > 60 ? line.slice(0, 60) + '…' : line || '새 프롬프트';
+  return line.length > 60 ? line.slice(0, 60) + '…' : line || t('common.newPrompt');
 }
 function renderPreview(body: string, values: Record<string, string>, vars: Variable[]) {
   // Render with filled/empty highlight spans

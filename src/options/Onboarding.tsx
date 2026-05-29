@@ -1,12 +1,7 @@
 import { useState } from 'preact/hooks';
 import { setSettings, getPrompts, setPrompts } from '@shared/store';
 import { buildSamplePrompts } from '@shared/samples';
-
-const HERO = {
-  1: { title: '환영해요 👋', desc: '좋은 프롬프트를 발견하면 스냅, 필요할 때 한 번에 꺼내 쓰세요. 시작하기 전에 딱 세 가지만 설정해요.' },
-  2: { title: '거의 다 됐어요', desc: '미리 준비된 샘플로 바로 감을 잡을 수 있어요. 본인 프롬프트로 채워가면 됩니다.' },
-  3: { title: '마지막 단계예요 ✨', desc: '이제 끝! 설정을 확인하고 SnapPrompt를 시작하세요.' },
-} as const;
+import { t } from '@shared/i18n';
 
 export function Onboarding() {
   const [step, setStep] = useState(1);
@@ -18,12 +13,12 @@ export function Onboarding() {
       await setPrompts([...buildSamplePrompts(), ...existing]);
     }
     await setSettings({ onboardingCompletedAt: Date.now() });
-    // strip the hash and show the full options page
     location.hash = '';
     location.reload();
   }
 
-  const hero = HERO[step as 1 | 2 | 3];
+  const heroTitle = t(`ob.hero${step}.title`);
+  const heroDesc = t(`ob.hero${step}.desc`);
 
   return (
     <div class="ob-wrap">
@@ -34,12 +29,12 @@ export function Onboarding() {
             <div class="ob-hero-name">SnapPrompt</div>
           </div>
           <div class="ob-hero-content">
-            <h2>{hero.title}</h2>
-            <p>{hero.desc}</p>
+            <h2>{heroTitle}</h2>
+            <p>{heroDesc}</p>
             <div class="ob-dots">
-              <Dot n={1} step={step} label="단축키" />
-              <Dot n={2} step={step} label="샘플" />
-              <Dot n={3} step={step} label="테마·언어" />
+              <Dot n={1} step={step} label={t('ob.dot.shortcut')} />
+              <Dot n={2} step={step} label={t('ob.dot.samples')} />
+              <Dot n={3} step={step} label={t('ob.dot.theme')} />
             </div>
           </div>
         </div>
@@ -50,14 +45,14 @@ export function Onboarding() {
           {step === 1 && (
             <>
               <div class="ob-kicker">STEP 1 / 3</div>
-              <h3>단축키 설정</h3>
-              <p>어떤 사이트에서든 단축키로 프롬프트 피커를 띄울 수 있어요. Chrome 정책상 단축키는 직접 지정해야 해요.</p>
+              <h3>{t('ob.step1.title')}</h3>
+              <p>{t('ob.step1.desc')}</p>
               <div class="ob-content">
                 <div class="kbd-display">
                   <span class="kbd-big">⌘</span><span>+</span><span class="kbd-big">⇧</span><span>+</span><span class="kbd-big">L</span>
-                  <span style="margin-left:8px;color:var(--text-muted);font-size:var(--text-sm)">추천</span>
+                  <span style="margin-left:8px;color:var(--text-muted);font-size:var(--text-sm)">{t('ob.recommended')}</span>
                 </div>
-                <button class="op-btn secondary" onClick={() => chrome.tabs.create({ url: 'chrome://extensions/shortcuts' })}>chrome://extensions/shortcuts 열기</button>
+                <button class="op-btn secondary" onClick={() => chrome.tabs.create({ url: 'chrome://extensions/shortcuts' })}>{t('ob.openShortcuts')}</button>
               </div>
             </>
           )}
@@ -65,8 +60,8 @@ export function Onboarding() {
           {step === 2 && (
             <>
               <div class="ob-kicker">STEP 2 / 3</div>
-              <h3>샘플 프롬프트로 시작</h3>
-              <p>처음이라면 자주 쓰이는 프롬프트 몇 개로 시작해보세요. 나중에 자유롭게 수정·삭제할 수 있어요.</p>
+              <h3>{t('ob.step2.title')}</h3>
+              <p>{t('ob.step2.desc')}</p>
               <div class="ob-content">
                 {buildSamplePrompts().map((s) => (
                   <div class={`sample-card${addSamples ? ' sel' : ''}`} key={s.id} onClick={() => setAddSamples((v) => !v)}>
@@ -78,7 +73,7 @@ export function Onboarding() {
                   </div>
                 ))}
                 <div style="font-size:11px;color:var(--text-muted);text-align:center;margin-top:8px">
-                  {addSamples ? '3개 샘플이 추가됩니다' : '빈 상태로 시작합니다'} · 카드를 눌러 토글
+                  {addSamples ? t('ob.samplesAdd', [3]) : t('ob.samplesNone')} · {t('ob.samplesToggleHint')}
                 </div>
               </div>
             </>
@@ -87,21 +82,21 @@ export function Onboarding() {
           {step === 3 && (
             <>
               <div class="ob-kicker">STEP 3 / 3</div>
-              <h3>테마와 언어 확인</h3>
-              <p>시스템 설정을 자동으로 감지했어요. 나중에 설정에서 변경할 수 있어요.</p>
+              <h3>{t('ob.step3.title')}</h3>
+              <p>{t('ob.step3.desc')}</p>
               <div class="ob-content">
-                <div class="op-card" style="padding:16px">시스템 테마·언어를 따릅니다. 설정 → 일반에서 언제든 바꿀 수 있어요.</div>
+                <div class="op-card" style="padding:16px">{t('ob.step3.body')}</div>
               </div>
             </>
           )}
 
           <div class="ob-foot">
-            <button class="op-btn secondary sm" onClick={finish} style="border:none;color:var(--text-muted)">건너뛰기</button>
+            <button class="op-btn secondary sm" onClick={finish} style="border:none;color:var(--text-muted)">{t('ob.skip')}</button>
             <div style="display:flex;gap:8px">
-              {step > 1 && <button class="op-btn secondary" onClick={() => setStep((s) => s - 1)}>이전</button>}
+              {step > 1 && <button class="op-btn secondary" onClick={() => setStep((s) => s - 1)}>{t('ob.prev')}</button>}
               {step < 3
-                ? <button class="op-btn primary" onClick={() => setStep((s) => s + 1)}>다음</button>
-                : <button class="op-btn primary" onClick={finish}>SnapPrompt 시작하기</button>}
+                ? <button class="op-btn primary" onClick={() => setStep((s) => s + 1)}>{t('ob.next')}</button>
+                : <button class="op-btn primary" onClick={finish}>{t('ob.start')}</button>}
             </div>
           </div>
         </div>

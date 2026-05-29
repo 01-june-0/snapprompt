@@ -2,13 +2,19 @@ import { render } from 'preact';
 import '@shared/tokens.css';
 import './popup.css';
 import { App } from './App';
-import { getSettings } from '@shared/store';
+import { getSettings, subscribe } from '@shared/store';
 import { applyTheme, watchSystemTheme } from '@shared/theme';
+import { setLocale } from '@shared/i18n';
 
-getSettings().then((s) => {
+function applyPrefs(s: { theme: 'system' | 'light' | 'dark'; language: 'system' | 'ko' | 'en' }) {
   applyTheme(s.theme);
+  setLocale(s.language);
+}
+getSettings().then((s) => {
+  applyPrefs(s);
   watchSystemTheme(s.theme);
 });
+subscribe(() => getSettings().then(applyPrefs));
 
 // Window-mode detection: ?mode=window (detached window) | ?mode=panel (side panel)
 const mode = new URLSearchParams(location.search).get('mode');

@@ -9,6 +9,7 @@ import { buildBackup, downloadBackup, importBackup } from '@shared/backup';
 import { sendToBackground } from '@shared/messaging';
 import { flattenTree, wouldCycle, folderPath } from '@shared/folders';
 import { search } from '@shared/search';
+import { t } from '@shared/i18n';
 import { uuid } from '@shared/id';
 
 type Tab = 'general' | 'prompts' | 'folders' | 'tags' | 'backup' | 'shortcuts' | 'data' | 'about';
@@ -40,26 +41,26 @@ export function Options() {
       <header class="op-header">
         <div class="op-header-inner">
           <div class="op-mark"><Mark /></div>
-          <div><div class="op-name">SnapPrompt</div><div class="op-sub">설정</div></div>
+          <div><div class="op-name">SnapPrompt</div><div class="op-sub">{t('opt.headerSub')}</div></div>
         </div>
       </header>
       <div class="op-layout">
         <nav class="op-nav">
-          <TabBtn id="general" tab={tab} set={setTab} label="일반" />
-          <TabBtn id="prompts" tab={tab} set={setTab} label="프롬프트" />
-          <TabBtn id="folders" tab={tab} set={setTab} label="폴더" />
-          <TabBtn id="tags" tab={tab} set={setTab} label="태그" />
-          <TabBtn id="backup" tab={tab} set={setTab} label="백업" />
-          <TabBtn id="shortcuts" tab={tab} set={setTab} label="단축키" />
+          <TabBtn id="general" tab={tab} set={setTab} label={t('opt.nav.general')} />
+          <TabBtn id="prompts" tab={tab} set={setTab} label={t('opt.nav.prompts')} />
+          <TabBtn id="folders" tab={tab} set={setTab} label={t('opt.nav.folders')} />
+          <TabBtn id="tags" tab={tab} set={setTab} label={t('opt.nav.tags')} />
+          <TabBtn id="backup" tab={tab} set={setTab} label={t('opt.nav.backup')} />
+          <TabBtn id="shortcuts" tab={tab} set={setTab} label={t('opt.nav.shortcuts')} />
           <div class="op-nav-sep" />
-          <TabBtn id="data" tab={tab} set={setTab} label="데이터" />
-          <TabBtn id="about" tab={tab} set={setTab} label="정보" />
+          <TabBtn id="data" tab={tab} set={setTab} label={t('opt.nav.data')} />
+          <TabBtn id="about" tab={tab} set={setTab} label={t('opt.nav.about')} />
         </nav>
         <div>
           {tab === 'general' && <General settings={settings} patch={patch} folders={folders} />}
           {tab === 'prompts' && <PromptsManager prompts={prompts} folders={folders} flash={flash} onChange={async (p) => { await setPrompts(p); setLocalPrompts(p); }} />}
           {tab === 'folders' && <Folders folders={folders} onChange={async (f) => { await setFolders(f); setLocalFolders(f); }} />}
-          {tab === 'tags' && <Tags prompts={prompts} onChange={async (p) => { await setPrompts(p); setLocalPrompts(p); flash('태그를 정리했어요'); }} />}
+          {tab === 'tags' && <Tags prompts={prompts} onChange={async (p) => { await setPrompts(p); setLocalPrompts(p); flash(t('opt.tags.toast.cleaned')); }} />}
           {tab === 'backup' && <Backup settings={settings} patch={patch} flash={flash} onRestore={reload} />}
           {tab === 'shortcuts' && <Shortcuts />}
           {tab === 'data' && <Data prompts={prompts} folders={folders} flash={flash} onCleared={reload} />}
@@ -79,31 +80,31 @@ function TabBtn({ id, tab, set, label }: { id: Tab; tab: Tab; set: (t: Tab) => v
 function General({ settings, patch, folders }: { settings: Settings; patch: (p: Partial<Settings>) => void; folders: Folder[] }) {
   return (
     <>
-      <h2 class="op-panel-title">일반</h2>
-      <p class="op-panel-desc">테마, 언어, 삽입 동작 등 기본 설정</p>
+      <h2 class="op-panel-title">{t('opt.nav.general')}</h2>
+      <p class="op-panel-desc">{t('opt.general.desc')}</p>
       <div class="op-card">
         <div class="op-setting">
-          <div class="op-setting-info"><div class="op-setting-label">테마</div><div class="op-setting-hint">시스템 설정을 따르거나 직접 선택</div></div>
-          <Seg<ThemePref> value={settings.theme} options={[['system', '시스템'], ['light', '라이트'], ['dark', '다크']]} onChange={(v) => patch({ theme: v })} />
+          <div class="op-setting-info"><div class="op-setting-label">{t('opt.theme')}</div><div class="op-setting-hint">{t('opt.theme.hint')}</div></div>
+          <Seg<ThemePref> value={settings.theme} options={[['system', t('opt.theme.system')], ['light', t('opt.theme.light')], ['dark', t('opt.theme.dark')]]} onChange={(v) => patch({ theme: v })} />
         </div>
         <div class="op-setting">
-          <div class="op-setting-info"><div class="op-setting-label">언어</div><div class="op-setting-hint">UI 표시 언어</div></div>
+          <div class="op-setting-info"><div class="op-setting-label">{t('opt.language')}</div><div class="op-setting-hint">{t('opt.language.hint')}</div></div>
           <select class="op-select" value={settings.language} onChange={(e) => patch({ language: (e.target as HTMLSelectElement).value as LanguagePref })}>
-            <option value="system">시스템</option><option value="ko">한국어</option><option value="en">English</option>
+            <option value="system">{t('opt.language.system')}</option><option value="ko">한국어</option><option value="en">English</option>
           </select>
         </div>
       </div>
       <div class="op-card">
-        <Toggle label="플로팅 버튼" hint="입력창 포커스 시 빠른 삽입 버튼 표시" checked={settings.floatingButton} onChange={(v) => patch({ floatingButton: v })} />
+        <Toggle label={t('opt.floating')} hint={t('opt.floating.hint')} checked={settings.floatingButton} onChange={(v) => patch({ floatingButton: v })} />
         <div class="op-setting">
-          <div class="op-setting-info"><div class="op-setting-label">삽입 방식</div><div class="op-setting-hint">자동 삽입 실패 시 클립보드 폴백</div></div>
-          <Seg value={settings.insertionMode} options={[['auto', '자동 삽입'], ['clipboard-fallback', '클립보드 폴백']]} onChange={(v) => patch({ insertionMode: v })} />
+          <div class="op-setting-info"><div class="op-setting-label">{t('opt.insertMode')}</div><div class="op-setting-hint">{t('opt.insertMode.hint')}</div></div>
+          <Seg value={settings.insertionMode} options={[['auto', t('opt.insertMode.auto')], ['clipboard-fallback', t('opt.insertMode.clip')]]} onChange={(v) => patch({ insertionMode: v })} />
         </div>
-        <Toggle label="마지막 변수값 기억" hint="같은 프롬프트 재사용 시 직전 입력값 자동 채움" checked={settings.rememberVariableValues} onChange={(v) => patch({ rememberVariableValues: v })} />
+        <Toggle label={t('opt.remember')} hint={t('opt.remember.hint')} checked={settings.rememberVariableValues} onChange={(v) => patch({ rememberVariableValues: v })} />
         <div class="op-setting">
-          <div class="op-setting-info"><div class="op-setting-label">기본 폴더</div><div class="op-setting-hint">저장 시 폴더 미선택이면 여기에 저장</div></div>
+          <div class="op-setting-info"><div class="op-setting-label">{t('opt.defaultFolder')}</div><div class="op-setting-hint">{t('opt.defaultFolder.hint')}</div></div>
           <select class="op-select" value={settings.defaultFolderId ?? ''} onChange={(e) => patch({ defaultFolderId: (e.target as HTMLSelectElement).value || null })}>
-            <option value="">분류 없음</option>
+            <option value="">{t('common.uncategorized')}</option>
             {flattenTree(folders).map((f) => <option key={f.id} value={f.id}>{indent(f.depth)}{f.name}</option>)}
           </select>
         </div>
@@ -145,36 +146,36 @@ function Folders({ folders, onChange }: { folders: Folder[]; onChange: (f: Folde
 
   return (
     <>
-      <h2 class="op-panel-title">폴더</h2>
-      <p class="op-panel-desc">계층 구조로 프롬프트를 정리하세요 (무제한 깊이)</p>
+      <h2 class="op-panel-title">{t('opt.nav.folders')}</h2>
+      <p class="op-panel-desc">{t('opt.folders.desc')}</p>
 
       <div class="op-card" style="padding:16px;margin-bottom:16px">
         <div style="display:flex;gap:8px;align-items:center">
-          <input class="op-input" style="flex:1" value={name} placeholder="새 폴더 이름" onInput={(e) => setName((e.target as HTMLInputElement).value)} onKeyDown={(e) => e.key === 'Enter' && add()} />
+          <input class="op-input" style="flex:1" value={name} placeholder={t('opt.folders.namePlaceholder')} onInput={(e) => setName((e.target as HTMLInputElement).value)} onKeyDown={(e) => e.key === 'Enter' && add()} />
           <select class="op-select" value={parentId ?? ''} onChange={(e) => setParentId((e.target as HTMLSelectElement).value || null)}>
-            <option value="">최상위</option>
+            <option value="">{t('common.topLevel')}</option>
             {flat.map((f) => <option key={f.id} value={f.id}>{indent(f.depth)}{f.name}</option>)}
           </select>
-          <button class="op-btn primary sm" onClick={add}>추가</button>
+          <button class="op-btn primary sm" onClick={add}>{t('common.add')}</button>
         </div>
-        <div style="font-size:11px;color:var(--text-muted);margin-top:8px">상위 폴더를 선택하면 하위 폴더로 만들어져요</div>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:8px">{t('opt.folders.parentHint')}</div>
       </div>
 
       <div class="op-card">
         <div class="op-list">
-          {flat.length === 0 && <div class="op-row"><span class="op-row-title" style="color:var(--text-muted)">폴더가 없어요</span></div>}
+          {flat.length === 0 && <div class="op-row"><span class="op-row-title" style="color:var(--text-muted)">{t('opt.folders.empty')}</span></div>}
           {flat.map((f) => (
             <div class="op-row" key={f.id}>
               <span style={`width:${f.depth * 16}px;flex-shrink:0`} />
               {f.depth > 0 && <span style="color:var(--text-disabled);flex-shrink:0">└</span>}
               <input class="op-input" style="flex:1" value={f.name} onChange={(e) => rename(f.id, (e.target as HTMLInputElement).value)} />
               <select class="op-select" style="min-width:120px" value={f.parentId ?? ''} onChange={(e) => reparent(f.id, (e.target as HTMLSelectElement).value || null)}>
-                <option value="">최상위</option>
+                <option value="">{t('common.topLevel')}</option>
                 {flat.filter((o) => o.id !== f.id && !wouldCycle(folders, f.id, o.id)).map((o) => (
                   <option key={o.id} value={o.id}>{indent(o.depth)}{o.name}</option>
                 ))}
               </select>
-              <button class="op-btn secondary sm" onClick={() => remove(f.id)}>삭제</button>
+              <button class="op-btn secondary sm" onClick={() => remove(f.id)}>{t('common.delete')}</button>
             </div>
           ))}
         </div>
@@ -218,62 +219,62 @@ function PromptsManager({
   function moveSelected(folderId: string | null) {
     const now = Date.now();
     onChange(prompts.map((p) => (selected.has(p.id) ? { ...p, folderId, updatedAt: now } : p)));
-    flash(`${selected.size}개를 옮겼어요`);
+    flash(t('opt.prompts.toast.moved', [selected.size]));
     setSelected(new Set());
   }
   function addTagToSelected() {
     const tag = tagToAdd.trim().replace(/^#/, '');
     if (!tag) return;
     onChange(prompts.map((p) => (selected.has(p.id) && !p.tags.includes(tag) ? { ...p, tags: [...p.tags, tag], updatedAt: Date.now() } : p)));
-    flash(`#${tag} 태그를 추가했어요`);
+    flash(t('opt.prompts.toast.tagAdded', [tag]));
     setTagToAdd('');
   }
   function deleteSelected() {
-    if (!confirm(`선택한 ${selected.size}개 프롬프트를 삭제할까요? 되돌릴 수 없어요.`)) return;
+    if (!confirm(t('opt.prompts.deleteConfirm', [selected.size]))) return;
     onChange(prompts.filter((p) => !selected.has(p.id)));
-    flash(`${selected.size}개를 삭제했어요`);
+    flash(t('opt.prompts.toast.deleted', [selected.size]));
     setSelected(new Set());
   }
 
   return (
     <>
-      <h2 class="op-panel-title">프롬프트</h2>
-      <p class="op-panel-desc">전체 프롬프트를 검색하고 다중 선택해 한 번에 정리하세요</p>
+      <h2 class="op-panel-title">{t('opt.nav.prompts')}</h2>
+      <p class="op-panel-desc">{t('opt.prompts.desc')}</p>
 
       <div style="display:flex;gap:8px;margin-bottom:16px;align-items:center">
-        <input class="op-input" style="flex:1" placeholder="제목·본문·태그 검색" value={query} onInput={(e) => setQuery((e.target as HTMLInputElement).value)} />
+        <input class="op-input" style="flex:1" placeholder={t('opt.prompts.search')} value={query} onInput={(e) => setQuery((e.target as HTMLInputElement).value)} />
         <label style="display:flex;align-items:center;gap:6px;font-size:var(--text-sm);color:var(--text-secondary);cursor:pointer;white-space:nowrap">
-          <input type="checkbox" checked={allVisibleSelected} onChange={toggleAll} /> 전체 선택
+          <input type="checkbox" checked={allVisibleSelected} onChange={toggleAll} /> {t('opt.prompts.selectAll')}
         </label>
       </div>
 
       {selected.size > 0 && (
         <div class="op-banner info" style="gap:10px;flex-wrap:wrap">
-          <span style="font-weight:var(--weight-semi)">{selected.size}개 선택됨</span>
+          <span style="font-weight:var(--weight-semi)">{t('opt.prompts.selected', [selected.size])}</span>
           <div style="display:flex;gap:8px;margin-left:auto;align-items:center;flex-wrap:wrap">
             <select class="op-select" value="__" onChange={(e) => { const v = (e.target as HTMLSelectElement).value; if (v !== '__') moveSelected(v === '' ? null : v); }}>
-              <option value="__">폴더로 이동…</option>
-              <option value="">분류 없음</option>
+              <option value="__">{t('opt.prompts.moveTo')}</option>
+              <option value="">{t('common.uncategorized')}</option>
               {flattenTree(folders).map((f) => <option key={f.id} value={f.id}>{indent(f.depth)}{f.name}</option>)}
             </select>
-            <input class="op-input" style="width:120px" placeholder="태그 추가" value={tagToAdd} onInput={(e) => setTagToAdd((e.target as HTMLInputElement).value)} onKeyDown={(e) => e.key === 'Enter' && addTagToSelected()} />
-            <button class="op-btn secondary sm" onClick={addTagToSelected}>추가</button>
-            <button class="op-btn danger sm" onClick={deleteSelected}>삭제</button>
+            <input class="op-input" style="width:120px" placeholder={t('opt.prompts.addTag')} value={tagToAdd} onInput={(e) => setTagToAdd((e.target as HTMLInputElement).value)} onKeyDown={(e) => e.key === 'Enter' && addTagToSelected()} />
+            <button class="op-btn secondary sm" onClick={addTagToSelected}>{t('common.add')}</button>
+            <button class="op-btn danger sm" onClick={deleteSelected}>{t('common.delete')}</button>
           </div>
         </div>
       )}
 
       <div class="op-card">
         <div class="op-list">
-          {visible.length === 0 && <div class="op-row"><span class="op-row-title" style="color:var(--text-muted)">{query ? '검색 결과가 없어요' : '프롬프트가 없어요'}</span></div>}
+          {visible.length === 0 && <div class="op-row"><span class="op-row-title" style="color:var(--text-muted)">{query ? t('opt.prompts.emptySearch') : t('opt.prompts.emptyNone')}</span></div>}
           {visible.map((p) => (
             <label class="op-row" key={p.id} style="cursor:pointer">
               <input type="checkbox" checked={selected.has(p.id)} onChange={() => toggle(p.id)} />
               <div style="flex:1;min-width:0">
-                <div class="op-row-title" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{p.title || '(제목 없음)'}</div>
-                <div class="op-row-sub">{folderPath(folders, p.folderId)}{p.tags.length ? ' · ' + p.tags.map((t) => '#' + t).join(' ') : ''}</div>
+                <div class="op-row-title" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{p.title || t('opt.prompts.untitled')}</div>
+                <div class="op-row-sub">{folderPath(folders, p.folderId)}{p.tags.length ? ' · ' + p.tags.map((tg) => '#' + tg).join(' ') : ''}</div>
               </div>
-              {p.variables.length > 0 && <span class="op-row-sub" style="flex-shrink:0;color:var(--text-accent)">{p.variables.length} vars</span>}
+              {p.variables.length > 0 && <span class="op-row-sub" style="flex-shrink:0;color:var(--text-accent)">{t('common.varsCount', [p.variables.length])}</span>}
             </label>
           ))}
         </div>
@@ -294,11 +295,11 @@ function Tags({ prompts, onChange }: { prompts: Prompt[]; onChange: (p: Prompt[]
   }
   return (
     <>
-      <h2 class="op-panel-title">태그</h2>
-      <p class="op-panel-desc">태그 삭제는 전체 프롬프트에 일괄 반영돼요</p>
+      <h2 class="op-panel-title">{t('opt.nav.tags')}</h2>
+      <p class="op-panel-desc">{t('opt.tags.desc')}</p>
       <div class="op-card">
         <div class="op-tagwrap">
-          {counts.length === 0 && <span style="color:var(--text-muted);font-size:var(--text-sm)">태그가 없어요</span>}
+          {counts.length === 0 && <span style="color:var(--text-muted);font-size:var(--text-sm)">{t('opt.tags.empty')}</span>}
           {counts.map(([tag, cnt]) => (
             <span class="op-tagchip" key={tag}>
               <span class="hash">#</span>{tag}<span class="cnt">{cnt}</span>
@@ -316,65 +317,65 @@ function Backup({ settings, patch, flash, onRestore }: { settings: Settings; pat
   const [snapshots, setSnaps] = useState<Snapshot[]>([]);
   useEffect(() => { getSnapshots().then(setSnaps); }, []);
 
-  async function doExport() { downloadBackup(await buildBackup()); flash('JSON으로 내보냈어요'); }
+  async function doExport() { downloadBackup(await buildBackup()); flash(t('opt.backup.toast.exported')); }
   async function doImport(e: Event) {
     const file = (e.target as HTMLInputElement).files?.[0];
     if (!file) return;
     try {
       const data = JSON.parse(await file.text());
       const res = await importBackup(data, 'duplicate');
-      flash(`가져오기 완료: +${res.added} / 덮어쓰기 ${res.overwritten} / 건너뜀 ${res.skipped}`);
+      flash(t('opt.backup.toast.imported', [res.added, res.overwritten, res.skipped]));
       onRestore();
-    } catch (err) { flash('가져오기 실패: ' + String(err)); }
+    } catch (err) { flash(t('opt.backup.toast.importFail', [String(err)])); }
   }
   async function restore(s: Snapshot) {
     await restoreSnapshot(s.createdAt);
-    flash('스냅샷을 복원했어요');
+    flash(t('opt.backup.toast.restored'));
     onRestore();
   }
 
   return (
     <>
-      <h2 class="op-panel-title">백업</h2>
-      <p class="op-panel-desc">내부 스냅샷은 항상 자동, 외부 백업은 선택 사항</p>
+      <h2 class="op-panel-title">{t('opt.nav.backup')}</h2>
+      <p class="op-panel-desc">{t('opt.backup.desc')}</p>
       <div class="op-card">
-        <Toggle label="자동 백업" hint="켜면 다운로드 폴더에 주기적으로 JSON 저장" checked={settings.backupFrequency !== 'off'} onChange={(v) => patch({ backupFrequency: v ? 'weekly' : 'off' })} />
+        <Toggle label={t('opt.backup.auto')} hint={t('opt.backup.autoHint')} checked={settings.backupFrequency !== 'off'} onChange={(v) => patch({ backupFrequency: v ? 'weekly' : 'off' })} />
         <div class="op-setting">
-          <div class="op-setting-info"><div class="op-setting-label">백업 주기</div><div class="op-setting-hint">자동 백업이 켜진 경우에만 적용</div></div>
+          <div class="op-setting-info"><div class="op-setting-label">{t('opt.backup.freq')}</div><div class="op-setting-hint">{t('opt.backup.freqHint')}</div></div>
           <select class="op-select" value={settings.backupFrequency} disabled={settings.backupFrequency === 'off'} onChange={(e) => patch({ backupFrequency: (e.target as HTMLSelectElement).value as BackupFrequency })}>
-            <option value="daily">매일</option><option value="weekly">매주</option><option value="monthly">매월</option>
+            <option value="daily">{t('opt.freq.daily')}</option><option value="weekly">{t('opt.freq.weekly')}</option><option value="monthly">{t('opt.freq.monthly')}</option>
           </select>
         </div>
         <div class="op-setting">
-          <div class="op-setting-info"><div class="op-setting-label">지금 다운로드 백업</div><div class="op-setting-hint">자동 백업과 동일 경로로 즉시 다운로드 폴더(snapprompt/)에 저장</div></div>
+          <div class="op-setting-info"><div class="op-setting-label">{t('opt.backup.now')}</div><div class="op-setting-hint">{t('opt.backup.nowHint')}</div></div>
           <button class="op-btn secondary sm" onClick={async () => {
             const res = await sendToBackground({ type: 'BACKUP_NOW' });
-            flash(res.ok ? '다운로드 폴더에 백업했어요' : (res.error ?? '백업 실패'));
-          }}>지금 백업</button>
+            flash(res.ok ? t('opt.backup.toast.now') : (res.error ?? t('opt.backup.toast.nowFail')));
+          }}>{t('opt.backup.nowBtn')}</button>
         </div>
       </div>
 
       <div class="op-card" style="margin-top:16px">
         <div class="op-setting">
-          <div class="op-setting-info"><div class="op-setting-label">수동 백업</div><div class="op-setting-hint">전체 데이터를 JSON으로 내보내거나 가져오기</div></div>
+          <div class="op-setting-info"><div class="op-setting-label">{t('opt.backup.manual')}</div><div class="op-setting-hint">{t('opt.backup.manualHint')}</div></div>
           <div style="display:flex;gap:8px">
-            <button class="op-btn secondary sm" onClick={doExport}>내보내기</button>
-            <label class="op-btn secondary sm">가져오기<input type="file" accept="application/json" style="display:none" onChange={doImport} /></label>
+            <button class="op-btn secondary sm" onClick={doExport}>{t('opt.backup.export')}</button>
+            <label class="op-btn secondary sm">{t('opt.backup.import')}<input type="file" accept="application/json" style="display:none" onChange={doImport} /></label>
           </div>
         </div>
       </div>
 
       <div class="op-card" style="margin-top:16px">
         <div class="op-list">
-          <div class="op-row"><span class="op-row-title">내부 스냅샷 (자동)</span></div>
-          {snapshots.length === 0 && <div class="op-row"><span class="op-row-sub">아직 스냅샷이 없어요</span></div>}
+          <div class="op-row"><span class="op-row-title">{t('opt.backup.snapshots')}</span></div>
+          {snapshots.length === 0 && <div class="op-row"><span class="op-row-sub">{t('opt.backup.snapshotsEmpty')}</span></div>}
           {snapshots.map((s) => (
             <div class="op-row" key={s.createdAt}>
               <div style="flex:1">
-                <div class="op-row-title">{new Date(s.createdAt).toLocaleString('ko-KR')}</div>
+                <div class="op-row-title">{new Date(s.createdAt).toLocaleString()}</div>
                 <div class="op-row-sub">{s.prompts.length} prompts · {s.folders.length} folders</div>
               </div>
-              <button class="op-btn secondary sm" onClick={() => restore(s)}>복원</button>
+              <button class="op-btn secondary sm" onClick={() => restore(s)}>{t('opt.backup.restore')}</button>
             </div>
           ))}
         </div>
@@ -387,15 +388,15 @@ function Backup({ settings, patch, flash, onRestore }: { settings: Settings; pat
 function Shortcuts() {
   return (
     <>
-      <h2 class="op-panel-title">단축키</h2>
-      <p class="op-panel-desc">변경은 Chrome 단축키 설정에서</p>
+      <h2 class="op-panel-title">{t('opt.nav.shortcuts')}</h2>
+      <p class="op-panel-desc">{t('opt.shortcuts.desc')}</p>
       <div class="op-card">
-        <div class="op-setting"><div class="op-setting-info"><div class="op-setting-label">프롬프트 피커 열기</div><div class="op-setting-hint">입력창에서 검색 가능한 피커 띄우기</div></div></div>
-        <div class="op-setting"><div class="op-setting-info"><div class="op-setting-label">선택 텍스트 저장</div><div class="op-setting-hint">드래그한 텍스트로 저장 모달 열기</div></div></div>
+        <div class="op-setting"><div class="op-setting-info"><div class="op-setting-label">{t('opt.shortcuts.picker')}</div><div class="op-setting-hint">{t('opt.shortcuts.pickerHint')}</div></div></div>
+        <div class="op-setting"><div class="op-setting-info"><div class="op-setting-label">{t('opt.shortcuts.save')}</div><div class="op-setting-hint">{t('opt.shortcuts.saveHint')}</div></div></div>
       </div>
       <div class="op-banner info" style="margin-top:16px">
-        Chrome 정책상 단축키는 확장 프로그램 설정 페이지에서만 변경할 수 있어요.
-        <button class="op-btn primary sm" style="margin-left:auto" onClick={() => chrome.tabs.create({ url: 'chrome://extensions/shortcuts' })}>단축키 설정 열기</button>
+        {t('opt.shortcuts.banner')}
+        <button class="op-btn primary sm" style="margin-left:auto" onClick={() => chrome.tabs.create({ url: 'chrome://extensions/shortcuts' })}>{t('opt.shortcuts.open')}</button>
       </div>
     </>
   );
@@ -405,27 +406,27 @@ function Shortcuts() {
 function Data({ prompts, folders, flash, onCleared }: { prompts: Prompt[]; folders: Folder[]; flash: (m: string) => void; onCleared: () => void }) {
   const bytes = useMemo(() => new Blob([JSON.stringify({ prompts, folders })]).size, [prompts, folders]);
   async function clearAll() {
-    if (!confirm('모든 프롬프트, 폴더, 설정을 영구 삭제할까요? 되돌릴 수 없어요.')) return;
+    if (!confirm(t('opt.data.clearConfirm'))) return;
     await Promise.all([setPrompts([]), setFolders([])]);
-    flash('모든 데이터를 삭제했어요');
+    flash(t('opt.data.toast.cleared'));
     onCleared();
   }
   return (
     <>
-      <h2 class="op-panel-title">데이터</h2>
-      <p class="op-panel-desc">저장 용량 현황 및 데이터 관리</p>
+      <h2 class="op-panel-title">{t('opt.nav.data')}</h2>
+      <p class="op-panel-desc">{t('opt.data.desc')}</p>
       <div class="op-card" style="padding:20px">
         <div style="display:flex;justify-content:space-between;margin-bottom:12px">
-          <div class="op-setting-label">저장 용량</div>
+          <div class="op-setting-label">{t('opt.data.usage')}</div>
           <div class="op-row-sub">{(bytes / 1024).toFixed(1)} KB</div>
         </div>
         <div class="op-bar"><div style={`width:${Math.min(100, bytes / 50000 * 100)}%`} /></div>
-        <div style="font-size:11px;color:var(--text-muted);margin-top:8px">unlimitedStorage 권한으로 실질 제한 없음 · {prompts.length}개 프롬프트</div>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:8px">{t('opt.data.usageHint', [prompts.length])}</div>
       </div>
       <div class="op-card op-danger-zone" style="margin-top:16px">
         <div class="op-setting">
-          <div class="op-setting-info"><div class="op-setting-label" style="color:var(--danger-700)">모든 데이터 삭제</div><div class="op-setting-hint">프롬프트·폴더·설정을 영구 삭제. 되돌릴 수 없어요.</div></div>
-          <button class="op-btn danger sm" onClick={clearAll}>전체 삭제</button>
+          <div class="op-setting-info"><div class="op-setting-label" style="color:var(--danger-700)">{t('opt.data.clear')}</div><div class="op-setting-hint">{t('opt.data.clearHint')}</div></div>
+          <button class="op-btn danger sm" onClick={clearAll}>{t('opt.data.clearBtn')}</button>
         </div>
       </div>
     </>
@@ -437,18 +438,18 @@ function About({ prompts, folders }: { prompts: Prompt[]; folders: Folder[] }) {
   const totalUse = prompts.reduce((a, p) => a + p.useCount, 0);
   return (
     <>
-      <h2 class="op-panel-title">정보</h2>
-      <p class="op-panel-desc">SnapPrompt에 대하여</p>
+      <h2 class="op-panel-title">{t('opt.nav.about')}</h2>
+      <p class="op-panel-desc">{t('opt.about.desc')}</p>
       <div class="op-card" style="padding:40px;text-align:center">
         <div style="width:64px;height:64px;border-radius:16px;background:var(--grad-primary);color:#fff;display:grid;place-items:center;margin:0 auto 16px"><Mark big /></div>
         <div style="font-size:var(--text-2xl);font-weight:700">SnapPrompt</div>
         <div style="color:var(--text-muted);font-size:var(--text-sm)">v1.0.0</div>
-        <div style="color:var(--text-secondary);font-size:var(--text-sm);margin-top:12px">웹서핑 중 발견한 LLM 프롬프트를 빠르게 저장하고 꺼내 쓰세요.</div>
+        <div style="color:var(--text-secondary);font-size:var(--text-sm);margin-top:12px">{t('opt.about.tagline')}</div>
       </div>
       <div class="op-card" style="margin-top:16px;display:grid;grid-template-columns:repeat(3,1fr);gap:12px;padding:20px">
-        <Stat v={prompts.length} l="프롬프트" />
-        <Stat v={folders.length} l="폴더" />
-        <Stat v={totalUse} l="총 사용" />
+        <Stat v={prompts.length} l={t('opt.about.statPrompts')} />
+        <Stat v={folders.length} l={t('opt.about.statFolders')} />
+        <Stat v={totalUse} l={t('opt.about.statUses')} />
       </div>
     </>
   );

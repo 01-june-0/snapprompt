@@ -8,8 +8,12 @@ import overlayCss from './overlay.css?inline';
 import { ContentApp, openPicker, openSave, insertPromptById, floatingEnabled, floatingTarget } from './ui';
 import { onMessage } from '@shared/messaging';
 import { applyTheme } from '@shared/theme';
+import { setLocale } from '@shared/i18n';
 import { getSettings, subscribe } from '@shared/store';
 import { startFocusTracking, isEditable } from './insertion';
+
+// resolve UI language from settings (and keep it in sync)
+getSettings().then((s) => setLocale(s.language));
 
 // Track the page's last-focused editable from the start so the popup can
 // insert into it even after the popup steals focus. Cheap, runs on every page.
@@ -83,6 +87,7 @@ function positionFloat() {
 getSettings().then((s) => (floatingEnabled.value = s.floatingButton));
 subscribe(() => getSettings().then((s) => {
   floatingEnabled.value = s.floatingButton;
+  setLocale(s.language);
   if (!s.floatingButton) { floatEl = null; floatingTarget.value = null; }
 }));
 

@@ -7,6 +7,7 @@ import { search, sortPrompts } from '@shared/search';
 import { extractVariables, substitute, hasVariables } from '@shared/variables';
 import { sendToActiveTab, sendToBackground } from '@shared/messaging';
 import { flattenTree, selfAndDescendants, countInFolder } from '@shared/folders';
+import { t } from '@shared/i18n';
 import { uuid } from '@shared/id';
 
 type Screen = { kind: 'list' } | { kind: 'edit'; prompt: Prompt; isNew: boolean };
@@ -55,9 +56,9 @@ export function App() {
   }, [prompts, folders, query, favOnly, sort, folderFilter]);
 
   const activeFolderLabel = useMemo(() => {
-    if (folderFilter === 'all') return '전체 폴더';
-    if (folderFilter === 'none') return '분류 없음';
-    return folders.find((f) => f.id === folderFilter)?.name ?? '전체 폴더';
+    if (folderFilter === 'all') return t('popup.allFolders');
+    if (folderFilter === 'none') return t('common.uncategorized');
+    return folders.find((f) => f.id === folderFilter)?.name ?? t('popup.allFolders');
   }, [folderFilter, folders]);
 
   async function doCopy(p: Prompt) {
@@ -66,7 +67,7 @@ export function App() {
       : p.body;
     await navigator.clipboard.writeText(text);
     await sendToBackground({ type: 'PROMPT_USED', promptId: p.id });
-    flash('복사했어요');
+    flash(t('popup.toast.copied'));
   }
   async function doInsert(p: Prompt) {
     // Ask the content script to insert into the page's last-focused editable.
@@ -75,13 +76,13 @@ export function App() {
     const res = await sendToActiveTab({ type: 'INSERT_PROMPT', promptId: p.id });
     if (!res.ok) {
       await doCopy(p);
-      flash('이 페이지엔 삽입할 수 없어 복사했어요');
+      flash(t('popup.toast.insertFallback'));
       return;
     }
     // Toolbar popup is transient → close after insert. Side panel / detached
     // window stay open so the user can keep inserting multiple prompts.
     if (VIEW_MODE === null) window.close();
-    else flash('삽입했어요');
+    else flash(t('popup.toast.inserted'));
   }
   async function toggleFav(p: Prompt) {
     await upsertPrompt({ ...p, favorite: !p.favorite, updatedAt: Date.now() });
@@ -105,7 +106,7 @@ export function App() {
     const now = Date.now();
     await persistPrompts(all.map((p) => (idSet.has(p.id) ? { ...p, folderId, updatedAt: now } : p)));
     setSelected(new Set());
-    flash(`${ids.length}개를 ${folderId ? '폴더로' : '분류 없음으로'} 옮겼어요`);
+    flash(folderId ? t('popup.toast.movedFolder', [ids.length]) : t('popup.toast.movedNone', [ids.length]));
   }
 
   function dragIdsFor(p: Prompt): string[] {
@@ -130,7 +131,7 @@ export function App() {
       await chrome.sidePanel.open({ windowId: win.id });
       window.close();
     } catch {
-      flash('사이드 패널을 열 수 없어요 (Chrome 116+ 필요)');
+      flash(t('popup.toast.panelFail'));
     }
   }
   function onFolderDrop(e: DragEvent, folderId: string | null) {
@@ -147,8 +148,8 @@ export function App() {
         isNew={screen.isNew}
         folders={folders}
         onCancel={() => setScreen({ kind: 'list' })}
-        onSaved={() => { setScreen({ kind: 'list' }); flash('저장했어요'); }}
-        onDeleted={() => { setScreen({ kind: 'list' }); flash('삭제했어요'); }}
+        onSaved={() => { setScreen({ kind: 'list' }); flash(t('popup.toast.saved')); }}
+        onDeleted={() => { setScreen({ kind: 'list' }); flash(t('popup.toast.deleted')); }}
       />
     );
   }
@@ -159,43 +160,43 @@ export function App() {
         <div class="pp-mark"><Mark /></div>
         <div class="pp-name">SnapPrompt</div>
         <div class="pp-header-actions">
-          <button class="pp-icon-btn" title="새 프롬프트" onClick={() => setScreen({ kind: 'edit', prompt: blankPrompt(), isNew: true })}><PlusIcon /></button>
+          <button class="pp-icon-btn" title={t('common.newPrompt')} onClick={() => setScreen({ kind: 'edit', prompt: blankPrompt(), isNew: true })}><PlusIcon /></button>
           {VIEW_MODE === null && (
             <>
-              <button class="pp-icon-btn" title="창으로 열기" onClick={() => void openWindow()}><WindowIcon /></button>
-              <button class="pp-icon-btn" title="사이드 패널로 열기" onClick={() => void openSidePanel()}><PanelIcon /></button>
+              <button class="pp-icon-btn" title={t('popup.openWindow')} onClick={() => void openWindow()}><WindowIcon /></button>
+              <button class="pp-icon-btn" title={t('popup.openPanel')} onClick={() => void openSidePanel()}><PanelIcon /></button>
             </>
           )}
-          <button class="pp-icon-btn" title="설정" onClick={() => sendToBackground({ type: 'OPEN_OPTIONS' })}><GearIcon /></button>
+          <button class="pp-icon-btn" title={t('common.settings')} onClick={() => sendToBackground({ type: 'OPEN_OPTIONS' })}><GearIcon /></button>
         </div>
       </header>
 
       <div class="pp-toolbar">
         <div class="pp-search">
           <SearchIcon />
-          <input value={query} placeholder="프롬프트 검색..." onInput={(e) => setQuery((e.target as HTMLInputElement).value)} />
+          <input value={query} placeholder={t('popup.search')} onInput={(e) => setQuery((e.target as HTMLInputElement).value)} />
         </div>
         <div class="pp-chips">
-          <button class={`pp-chip${showSidebar || folderFilter !== 'all' ? ' active' : ''}`} onClick={() => setShowSidebar((v) => !v)} title="폴더">
+          <button class={`pp-chip${showSidebar || folderFilter !== 'all' ? ' active' : ''}`} onClick={() => setShowSidebar((v) => !v)} title={t('common.folder')}>
             <FolderIcon size={11} /> {activeFolderLabel}
             <ChevDown />
           </button>
           <button class={`pp-chip${favOnly ? ' active' : ''}`} onClick={() => setFavOnly((v) => !v)}>
-            <StarIcon size={11} /> 즐겨찾기
+            <StarIcon size={11} /> {t('popup.favorites')}
           </button>
           <select class="pp-sort" value={sort} onChange={(e) => setSort((e.target as HTMLSelectElement).value as SortMode)}>
-            <option value="recent-used">최근 사용</option>
-            <option value="recent-saved">최근 저장</option>
-            <option value="most-used">자주 사용</option>
-            <option value="name">이름순</option>
+            <option value="recent-used">{t('popup.sort.recentUsed')}</option>
+            <option value="recent-saved">{t('popup.sort.recentSaved')}</option>
+            <option value="most-used">{t('popup.sort.mostUsed')}</option>
+            <option value="name">{t('popup.sort.name')}</option>
           </select>
         </div>
       </div>
 
       {selected.size > 0 && (
         <div class="pp-selbar">
-          <span>{selected.size}개 선택됨 · 폴더로 드래그하세요</span>
-          <button onClick={() => setSelected(new Set())}>해제</button>
+          <span>{t('popup.selected', [selected.size])}</span>
+          <button onClick={() => setSelected(new Set())}>{t('popup.clear')}</button>
         </div>
       )}
 
@@ -203,7 +204,7 @@ export function App() {
         {showSidebar && (
           <aside class="pp-sidebar">
             <button class={`pp-folder${folderFilter === 'all' ? ' active' : ''}`} onClick={() => setFolderFilter('all')}>
-              <FolderIcon size={12} /> 전체 <span class="pp-fcount">{prompts.length}</span>
+              <FolderIcon size={12} /> {t('popup.all')} <span class="pp-fcount">{prompts.length}</span>
             </button>
             {flattenTree(folders).map((f) => (
               <button
@@ -226,7 +227,7 @@ export function App() {
               onDragLeave={() => setDropTarget((t) => (t === 'none' ? null : t))}
               onDrop={(e) => onFolderDrop(e, null)}
             >
-              <DashIcon /> 분류 없음 <span class="pp-fcount">{prompts.filter((p) => !p.folderId).length}</span>
+              <DashIcon /> {t('common.uncategorized')} <span class="pp-fcount">{prompts.filter((p) => !p.folderId).length}</span>
             </button>
           </aside>
         )}
@@ -235,8 +236,8 @@ export function App() {
           {visible.length === 0 ? (
             <div class="pp-empty">
               <div class="ill"><SearchIcon size={28} /></div>
-              <h3>{query ? '검색 결과가 없어요' : folderFilter !== 'all' ? '이 폴더가 비어 있어요' : '아직 저장된 프롬프트가 없어요'}</h3>
-              <p>{query ? '다른 키워드로 검색해보세요.' : '웹에서 텍스트를 선택해 우클릭하거나, 아래 버튼으로 추가하세요.'}</p>
+              <h3>{query ? t('popup.empty.search') : folderFilter !== 'all' ? t('popup.empty.folder') : t('popup.empty.none')}</h3>
+              <p>{query ? t('popup.empty.hintSearch') : t('popup.empty.hintNone')}</p>
             </div>
           ) : (
             visible.map((p) => (
@@ -251,7 +252,7 @@ export function App() {
                     e.dataTransfer.effectAllowed = 'move';
                     // small custom drag image so the full-size card doesn't cover the folder tree
                     const ghost = document.createElement('div');
-                    ghost.textContent = ids.length > 1 ? `${ids.length}개 이동` : p.title;
+                    ghost.textContent = ids.length > 1 ? t('popup.dragMove', [ids.length]) : p.title;
                     ghost.className = 'pp-drag-ghost';
                     document.body.appendChild(ghost);
                     e.dataTransfer.setDragImage(ghost, 12, 12);
@@ -262,7 +263,7 @@ export function App() {
                 onClick={() => setScreen({ kind: 'edit', prompt: p, isNew: false })}
               >
                 <div class="pp-card-head">
-                  <button class={`pp-check${selected.has(p.id) ? ' on' : ''}`} title="선택" onClick={(e) => { e.stopPropagation(); toggleSelect(p.id); }}>
+                  <button class={`pp-check${selected.has(p.id) ? ' on' : ''}`} title={t('popup.select')} onClick={(e) => { e.stopPropagation(); toggleSelect(p.id); }}>
                     {selected.has(p.id) && <CheckIcon />}
                   </button>
                   <button class={`pp-fav${p.favorite ? '' : ' off'}`} onClick={(e) => { e.stopPropagation(); void toggleFav(p); }}>
@@ -273,10 +274,10 @@ export function App() {
                 </div>
                 <div class="pp-card-preview">{firstLine(p.body)}</div>
                 <div class="pp-card-meta">
-                  {p.tags.slice(0, 3).map((t) => <span class="pp-tag" key={t}>{t}</span>)}
+                  {p.tags.slice(0, 3).map((tag) => <span class="pp-tag" key={tag}>{tag}</span>)}
                   <div class="pp-card-actions">
-                    <button class="pp-action" onClick={(e) => { e.stopPropagation(); void doCopy(p); }}>복사</button>
-                    <button class="pp-action primary" onClick={(e) => { e.stopPropagation(); void doInsert(p); }}>삽입</button>
+                    <button class="pp-action" onClick={(e) => { e.stopPropagation(); void doCopy(p); }}>{t('common.copy')}</button>
+                    <button class="pp-action primary" onClick={(e) => { e.stopPropagation(); void doInsert(p); }}>{t('common.insert')}</button>
                   </div>
                 </div>
               </div>
@@ -287,9 +288,9 @@ export function App() {
 
       <footer class="pp-footer">
         <button class="pp-new" onClick={() => setScreen({ kind: 'edit', prompt: blankPrompt(), isNew: true })}>
-          <PlusIcon /> 새 프롬프트
+          <PlusIcon /> {t('common.newPrompt')}
         </button>
-        <span class="pp-count">{prompts.length}개</span>
+        <span class="pp-count">{t('popup.count', [prompts.length])}</span>
       </footer>
 
       {toast && <div class="pp-toast"><span class="dot"><CheckIcon /></span>{toast}</div>}
@@ -314,7 +315,7 @@ function Editor({
     const now = Date.now();
     await upsertPrompt({
       ...prompt,
-      title: title.trim() || firstLine(body) || '새 프롬프트',
+      title: title.trim() || firstLine(body) || t('common.newPrompt'),
       body,
       folderId,
       tags: tags.split(',').map((t) => t.trim().replace(/^#/, '')).filter(Boolean),
@@ -332,41 +333,41 @@ function Editor({
   return (
     <div class="pp">
       <header class="pp-header">
-        <button class="pp-back" onClick={onCancel}><ChevLeft /> 뒤로</button>
+        <button class="pp-back" onClick={onCancel}><ChevLeft /> {t('common.back')}</button>
         <div class="pp-header-actions">
-          {!isNew && <button class="pp-icon-btn" title="삭제" onClick={() => void remove()}><TrashIcon /></button>}
+          {!isNew && <button class="pp-icon-btn" title={t('common.delete')} onClick={() => void remove()}><TrashIcon /></button>}
         </div>
       </header>
       <div class="pp-detail">
         <div class="pp-field">
-          <label class="pp-flabel">제목</label>
-          <input class="pp-input" value={title} onInput={(e) => setTitle((e.target as HTMLInputElement).value)} placeholder="제목" />
+          <label class="pp-flabel">{t('common.title')}</label>
+          <input class="pp-input" value={title} onInput={(e) => setTitle((e.target as HTMLInputElement).value)} placeholder={t('common.title')} />
         </div>
         <div class="pp-field">
-          <label class="pp-flabel">본문</label>
-          <textarea class="pp-textarea" value={body} onInput={(e) => setBody((e.target as HTMLTextAreaElement).value)} placeholder="프롬프트 본문. 변수는 {{이름}} 또는 {{이름|기본값}}" />
+          <label class="pp-flabel">{t('common.body')}</label>
+          <textarea class="pp-textarea" value={body} onInput={(e) => setBody((e.target as HTMLTextAreaElement).value)} placeholder={t('popup.bodyPlaceholder')} />
         </div>
         {vars.length > 0 && (
           <div class="pp-field">
-            <label class="pp-flabel">감지된 변수 {vars.length}개</label>
+            <label class="pp-flabel">{t('common.detectedVars', [vars.length])}</label>
             <div>{vars.map((v) => <span class="pp-tag" key={v.name} style="margin:0 4px 4px 0">{`{{${v.name}}}`}</span>)}</div>
           </div>
         )}
         <div class="pp-field">
-          <label class="pp-flabel">폴더</label>
+          <label class="pp-flabel">{t('common.folder')}</label>
           <select class="pp-select" value={folderId ?? ''} onChange={(e) => setFolderId((e.target as HTMLSelectElement).value || null)}>
-            <option value="">분류 없음</option>
+            <option value="">{t('common.uncategorized')}</option>
             {flattenTree(folders).map((f) => <option key={f.id} value={f.id}>{'  '.repeat(f.depth)}{f.name}</option>)}
           </select>
         </div>
         <div class="pp-field">
-          <label class="pp-flabel">태그 <span style="font-weight:400;color:var(--text-muted)">쉼표로 구분</span></label>
-          <input class="pp-input" value={tags} placeholder="코딩, 리뷰" onInput={(e) => setTags((e.target as HTMLInputElement).value)} />
+          <label class="pp-flabel">{t('common.tags')} <span style="font-weight:400;color:var(--text-muted)">{t('common.commaSeparated')}</span></label>
+          <input class="pp-input" value={tags} placeholder={t('common.tagsPlaceholder')} onInput={(e) => setTags((e.target as HTMLInputElement).value)} />
         </div>
       </div>
       <div class="pp-detail-foot">
-        <button class="pp-btn ghost" onClick={onCancel}>취소</button>
-        <button class="pp-btn primary" onClick={() => void save()}>저장</button>
+        <button class="pp-btn ghost" onClick={onCancel}>{t('common.cancel')}</button>
+        <button class="pp-btn primary" onClick={() => void save()}>{t('common.save')}</button>
       </div>
     </div>
   );
