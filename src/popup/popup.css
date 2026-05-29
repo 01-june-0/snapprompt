@@ -1,6 +1,6 @@
 html, body { margin: 0; padding: 0; }
 body {
-  /* 1.5× wider than the original 400px. Chrome caps popup height at 600px. */
+  /* Toolbar popup: fixed size (Chrome caps height at 600px). 1.5× wider than 400. */
   width: 600px; height: 600px;
   font-family: var(--font-sans);
   font-size: var(--text-sm);
@@ -8,6 +8,12 @@ body {
   background: var(--bg-base);
   -webkit-font-smoothing: antialiased;
   overflow: hidden;
+}
+/* Detached window / side panel: fill the host container instead of a fixed box */
+html.mode-window body,
+html.mode-panel body {
+  width: 100%;
+  height: 100vh;
 }
 #app { width: 100%; height: 100%; }
 

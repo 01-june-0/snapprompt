@@ -12,6 +12,8 @@ import { uuid } from '@shared/id';
 type Screen = { kind: 'list' } | { kind: 'edit'; prompt: Prompt; isNew: boolean };
 type FolderFilter = 'all' | 'none' | string;
 
+const VIEW_MODE = new URLSearchParams(location.search).get('mode'); // null | 'window' | 'panel'
+
 export function App() {
   const [prompts, setPrompts] = useState<Prompt[]>([]);
   const [folders, setFolders] = useState<Folder[]>([]);
@@ -76,7 +78,10 @@ export function App() {
       flash('이 페이지엔 삽입할 수 없어 복사했어요');
       return;
     }
-    window.close();
+    // Toolbar popup is transient → close after insert. Side panel / detached
+    // window stay open so the user can keep inserting multiple prompts.
+    if (VIEW_MODE === null) window.close();
+    else flash('삽입했어요');
   }
   async function toggleFav(p: Prompt) {
     await upsertPrompt({ ...p, favorite: !p.favorite, updatedAt: Date.now() });
@@ -106,6 +111,28 @@ export function App() {
   function dragIdsFor(p: Prompt): string[] {
     return selected.has(p.id) && selected.size > 0 ? [...selected] : [p.id];
   }
+
+  /** Open the prompt UI in a freely-movable detached window. */
+  async function openWindow() {
+    await chrome.windows.create({
+      url: chrome.runtime.getURL('src/popup/index.html?mode=window'),
+      type: 'popup',
+      width: 480,
+      height: 640,
+    });
+    window.close();
+  }
+  /** Open the prompt UI docked in the side panel (Chrome 116+). */
+  async function openSidePanel() {
+    try {
+      const win = await chrome.windows.getCurrent();
+      // @ts-ignore — sidePanel.open is newer than some @types/chrome versions
+      await chrome.sidePanel.open({ windowId: win.id });
+      window.close();
+    } catch {
+      flash('사이드 패널을 열 수 없어요 (Chrome 116+ 필요)');
+    }
+  }
   function onFolderDrop(e: DragEvent, folderId: string | null) {
     e.preventDefault();
     const ids = (e.dataTransfer?.getData('text/plain') || '').split(',').filter(Boolean);
@@ -133,6 +160,12 @@ export function App() {
         <div class="pp-name">SnapPrompt</div>
         <div class="pp-header-actions">
           <button class="pp-icon-btn" title="새 프롬프트" onClick={() => setScreen({ kind: 'edit', prompt: blankPrompt(), isNew: true })}><PlusIcon /></button>
+          {VIEW_MODE === null && (
+            <>
+              <button class="pp-icon-btn" title="창으로 열기" onClick={() => void openWindow()}><WindowIcon /></button>
+              <button class="pp-icon-btn" title="사이드 패널로 열기" onClick={() => void openSidePanel()}><PanelIcon /></button>
+            </>
+          )}
           <button class="pp-icon-btn" title="설정" onClick={() => sendToBackground({ type: 'OPEN_OPTIONS' })}><GearIcon /></button>
         </div>
       </header>
@@ -363,3 +396,5 @@ const TrashIcon = () => <svg width="14" height="14" viewBox="0 0 24 24" fill="no
 const FolderIcon = ({ size = 12 }: { size?: number }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" /></svg>;
 const ChevDown = () => <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="6 9 12 15 18 9" /></svg>;
 const DashIcon = () => <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9" /></svg>;
+const WindowIcon = () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2" /><path d="M3 9h18" /></svg>;
+const PanelIcon = () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2" /><path d="M15 4v16" /></svg>;

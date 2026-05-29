@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="light">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>SnapPrompt · Window Modes</title>
+<style>
+  :root{
+    --violet-50:#F5F3FF;--violet-100:#EDE9FE;--violet-200:#DDD6FE;--violet-300:#C4B5FD;
+    --violet-400:#A78BFA;--violet-500:#8B5CF6;--violet-600:#7C3AED;--violet-700:#6D28D9;
+    --violet-800:#5B21B6;--violet-900:#4C1D95;--violet-950:#2E1065;
+    --slate-50:#F8FAFC;--slate-100:#F1F5F9;--slate-200:#E2E8F0;--slate-300:#CBD5E1;
+    --slate-400:#94A3B8;--slate-500:#64748B;--slate-600:#475569;--slate-700:#334155;
+    --slate-800:#1E293B;--slate-900:#0F172A;--slate-950:#020617;
+    --success-500:#10B981;--warning-500:#F59E0B;--danger-500:#EF4444;
+    --bg-base:var(--slate-50);--bg-surface:#fff;--bg-subtle:var(--slate-100);--bg-muted:var(--slate-200);
+    --text-primary:var(--slate-900);--text-secondary:var(--slate-700);--text-muted:var(--slate-500);--text-disabled:var(--slate-400);
+    --text-accent:var(--violet-700);--border-subtle:var(--slate-200);--border-default:var(--slate-300);--border-accent:var(--violet-300);
+    --accent:var(--violet-600);--accent-hover:var(--violet-700);--accent-soft:var(--violet-50);--accent-soft-2:var(--violet-100);
+    --grad-primary:linear-gradient(135deg,var(--violet-500),var(--violet-700));
+    --grad-mesh:radial-gradient(at 0% 0%,var(--violet-100) 0,transparent 50%),radial-gradient(at 100% 0%,#E0F2FE 0,transparent 50%),radial-gradient(at 100% 100%,#FCE7F3 0,transparent 50%);
+    --font-sans:'Pretendard',-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',Roboto,Arial,sans-serif;
+    --font-mono:ui-monospace,SFMono-Regular,'JetBrains Mono',Menlo,Consolas,monospace;
+    --text-xs:.75rem;--text-sm:.8125rem;--text-base:.875rem;--text-md:.9375rem;--text-lg:1rem;--text-xl:1.125rem;--text-2xl:1.25rem;--text-3xl:1.5rem;--text-4xl:1.875rem;
+    --w-regular:400;--w-medium:500;--w-semi:600;--w-bold:700;
+    --r-xs:4px;--r-sm:6px;--r-md:8px;--r-lg:10px;--r-xl:12px;--r-2xl:16px;--r-3xl:20px;--r-full:9999px;
+    --sh-sm:0 1px 2px rgba(15,23,42,.05),0 1px 1px rgba(15,23,42,.03);
+    --sh-md:0 4px 8px -2px rgba(15,23,42,.08),0 2px 4px -2px rgba(15,23,42,.04);
+    --sh-lg:0 12px 20px -6px rgba(15,23,42,.12),0 4px 8px -4px rgba(15,23,42,.06);
+    --sh-xl:0 24px 48px -12px rgba(15,23,42,.18),0 8px 16px -6px rgba(15,23,42,.08);
+    --sh-2xl:0 40px 80px -20px rgba(15,23,42,.25);
+    --tracking-tight:-0.02em;--tracking-wide:.04em;
+  }
+  [data-theme="dark"]{
+    --bg-base:#0B0F1A;--bg-surface:#131826;--bg-subtle:#1A2030;--bg-muted:#232B3D;
+    --text-primary:#F1F5F9;--text-secondary:#CBD5E1;--text-muted:#94A3B8;--text-disabled:#64748B;
+    --text-accent:var(--violet-300);--border-subtle:#1F2738;--border-default:#2C3447;--border-accent:var(--violet-700);
+    --accent:var(--violet-500);--accent-hover:var(--violet-400);--accent-soft:rgba(139,92,246,.12);--accent-soft-2:rgba(139,92,246,.22);
+    --grad-mesh:radial-gradient(at 0% 0%,rgba(139,92,246,.18) 0,transparent 50%),radial-gradient(at 100% 0%,rgba(56,189,248,.08) 0,transparent 50%),radial-gradient(at 100% 100%,rgba(244,114,182,.08) 0,transparent 50%);
+    --sh-sm:0 1px 2px rgba(0,0,0,.45);--sh-md:0 4px 8px -2px rgba(0,0,0,.5);--sh-lg:0 12px 20px -6px rgba(0,0,0,.55);--sh-xl:0 24px 48px -12px rgba(0,0,0,.6);--sh-2xl:0 40px 80px -20px rgba(0,0,0,.7);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{font-family:var(--font-sans);font-size:var(--text-base);color:var(--text-primary);background:var(--bg-base);background-image:var(--grad-mesh);background-attachment:fixed;-webkit-font-smoothing:antialiased;min-height:100vh}
+  button{font-family:var(--font-sans)}
+
+  .topbar{position:sticky;top:0;z-index:50;background:var(--bg-surface);border-bottom:1px solid var(--border-subtle);backdrop-filter:saturate(180%) blur(10px)}
+  .topbar-inner{max-width:1180px;margin:0 auto;padding:16px 24px;display:flex;align-items:center;justify-content:space-between;gap:16px}
+  .brand{display:flex;align-items:center;gap:12px}
+  .brand-mark{width:32px;height:32px;border-radius:var(--r-lg);background:var(--grad-primary);display:grid;place-items:center;color:#fff;box-shadow:var(--sh-md)}
+  .brand-mark svg{width:18px;height:18px}
+  .brand-name{font-weight:var(--w-semi);font-size:var(--text-lg);letter-spacing:var(--tracking-tight)}
+  .brand-sub{font-size:var(--text-xs);color:var(--text-muted)}
+  .crumb{color:var(--text-muted);font-size:var(--text-sm)}
+  .crumb a{color:var(--text-accent);text-decoration:none}
+  .theme-toggle{display:inline-flex;align-items:center;gap:8px;height:36px;padding:0 14px;border-radius:var(--r-md);border:1px solid var(--border-default);background:var(--bg-surface);color:var(--text-primary);font-size:var(--text-sm);font-weight:var(--w-medium);cursor:pointer}
+  .theme-toggle:hover{border-color:var(--accent)}
+
+  main{max-width:1180px;margin:0 auto;padding:40px 24px 80px}
+  .page-title{font-size:var(--text-3xl);font-weight:var(--w-bold);letter-spacing:var(--tracking-tight);margin:0 0 8px}
+  .page-sub{color:var(--text-secondary);font-size:var(--text-md);margin:0 0 16px;max-width:760px;line-height:1.6}
+  .note{display:flex;gap:10px;align-items:flex-start;background:var(--warning-50,#FFFBEB);border:1px solid var(--warning-500);border-radius:var(--r-lg);padding:12px 14px;margin-bottom:40px;font-size:var(--text-sm);color:#92660b;max-width:860px}
+  [data-theme="dark"] .note{background:rgba(245,158,11,.12);color:#FCD34D}
+  .note svg{flex-shrink:0;color:var(--warning-500);margin-top:1px}
+
+  .mode{margin-bottom:56px}
+  .mode-head{display:flex;align-items:center;gap:12px;margin-bottom:16px}
+  .mode-badge{width:30px;height:30px;border-radius:var(--r-md);background:var(--grad-primary);color:#fff;display:grid;place-items:center;font-weight:var(--w-bold);font-size:var(--text-md);flex-shrink:0}
+  .mode-head h2{margin:0;font-size:var(--text-2xl);font-weight:var(--w-semi);letter-spacing:var(--tracking-tight)}
+  .mode-head .tag{margin-left:8px;font-size:var(--text-xs);color:var(--text-muted);font-family:var(--font-mono);background:var(--bg-subtle);padding:3px 8px;border-radius:var(--r-full)}
+  .mode-grid{display:grid;grid-template-columns:1fr 280px;gap:24px;align-items:start}
+  @media(max-width:880px){.mode-grid{grid-template-columns:1fr}}
+  .stage{border-radius:var(--r-2xl);overflow:hidden;box-shadow:var(--sh-2xl);border:1px solid var(--border-subtle);position:relative}
+  .side-info{font-size:var(--text-sm)}
+  .side-info h4{margin:0 0 8px;font-size:var(--text-sm);font-weight:var(--w-semi);color:var(--text-accent)}
+  .side-info ul{margin:0 0 16px;padding-left:0;list-style:none}
+  .side-info li{display:flex;gap:7px;align-items:flex-start;color:var(--text-secondary);line-height:1.5;margin-bottom:6px}
+  .side-info li .ic{flex-shrink:0;margin-top:2px}
+  .pro .ic{color:var(--success-500)}.con .ic{color:var(--danger-500)}.neu .ic{color:var(--text-muted)}
+
+  /* ======= mock browser chrome ======= */
+  .chrome{background:#1E293B;height:38px;display:flex;align-items:center;padding:0 12px;gap:10px}
+  [data-theme="dark"] .chrome{background:#0a0e16}
+  .traffic{display:flex;gap:6px}
+  .traffic span{width:11px;height:11px;border-radius:50%}
+  .traffic span:nth-child(1){background:#FF5F57}.traffic span:nth-child(2){background:#FEBC2E}.traffic span:nth-child(3){background:#28C840}
+  .omni{flex:1;height:24px;border-radius:var(--r-sm);background:#0F172A;display:flex;align-items:center;padding:0 10px;gap:6px;color:#94A3B8;font-family:var(--font-mono);font-size:11px}
+  .chrome .ext-ico{width:22px;height:22px;border-radius:var(--r-sm);background:var(--grad-primary);display:grid;place-items:center;color:#fff}
+
+  /* ======= mock LLM page ======= */
+  .llm{background:#fff;min-height:340px;position:relative;padding:0}
+  [data-theme="dark"] .llm{background:#0d1117}
+  .llm-side{position:absolute;left:0;top:0;bottom:0;width:180px;background:var(--bg-subtle);border-right:1px solid var(--border-subtle);padding:14px 12px}
+  .llm-side .li{height:9px;border-radius:5px;background:var(--bg-muted);margin-bottom:10px}
+  .llm-side .li.s{width:60%}.llm-side .li.m{width:80%}
+  .llm-main{margin-left:180px;padding:28px;display:flex;flex-direction:column;height:100%;min-height:340px}
+  .llm-greet{font-size:var(--text-2xl);font-weight:var(--w-semi);color:var(--text-secondary);text-align:center;margin:40px 0 auto;opacity:.5}
+  .llm-input{margin-top:auto;border:1px solid var(--border-default);border-radius:var(--r-2xl);background:var(--bg-surface);padding:14px 16px;display:flex;align-items:center;gap:10px;box-shadow:var(--sh-sm)}
+  .llm-input .ph{flex:1;color:var(--text-disabled);font-size:var(--text-sm)}
+  .llm-input .mic,.llm-input .send{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;flex-shrink:0}
+  .llm-input .mic{color:var(--text-muted)}
+  .llm-input .send{background:var(--accent);color:#fff}
+
+  /* ======= SnapPrompt popup content (reusable) ======= */
+  .sp{display:flex;flex-direction:column;background:var(--bg-surface);height:100%;font-size:var(--text-sm);color:var(--text-primary)}
+  .sp-head{display:flex;align-items:center;gap:8px;padding:12px 14px;border-bottom:1px solid var(--border-subtle);flex-shrink:0}
+  .sp-mark{width:22px;height:22px;border-radius:var(--r-sm);background:var(--grad-primary);color:#fff;display:grid;place-items:center}
+  .sp-name{font-weight:var(--w-semi);font-size:var(--text-md)}
+  .sp-head-actions{margin-left:auto;display:flex;gap:4px;color:var(--text-muted)}
+  .sp-ibtn{width:26px;height:26px;border-radius:var(--r-sm);display:grid;place-items:center;cursor:pointer}
+  .sp-ibtn:hover{background:var(--bg-subtle)}
+  .sp-search{padding:10px 14px;border-bottom:1px solid var(--border-subtle);flex-shrink:0}
+  .sp-search .box{display:flex;align-items:center;gap:8px;height:32px;border-radius:var(--r-md);background:var(--bg-subtle);padding:0 10px;color:var(--text-muted)}
+  .sp-search .box .ph{font-size:var(--text-sm)}
+  .sp-body{flex:1;display:flex;min-height:0;overflow:hidden}
+  .sp-sidebar{width:118px;flex-shrink:0;background:var(--bg-surface);border-right:1px solid var(--border-subtle);padding:6px}
+  .sp-folder{display:flex;align-items:center;gap:6px;padding:5px 7px;border-radius:var(--r-sm);font-size:var(--text-xs);color:var(--text-secondary)}
+  .sp-folder.active{background:var(--accent-soft);color:var(--text-accent);font-weight:var(--w-semi)}
+  .sp-folder .cnt{margin-left:auto;font-size:10px;color:var(--text-muted);font-family:var(--font-mono)}
+  .sp-folder.nest{padding-left:18px}
+  .sp-list{flex:1;overflow-y:auto;padding:0}
+  .sp-card{margin:8px 8px 0;padding:9px;border:1px solid var(--border-subtle);border-radius:var(--r-md);background:var(--bg-surface)}
+  .sp-card .t{font-weight:var(--w-semi);font-size:var(--text-sm);display:flex;align-items:center;gap:6px}
+  .sp-card .t .star{color:var(--warning-500)}
+  .sp-card .t .vars{margin-left:auto;font-size:10px;background:var(--accent-soft);color:var(--text-accent);padding:1px 5px;border-radius:var(--r-xs);font-weight:var(--w-semi)}
+  .sp-card .p{font-size:11px;color:var(--text-muted);margin-top:4px;line-height:1.35;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .sp-card .m{display:flex;gap:5px;margin-top:7px;align-items:center}
+  .sp-tag{font-size:10px;background:var(--bg-subtle);color:var(--text-secondary);padding:1px 6px;border-radius:var(--r-xs)}
+  .sp-acts{margin-left:auto;display:flex;gap:4px}
+  .sp-act{font-size:10px;padding:2px 7px;border-radius:var(--r-xs);border:1px solid var(--border-default);background:var(--bg-surface);color:var(--text-primary)}
+  .sp-act.pri{background:var(--accent);color:#fff;border-color:transparent}
+  .sp-foot{display:flex;align-items:center;gap:10px;padding:10px 14px;border-top:1px solid var(--border-subtle);flex-shrink:0}
+  .sp-new{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;height:30px;border-radius:var(--r-md);background:var(--grad-primary);color:#fff;font-size:var(--text-sm);font-weight:var(--w-medium)}
+  .sp-cnt{font-size:11px;color:var(--text-muted);font-family:var(--font-mono)}
+
+  /* window title bar (drag affordance) */
+  .titlebar{display:flex;align-items:center;gap:8px;height:30px;padding:0 10px;background:var(--bg-subtle);border-bottom:1px solid var(--border-subtle);cursor:grab}
+  .titlebar .dots{color:var(--text-disabled);letter-spacing:1px}
+  .titlebar .tt{font-size:11px;font-weight:var(--w-semi);color:var(--text-secondary)}
+  .titlebar .win-btns{margin-left:auto;display:flex;gap:5px}
+  .titlebar .win-btns span{width:10px;height:10px;border-radius:50%;background:var(--border-default)}
+  .grab-hint{position:absolute;background:var(--slate-900);color:#fff;font-size:11px;padding:4px 9px;border-radius:var(--r-full);box-shadow:var(--sh-md);display:flex;align-items:center;gap:5px;z-index:5;white-space:nowrap}
+  [data-theme="dark"] .grab-hint{background:var(--violet-600)}
+  .grab-hint::after{content:'';position:absolute}
+
+  /* arrows for "movable" */
+  .move-arrows{position:absolute;inset:0;pointer-events:none}
+</style>
+</head>
+<body>
+  <div class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">
+        <div class="brand-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12l-2 8 4 5-7-2-7 4 2-9-4-4z"/></svg></div>
+        <div><div class="brand-name">SnapPrompt</div><div class="brand-sub">Window Modes</div></div>
+      </div>
+      <div class="crumb"><a href="index.html">← Index</a> · 창 방식 비교</div>
+      <button class="theme-toggle" id="themeToggle"><svg id="themeIcon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg><span id="themeLabel">Dark</span></button>
+    </div>
+  </div>
+
+  <main>
+    <h1 class="page-title">팝업을 옮기는 3가지 방식</h1>
+    <p class="page-sub">"마우스로 자유롭게 이동"을 위한 대안들. 각 방식이 화면에서 어떻게 보이는지 목업으로 비교합니다.</p>
+    <div class="note">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      <div>기본 툴바 팝업(아이콘 클릭 시 뜨는 패널)은 Chrome 정책상 위치 이동이 불가능합니다. 아래 세 방식은 그 대안이에요.</div>
+    </div>
+
+    <!-- ================= MODE 1: Detached window ================= -->
+    <section class="mode">
+      <div class="mode-head">
+        <span class="mode-badge">1</span>
+        <h2>분리된 창</h2>
+        <span class="tag">chrome.windows.create · type:popup</span>
+      </div>
+      <div class="mode-grid">
+        <div class="stage" style="background:repeating-linear-gradient(45deg,var(--bg-muted),var(--bg-muted) 12px,var(--bg-subtle) 12px,var(--bg-subtle) 24px);padding:34px;position:relative;min-height:440px">
+          <!-- faint background page -->
+          <div style="position:absolute;inset:24px;border-radius:var(--r-lg);background:var(--bg-surface);opacity:.45;box-shadow:var(--sh-sm)"></div>
+          <!-- floating detached window -->
+          <div style="position:relative;width:430px;margin:18px auto 0;border-radius:var(--r-xl);overflow:hidden;box-shadow:var(--sh-2xl);border:1px solid var(--border-default)">
+            <div class="titlebar">
+              <span class="dots">⠿</span>
+              <span class="sp-mark" style="width:18px;height:18px"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12l-2 8 4 5-7-2-7 4 2-9-4-4z"/></svg></span>
+              <span class="tt">SnapPrompt</span>
+              <span class="win-btns"><span></span><span></span><span style="background:#FF5F57"></span></span>
+            </div>
+            <div class="sp" style="height:320px">
+              <div class="sp-search"><div class="box"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><span class="ph">프롬프트 검색...</span></div></div>
+              <div class="sp-body">
+                <div class="sp-sidebar">
+                  <div class="sp-folder active"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>전체<span class="cnt">12</span></div>
+                  <div class="sp-folder"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>코딩<span class="cnt">5</span></div>
+                  <div class="sp-folder nest"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>리뷰<span class="cnt">3</span></div>
+                  <div class="sp-folder"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>영어<span class="cnt">3</span></div>
+                </div>
+                <div class="sp-list">
+                  <div class="sp-card"><div class="t"><svg class="star" width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15 8 22 9 17 14 18 21 12 18 6 21 7 14 2 9 9 8"/></svg>코드 리뷰 (KR)<span class="vars">2</span></div><div class="p">{{언어}}로 다음 코드를 리뷰해줘...</div><div class="m"><span class="sp-tag">코딩</span><div class="sp-acts"><span class="sp-act">복사</span><span class="sp-act pri">삽입</span></div></div></div>
+                  <div class="sp-card"><div class="t">영어 이메일 답장</div><div class="p">Write a professional reply in English...</div><div class="m"><span class="sp-tag">이메일</span><div class="sp-acts"><span class="sp-act">복사</span><span class="sp-act pri">삽입</span></div></div></div>
+                </div>
+              </div>
+              <div class="sp-foot"><div class="sp-new">+ 새 프롬프트</div><span class="sp-cnt">12개</span></div>
+            </div>
+            <!-- resize handle -->
+            <div style="position:absolute;right:2px;bottom:2px;color:var(--text-disabled)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v6h-6M21 21l-7-7M9 21H3v-6M3 21l7-7"/></svg></div>
+          </div>
+          <div class="grab-hint" style="top:46px;left:50%;transform:translateX(-50%)"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 9l-3 3 3 3M9 5l3-3 3 3M15 19l-3 3-3-3M19 9l3 3-3 3M2 12h20M12 2v20"/></svg>제목표시줄을 잡고 어디든 드래그</div>
+        </div>
+        <div class="side-info">
+          <h4>이렇게 보여요</h4>
+          <ul>
+            <li class="pro"><span class="ic">✓</span>주소창·탭 없는 별도 미니 창</li>
+            <li class="pro"><span class="ic">✓</span>제목표시줄로 화면 어디든 드래그, 모서리로 리사이즈</li>
+            <li class="pro"><span class="ic">✓</span>다른 곳 클릭해도 안 닫힘 (상주)</li>
+            <li class="pro"><span class="ic">✓</span>기존 팝업 UI 그대로 재사용 · 구현 가벼움</li>
+            <li class="con"><span class="ic">✕</span>작업표시줄/alt-tab에 별도 창으로 잡힘</li>
+          </ul>
+          <h4>적합</h4>
+          <ul><li class="neu"><span class="ic">→</span>"마우스로 자유롭게 이동"에 가장 정확</li></ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= MODE 2: Side panel ================= -->
+    <section class="mode">
+      <div class="mode-head">
+        <span class="mode-badge">2</span>
+        <h2>사이드 패널</h2>
+        <span class="tag">chrome.sidePanel · Chrome 114+</span>
+      </div>
+      <div class="mode-grid">
+        <div class="stage">
+          <div class="chrome">
+            <div class="traffic"><span></span><span></span><span></span></div>
+            <div class="omni"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>gemini.google.com</div>
+            <div class="ext-ico"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12l-2 8 4 5-7-2-7 4 2-9-4-4z"/></svg></div>
+          </div>
+          <div style="display:flex;min-height:402px">
+            <!-- main LLM area -->
+            <div class="llm" style="flex:1;min-height:402px">
+              <div class="llm-side"><div class="li m"></div><div class="li s"></div><div class="li m"></div><div class="li s"></div></div>
+              <div class="llm-main">
+                <div class="llm-greet">무엇을 도와드릴까요?</div>
+                <div class="llm-input"><span class="ph">메시지를 입력하세요…</span><span class="mic"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/></svg></span><span class="send"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg></span></div>
+              </div>
+            </div>
+            <!-- docked side panel -->
+            <div style="width:280px;flex-shrink:0;border-left:1px solid var(--border-default);position:relative">
+              <div style="position:absolute;left:-3px;top:0;bottom:0;width:6px;cursor:col-resize"></div>
+              <div class="sp" style="height:100%">
+                <div class="sp-head"><div class="sp-mark"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12l-2 8 4 5-7-2-7 4 2-9-4-4z"/></svg></div><span class="sp-name">SnapPrompt</span><div class="sp-head-actions"><span class="sp-ibtn"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></span><span class="sp-ibtn"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></span></div></div>
+                <div class="sp-search"><div class="box"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><span class="ph">프롬프트 검색...</span></div></div>
+                <div class="sp-list">
+                  <div class="sp-card"><div class="t"><svg class="star" width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15 8 22 9 17 14 18 21 12 18 6 21 7 14 2 9 9 8"/></svg>코드 리뷰 (KR)<span class="vars">2</span></div><div class="p">{{언어}}로 다음 코드를 리뷰해줘...</div><div class="m"><span class="sp-tag">코딩</span><div class="sp-acts"><span class="sp-act">복사</span><span class="sp-act pri">삽입</span></div></div></div>
+                  <div class="sp-card"><div class="t">영어 이메일 답장</div><div class="p">Write a professional reply...</div><div class="m"><span class="sp-tag">영어</span><div class="sp-acts"><span class="sp-act">복사</span><span class="sp-act pri">삽입</span></div></div></div>
+                  <div class="sp-card"><div class="t">3줄 요약<span class="vars">1</span></div><div class="p">다음 내용을 핵심만 3줄로...</div><div class="m"><span class="sp-tag">요약</span><div class="sp-acts"><span class="sp-act">복사</span><span class="sp-act pri">삽입</span></div></div></div>
+                </div>
+                <div class="sp-foot"><div class="sp-new">+ 새 프롬프트</div></div>
+              </div>
+              <div class="grab-hint" style="top:50%;left:-2px;transform:translate(-100%,-50%)"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/><polyline points="21 18 15 12 21 6"/></svg>경계선으로 폭만 조절</div>
+            </div>
+          </div>
+        </div>
+        <div class="side-info">
+          <h4>이렇게 보여요</h4>
+          <ul>
+            <li class="pro"><span class="ic">✓</span>브라우저 오른쪽에 도킹, 전체 높이</li>
+            <li class="pro"><span class="ic">✓</span>LLM을 메인에서 쓰며 옆에 계속 띄워둠</li>
+            <li class="pro"><span class="ic">✓</span>blur로 안 닫힘 (상주)</li>
+            <li class="con"><span class="ic">✕</span>좌/우 고정 — 자유 이동 불가, 폭만 조절</li>
+            <li class="con"><span class="ic">✕</span>Chrome 114+ 필요</li>
+          </ul>
+          <h4>적합</h4>
+          <ul><li class="neu"><span class="ic">→</span>"옆에 고정해두고 쓰기"</li></ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= MODE 3: In-page panel ================= -->
+    <section class="mode">
+      <div class="mode-head">
+        <span class="mode-badge">3</span>
+        <h2>페이지 위 떠다니는 패널</h2>
+        <span class="tag">content script overlay</span>
+      </div>
+      <div class="mode-grid">
+        <div class="stage">
+          <div class="chrome">
+            <div class="traffic"><span></span><span></span><span></span></div>
+            <div class="omni"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>chatgpt.com</div>
+            <div class="ext-ico"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12l-2 8 4 5-7-2-7 4 2-9-4-4z"/></svg></div>
+          </div>
+          <div class="llm" style="min-height:402px;position:relative;overflow:hidden">
+            <div class="llm-side"><div class="li m"></div><div class="li s"></div><div class="li m"></div><div class="li s"></div></div>
+            <div class="llm-main">
+              <div class="llm-greet">무엇을 도와드릴까요?</div>
+              <div class="llm-input"><span class="ph">메시지를 입력하세요…</span><span class="mic"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/></svg></span><span class="send"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg></span></div>
+            </div>
+            <!-- floating draggable panel over the page -->
+            <div style="position:absolute;top:30px;right:46px;width:300px;border-radius:var(--r-xl);overflow:hidden;box-shadow:var(--sh-2xl);border:1px solid var(--border-default)">
+              <div class="titlebar"><span class="dots">⠿</span><span class="sp-mark" style="width:18px;height:18px"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12l-2 8 4 5-7-2-7 4 2-9-4-4z"/></svg></span><span class="tt">SnapPrompt</span><div class="win-btns" style="margin-left:auto"><span style="background:#FF5F57"></span></div></div>
+              <div class="sp" style="height:264px">
+                <div class="sp-search"><div class="box"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><span class="ph">검색...</span></div></div>
+                <div class="sp-list">
+                  <div class="sp-card"><div class="t"><svg class="star" width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15 8 22 9 17 14 18 21 12 18 6 21 7 14 2 9 9 8"/></svg>코드 리뷰 (KR)<span class="vars">2</span></div><div class="p">{{언어}}로 다음 코드를...</div><div class="m"><div class="sp-acts"><span class="sp-act">복사</span><span class="sp-act pri">삽입</span></div></div></div>
+                  <div class="sp-card"><div class="t">3줄 요약<span class="vars">1</span></div><div class="p">다음 내용을 핵심만...</div><div class="m"><div class="sp-acts"><span class="sp-act">복사</span><span class="sp-act pri">삽입</span></div></div></div>
+                </div>
+              </div>
+            </div>
+            <div class="grab-hint" style="top:14px;right:46px"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 9l-3 3 3 3M9 5l3-3 3 3M15 19l-3 3-3-3M19 9l3 3-3 3M2 12h20M12 2v20"/></svg>페이지 안에서 드래그</div>
+          </div>
+        </div>
+        <div class="side-info">
+          <h4>이렇게 보여요</h4>
+          <ul>
+            <li class="pro"><span class="ic">✓</span>LLM 페이지 위에 겹쳐서 띄움</li>
+            <li class="pro"><span class="ic">✓</span>페이지 안에서 자유 드래그, 위치 기억</li>
+            <li class="con"><span class="ic">✕</span>탭에 종속 — 콘텐츠 영역 밖으론 못 나감</li>
+            <li class="con"><span class="ic">✕</span>탭 이동/새로고침 시 사라짐(재주입)</li>
+            <li class="con"><span class="ic">✕</span>UI 재구성 필요 · 구현 가장 큼</li>
+          </ul>
+          <h4>적합</h4>
+          <ul><li class="neu"><span class="ic">→</span>LLM 화면 위에 겹쳐 옮기고 싶을 때</li></ul>
+        </div>
+      </div>
+    </section>
+
+    <footer style="text-align:center;color:var(--text-muted);font-size:var(--text-xs);padding-top:24px">SnapPrompt · Window Modes 비교 목업</footer>
+  </main>
+
+  <script>
+    const t=document.getElementById('themeToggle'),l=document.getElementById('themeLabel'),i=document.getElementById('themeIcon'),r=document.documentElement;
+    const SUN='<path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m4.93 19.07 1.41-1.41"/><path d="m17.66 6.34 1.41-1.41"/><circle cx="12" cy="12" r="4"/>';
+    const MOON='<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>';
+    t.addEventListener('click',()=>{const n=r.dataset.theme==='dark'?'light':'dark';r.dataset.theme=n;l.textContent=n==='dark'?'Light':'Dark';i.innerHTML=n==='dark'?SUN:MOON;});
+  </script>
+</body>
+</html>

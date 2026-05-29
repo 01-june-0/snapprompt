@@ -22,6 +22,9 @@ export default defineManifest({
     },
   },
   options_page: 'src/options/index.html',
+  side_panel: {
+    default_path: 'src/popup/index.html?mode=panel',
+  },
   background: {
     service_worker: 'src/background/index.ts',
     type: 'module',
@@ -42,6 +45,7 @@ export default defineManifest({
     'activeTab',
     'scripting',
     'alarms',
+    'sidePanel',
   ],
   host_permissions: ['<all_urls>'],
   commands: {
