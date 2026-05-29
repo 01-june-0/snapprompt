@@ -418,9 +418,19 @@ function SaveModal({ text, sourceUrl }: { text: string; sourceUrl: string }) {
 
 /* ---------------- shared bits ---------------- */
 function Backdrop({ position, children }: { position: 'top' | 'center'; children: preact.ComponentChildren }) {
+  // Keep keystrokes inside the overlay. Some sites (e.g. claude.ai) have a
+  // document-level "type anywhere → focus composer" handler that would steal
+  // focus while the user types in our modal. Our own key handlers (Esc/Enter/
+  // arrows) run first during bubbling; we stop the event before it reaches the
+  // page's document/window listeners. The character still lands in the input
+  // (default action is unaffected by stopPropagation).
+  const stopKeys = (e: KeyboardEvent) => e.stopPropagation();
   return (
     <div
       class={`sp-backdrop ${position}`}
+      onKeyDown={stopKeys}
+      onKeyUp={stopKeys}
+      onKeyPress={stopKeys}
       onClick={(e) => { if (e.target === e.currentTarget) close(); }}
     >
       {children}
