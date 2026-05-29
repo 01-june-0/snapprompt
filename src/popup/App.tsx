@@ -214,7 +214,16 @@ export function App() {
                 onDragStart={(e) => {
                   const ids = dragIdsFor(p);
                   e.dataTransfer?.setData('text/plain', ids.join(','));
-                  if (e.dataTransfer) e.dataTransfer.effectAllowed = 'move';
+                  if (e.dataTransfer) {
+                    e.dataTransfer.effectAllowed = 'move';
+                    // small custom drag image so the full-size card doesn't cover the folder tree
+                    const ghost = document.createElement('div');
+                    ghost.textContent = ids.length > 1 ? `${ids.length}개 이동` : p.title;
+                    ghost.className = 'pp-drag-ghost';
+                    document.body.appendChild(ghost);
+                    e.dataTransfer.setDragImage(ghost, 12, 12);
+                    setTimeout(() => ghost.remove(), 0);
+                  }
                   if (!showSidebar) setShowSidebar(true);
                 }}
                 onClick={() => setScreen({ kind: 'edit', prompt: p, isNew: false })}

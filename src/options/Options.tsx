@@ -7,10 +7,11 @@ import {
 import { applyTheme } from '@shared/theme';
 import { buildBackup, downloadBackup, importBackup } from '@shared/backup';
 import { sendToBackground } from '@shared/messaging';
-import { flattenTree, wouldCycle } from '@shared/folders';
+import { flattenTree, wouldCycle, folderPath } from '@shared/folders';
+import { search } from '@shared/search';
 import { uuid } from '@shared/id';
 
-type Tab = 'general' | 'folders' | 'tags' | 'backup' | 'shortcuts' | 'data' | 'about';
+type Tab = 'general' | 'prompts' | 'folders' | 'tags' | 'backup' | 'shortcuts' | 'data' | 'about';
 
 export function Options() {
   const [tab, setTab] = useState<Tab>('general');
@@ -45,6 +46,7 @@ export function Options() {
       <div class="op-layout">
         <nav class="op-nav">
           <TabBtn id="general" tab={tab} set={setTab} label="일반" />
+          <TabBtn id="prompts" tab={tab} set={setTab} label="프롬프트" />
           <TabBtn id="folders" tab={tab} set={setTab} label="폴더" />
           <TabBtn id="tags" tab={tab} set={setTab} label="태그" />
           <TabBtn id="backup" tab={tab} set={setTab} label="백업" />
@@ -55,6 +57,7 @@ export function Options() {
         </nav>
         <div>
           {tab === 'general' && <General settings={settings} patch={patch} folders={folders} />}
+          {tab === 'prompts' && <PromptsManager prompts={prompts} folders={folders} flash={flash} onChange={async (p) => { await setPrompts(p); setLocalPrompts(p); }} />}
           {tab === 'folders' && <Folders folders={folders} onChange={async (f) => { await setFolders(f); setLocalFolders(f); }} />}
           {tab === 'tags' && <Tags prompts={prompts} onChange={async (p) => { await setPrompts(p); setLocalPrompts(p); flash('태그를 정리했어요'); }} />}
           {tab === 'backup' && <Backup settings={settings} patch={patch} flash={flash} onRestore={reload} />}
@@ -182,6 +185,101 @@ function Folders({ folders, onChange }: { folders: Folder[]; onChange: (f: Folde
 
 function indent(depth: number): string {
   return '  '.repeat(depth);
+}
+
+/* ---------- Prompts manager (F9.10) ---------- */
+function PromptsManager({
+  prompts, folders, onChange, flash,
+}: {
+  prompts: Prompt[]; folders: Folder[];
+  onChange: (p: Prompt[]) => void; flash: (m: string) => void;
+}) {
+  const [query, setQuery] = useState('');
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [tagToAdd, setTagToAdd] = useState('');
+
+  const visible = useMemo(
+    () => (query.trim() ? search(prompts, query).map((r) => r.prompt) : prompts),
+    [prompts, query],
+  );
+  const allVisibleSelected = visible.length > 0 && visible.every((p) => selected.has(p.id));
+
+  function toggle(id: string) {
+    setSelected((s) => {
+      const n = new Set(s);
+      if (n.has(id)) n.delete(id);
+      else n.add(id);
+      return n;
+    });
+  }
+  function toggleAll() {
+    setSelected(allVisibleSelected ? new Set() : new Set(visible.map((p) => p.id)));
+  }
+  function moveSelected(folderId: string | null) {
+    const now = Date.now();
+    onChange(prompts.map((p) => (selected.has(p.id) ? { ...p, folderId, updatedAt: now } : p)));
+    flash(`${selected.size}개를 옮겼어요`);
+    setSelected(new Set());
+  }
+  function addTagToSelected() {
+    const tag = tagToAdd.trim().replace(/^#/, '');
+    if (!tag) return;
+    onChange(prompts.map((p) => (selected.has(p.id) && !p.tags.includes(tag) ? { ...p, tags: [...p.tags, tag], updatedAt: Date.now() } : p)));
+    flash(`#${tag} 태그를 추가했어요`);
+    setTagToAdd('');
+  }
+  function deleteSelected() {
+    if (!confirm(`선택한 ${selected.size}개 프롬프트를 삭제할까요? 되돌릴 수 없어요.`)) return;
+    onChange(prompts.filter((p) => !selected.has(p.id)));
+    flash(`${selected.size}개를 삭제했어요`);
+    setSelected(new Set());
+  }
+
+  return (
+    <>
+      <h2 class="op-panel-title">프롬프트</h2>
+      <p class="op-panel-desc">전체 프롬프트를 검색하고 다중 선택해 한 번에 정리하세요</p>
+
+      <div style="display:flex;gap:8px;margin-bottom:16px;align-items:center">
+        <input class="op-input" style="flex:1" placeholder="제목·본문·태그 검색" value={query} onInput={(e) => setQuery((e.target as HTMLInputElement).value)} />
+        <label style="display:flex;align-items:center;gap:6px;font-size:var(--text-sm);color:var(--text-secondary);cursor:pointer;white-space:nowrap">
+          <input type="checkbox" checked={allVisibleSelected} onChange={toggleAll} /> 전체 선택
+        </label>
+      </div>
+
+      {selected.size > 0 && (
+        <div class="op-banner info" style="gap:10px;flex-wrap:wrap">
+          <span style="font-weight:var(--weight-semi)">{selected.size}개 선택됨</span>
+          <div style="display:flex;gap:8px;margin-left:auto;align-items:center;flex-wrap:wrap">
+            <select class="op-select" value="__" onChange={(e) => { const v = (e.target as HTMLSelectElement).value; if (v !== '__') moveSelected(v === '' ? null : v); }}>
+              <option value="__">폴더로 이동…</option>
+              <option value="">분류 없음</option>
+              {flattenTree(folders).map((f) => <option key={f.id} value={f.id}>{indent(f.depth)}{f.name}</option>)}
+            </select>
+            <input class="op-input" style="width:120px" placeholder="태그 추가" value={tagToAdd} onInput={(e) => setTagToAdd((e.target as HTMLInputElement).value)} onKeyDown={(e) => e.key === 'Enter' && addTagToSelected()} />
+            <button class="op-btn secondary sm" onClick={addTagToSelected}>추가</button>
+            <button class="op-btn danger sm" onClick={deleteSelected}>삭제</button>
+          </div>
+        </div>
+      )}
+
+      <div class="op-card">
+        <div class="op-list">
+          {visible.length === 0 && <div class="op-row"><span class="op-row-title" style="color:var(--text-muted)">{query ? '검색 결과가 없어요' : '프롬프트가 없어요'}</span></div>}
+          {visible.map((p) => (
+            <label class="op-row" key={p.id} style="cursor:pointer">
+              <input type="checkbox" checked={selected.has(p.id)} onChange={() => toggle(p.id)} />
+              <div style="flex:1;min-width:0">
+                <div class="op-row-title" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{p.title || '(제목 없음)'}</div>
+                <div class="op-row-sub">{folderPath(folders, p.folderId)}{p.tags.length ? ' · ' + p.tags.map((t) => '#' + t).join(' ') : ''}</div>
+              </div>
+              {p.variables.length > 0 && <span class="op-row-sub" style="flex-shrink:0;color:var(--text-accent)">{p.variables.length} vars</span>}
+            </label>
+          ))}
+        </div>
+      </div>
+    </>
+  );
 }
 
 /* ---------- Tags ---------- */

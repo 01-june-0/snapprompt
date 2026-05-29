@@ -323,6 +323,7 @@ function SaveModal({ text, sourceUrl }: { text: string; sourceUrl: string }) {
   const [folderId, setFolderId] = useState<string | null>(null);
   const [tagsInput, setTagsInput] = useState('');
   const [existing, setExisting] = useState<Prompt[]>([]);
+  const [tagFocused, setTagFocused] = useState(false);
 
   useEffect(() => {
     getFolders().then(setFolders);
@@ -338,6 +339,26 @@ function SaveModal({ text, sourceUrl }: { text: string; sourceUrl: string }) {
     if (!norm) return null;
     return existing.find((p) => normalizeBody(p.body) === norm) ?? null;
   }, [existing, body]);
+
+  // F6.5: tag autocomplete from existing prompts.
+  const allTags = useMemo(() => {
+    const freq = new Map<string, number>();
+    for (const p of existing) for (const t of p.tags) freq.set(t, (freq.get(t) ?? 0) + 1);
+    return [...freq.entries()].sort((a, b) => b[1] - a[1]).map(([t]) => t);
+  }, [existing]);
+
+  const tagSegments = tagsInput.split(',');
+  const tagFragment = (tagSegments[tagSegments.length - 1] ?? '').trim().toLowerCase();
+  const typedTags = new Set(tagSegments.map((s) => s.trim()).filter(Boolean));
+  const tagSuggestions = tagFocused
+    ? allTags.filter((t) => !typedTags.has(t) && (!tagFragment || t.toLowerCase().includes(tagFragment))).slice(0, 6)
+    : [];
+
+  function completeTag(tag: string) {
+    const segs = tagsInput.split(',');
+    segs[segs.length - 1] = ' ' + tag;
+    setTagsInput(segs.join(',') + ', ');
+  }
 
   async function save() {
     const now = Date.now();
@@ -409,9 +430,30 @@ function SaveModal({ text, sourceUrl }: { text: string; sourceUrl: string }) {
               {flattenTree(folders).map((f) => <option key={f.id} value={f.id}>{'  '.repeat(f.depth)}{f.name}</option>)}
             </select>
           </div>
-          <div class="sp-field">
+          <div class="sp-field" style="position:relative">
             <div class="sp-label">태그 <span style="font-weight:400;color:var(--text-muted)">쉼표로 구분</span></div>
-            <input class="sp-input" value={tagsInput} placeholder="코딩, 리뷰" onInput={(e) => setTagsInput((e.target as HTMLInputElement).value)} />
+            <input
+              class="sp-input"
+              value={tagsInput}
+              placeholder="코딩, 리뷰"
+              onInput={(e) => setTagsInput((e.target as HTMLInputElement).value)}
+              onFocus={() => setTagFocused(true)}
+              onBlur={() => setTimeout(() => setTagFocused(false), 150)}
+            />
+            {tagSuggestions.length > 0 && (
+              <div class="sp-ac">
+                {tagSuggestions.map((t) => (
+                  <div
+                    key={t}
+                    class="sp-ac-item"
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={() => completeTag(t)}
+                  >
+                    <span class="hash">#</span>{t}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
           {sourceUrl && (
             <div class="sp-field">

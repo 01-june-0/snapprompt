@@ -103,6 +103,16 @@ body {
 }
 .pp-selbar button:hover { background: var(--bg-surface); filter: brightness(0.98); }
 
+/* compact drag image */
+.pp-drag-ghost {
+  position: absolute; top: -1000px; left: -1000px;
+  padding: 6px 12px; border-radius: var(--radius-md);
+  background: var(--accent); color: #fff;
+  font: var(--weight-semi) 12px var(--font-sans);
+  white-space: nowrap; box-shadow: var(--shadow-lg); max-width: 240px;
+  overflow: hidden; text-overflow: ellipsis;
+}
+
 /* drop target highlight */
 .pp-folder.drop {
   background: var(--accent-soft-2); color: var(--text-accent);

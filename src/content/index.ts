@@ -51,6 +51,8 @@ function ensureMounted() {
 /* ---------- Floating button (Phase 2) ---------- */
 let floatEl: HTMLElement | null = null;
 
+const FAB = 28;
+
 function positionFloat() {
   if (!floatEl || !document.contains(floatEl)) {
     floatEl = null;
@@ -59,8 +61,22 @@ function positionFloat() {
   }
   const r = floatEl.getBoundingClientRect();
   if (r.width === 0 && r.height === 0) { floatingTarget.value = null; return; }
-  // top-right corner, just inside the field
-  floatingTarget.value = { x: Math.max(8, r.right - 32), y: Math.max(8, r.top + 4) };
+
+  const vw = window.innerWidth;
+  const vh = window.innerHeight;
+  const gap = 6;
+
+  // Prefer just OUTSIDE the field's right edge (no overlap with field content
+  // or the site's in-field buttons). Fall back to inside the top-right corner
+  // when there isn't room to the right.
+  let x = r.right + gap;
+  if (x + FAB > vw - 4) x = r.right - FAB - 4;
+
+  // vertically centered on the field, clamped to the viewport
+  let y = r.top + r.height / 2 - FAB / 2;
+  y = Math.min(Math.max(8, y), vh - FAB - 8);
+
+  floatingTarget.value = { x: Math.max(4, x), y };
 }
 
 getSettings().then((s) => (floatingEnabled.value = s.floatingButton));
