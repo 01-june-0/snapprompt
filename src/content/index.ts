@@ -64,19 +64,20 @@ function positionFloat() {
 
   const vw = window.innerWidth;
   const vh = window.innerHeight;
-  const gap = 6;
+  const gap = 8;
 
-  // Prefer just OUTSIDE the field's right edge (no overlap with field content
-  // or the site's in-field buttons). Fall back to inside the top-right corner
-  // when there isn't room to the right.
-  let x = r.right + gap;
-  if (x + FAB > vw - 4) x = r.right - FAB - 4;
+  // Place the button ABOVE the input, anchored to its LEFT edge. Sites often
+  // put the mic / send controls inside/right-of the field, so the top-left
+  // corner is the most reliably clear spot.
+  let x = r.left;
+  let y = r.top - FAB - gap;
+  if (y < 4) y = r.bottom + gap; // no room above → just below the field
 
-  // vertically centered on the field, clamped to the viewport
-  let y = r.top + r.height / 2 - FAB / 2;
-  y = Math.min(Math.max(8, y), vh - FAB - 8);
+  // clamp into the viewport
+  x = Math.min(Math.max(4, x), vw - FAB - 4);
+  y = Math.min(Math.max(4, y), vh - FAB - 4);
 
-  floatingTarget.value = { x: Math.max(4, x), y };
+  floatingTarget.value = { x, y };
 }
 
 getSettings().then((s) => (floatingEnabled.value = s.floatingButton));
