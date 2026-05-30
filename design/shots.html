@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="light">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>SnapPrompt · README shots</title>
+<style>
+  :root{
+    --violet-50:#F5F3FF;--violet-100:#EDE9FE;--violet-200:#DDD6FE;--violet-300:#C4B5FD;
+    --violet-400:#A78BFA;--violet-500:#8B5CF6;--violet-600:#7C3AED;--violet-700:#6D28D9;--violet-900:#4C1D95;
+    --slate-50:#F8FAFC;--slate-100:#F1F5F9;--slate-200:#E2E8F0;--slate-300:#CBD5E1;
+    --slate-400:#94A3B8;--slate-500:#64748B;--slate-600:#475569;--slate-700:#334155;--slate-800:#1E293B;--slate-900:#0F172A;
+    --success-500:#10B981;--warning-500:#F59E0B;
+    --bg-base:var(--slate-50);--bg-surface:#fff;--bg-subtle:var(--slate-100);--bg-muted:var(--slate-200);
+    --text-primary:var(--slate-900);--text-secondary:var(--slate-700);--text-muted:var(--slate-500);--text-disabled:var(--slate-400);
+    --text-accent:var(--violet-700);--border-subtle:var(--slate-200);--border-default:var(--slate-300);--border-accent:var(--violet-300);
+    --accent:var(--violet-600);--accent-hover:var(--violet-700);--accent-soft:var(--violet-50);--accent-soft-2:var(--violet-100);
+    --grad:linear-gradient(135deg,var(--violet-500),var(--violet-700));
+    --mesh:radial-gradient(at 0% 0%,var(--violet-100) 0,transparent 50%),radial-gradient(at 100% 0%,#E0F2FE 0,transparent 50%),radial-gradient(at 100% 100%,#FCE7F3 0,transparent 55%);
+    --font:'Pretendard',-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',Roboto,Arial,sans-serif;
+    --mono:ui-monospace,SFMono-Regular,'JetBrains Mono',Menlo,Consolas,monospace;
+    --r-sm:6px;--r-md:8px;--r-lg:10px;--r-xl:12px;--r-2xl:16px;--r-3xl:20px;--r-full:9999px;
+    --sh-sm:0 1px 2px rgba(15,23,42,.06);--sh-md:0 4px 8px -2px rgba(15,23,42,.08);
+    --sh-lg:0 12px 22px -8px rgba(15,23,42,.16);--sh-2xl:0 40px 80px -24px rgba(15,23,42,.32);
+    --w-med:500;--w-semi:600;--w-bold:700;
+  }
+  [data-theme="dark"]{
+    --bg-base:#0B0F1A;--bg-surface:#131826;--bg-subtle:#1A2030;--bg-muted:#232B3D;
+    --text-primary:#F1F5F9;--text-secondary:#CBD5E1;--text-muted:#94A3B8;--text-disabled:#64748B;
+    --text-accent:var(--violet-300);--border-subtle:#1F2738;--border-default:#2C3447;--border-accent:var(--violet-700);
+    --accent:var(--violet-500);--accent-hover:var(--violet-400);--accent-soft:rgba(139,92,246,.12);--accent-soft-2:rgba(139,92,246,.22);
+    --mesh:radial-gradient(at 0% 0%,rgba(139,92,246,.22) 0,transparent 50%),radial-gradient(at 100% 0%,rgba(56,189,248,.10) 0,transparent 50%),radial-gradient(at 100% 100%,rgba(244,114,182,.10) 0,transparent 55%);
+    --sh-2xl:0 40px 80px -24px rgba(0,0,0,.7);--sh-lg:0 12px 22px -8px rgba(0,0,0,.55);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{width:100%;height:100%}
+  body{font-family:var(--font);color:var(--text-primary);background:var(--bg-base);background-image:var(--mesh);
+    -webkit-font-smoothing:antialiased;overflow:hidden}
+  .frame{display:none;width:100vw;height:100vh;align-items:center;justify-content:center;padding:36px;position:relative}
+  .frame.active{display:flex}
+  svg{display:block}
+
+  /* ===== generic popup-style surface ===== */
+  .sp{background:var(--bg-surface);border:1px solid var(--border-subtle);border-radius:var(--r-xl);
+    box-shadow:var(--sh-2xl);overflow:hidden;display:flex;flex-direction:column;font-size:.8125rem;color:var(--text-primary)}
+  .sp-head{display:flex;align-items:center;gap:8px;padding:12px 16px;border-bottom:1px solid var(--border-subtle)}
+  .mark{width:24px;height:24px;border-radius:var(--r-md);background:var(--grad);color:#fff;display:grid;place-items:center;box-shadow:var(--sh-sm)}
+  .nm{font-weight:var(--w-semi);font-size:.9375rem}
+  .hacts{margin-left:auto;display:flex;gap:4px;color:var(--text-muted)}
+  .ib{width:28px;height:28px;border-radius:var(--r-md);display:grid;place-items:center}
+  .tb{padding:12px 16px;border-bottom:1px solid var(--border-subtle);display:flex;flex-direction:column;gap:8px}
+  .srch{display:flex;align-items:center;gap:8px;height:34px;border-radius:var(--r-md);background:var(--bg-subtle);padding:0 12px;color:var(--text-muted)}
+  .chips{display:flex;gap:6px;align-items:center}
+  .chip{display:inline-flex;align-items:center;gap:4px;height:24px;padding:0 8px;border-radius:var(--r-sm);background:var(--bg-subtle);color:var(--text-secondary);font-size:.75rem;font-weight:var(--w-med)}
+  .chip.on{background:var(--accent-soft);color:var(--text-accent);border:1px solid var(--border-accent)}
+  .sort{margin-left:auto;font-size:.75rem;color:var(--text-muted)}
+  .body{flex:1;display:flex;min-height:0}
+  .side{width:160px;flex-shrink:0;background:var(--bg-surface);border-right:1px solid var(--border-subtle);padding:6px;overflow:hidden}
+  .fld{display:flex;align-items:center;gap:6px;padding:6px 8px;border-radius:var(--r-sm);font-size:.75rem;color:var(--text-secondary)}
+  .fld.on{background:var(--accent-soft);color:var(--text-accent);font-weight:var(--w-semi)}
+  .fld .c{margin-left:auto;font-size:10px;color:var(--text-muted);font-family:var(--mono)}
+  .fld.nest{padding-left:22px}
+  .slbl{font-size:10px;font-weight:var(--w-semi);color:var(--text-muted);letter-spacing:.04em;text-transform:uppercase;padding:10px 8px 4px}
+  .list{flex:1;overflow:hidden;padding:0}
+  .card{margin:10px 10px 0;padding:11px;border:1px solid var(--border-subtle);border-radius:var(--r-lg);background:var(--bg-surface)}
+  .card .h{display:flex;align-items:center;gap:8px}
+  .chk{width:16px;height:16px;border-radius:4px;border:1.5px solid var(--border-default);flex-shrink:0}
+  .star{color:var(--warning-500)}
+  .ct{font-weight:var(--w-semi);font-size:.8125rem;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .vb{font-size:10px;background:var(--accent-soft);color:var(--text-accent);padding:1px 6px;border-radius:4px;font-weight:var(--w-semi)}
+  .cp{font-size:11px;color:var(--text-muted);margin-top:6px;line-height:1.35;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .cm{display:flex;gap:5px;margin-top:8px;align-items:center}
+  .tag{font-size:10px;background:var(--bg-subtle);color:var(--text-secondary);padding:1px 6px;border-radius:4px}
+  .acts{margin-left:auto;display:flex;gap:4px}
+  .a{font-size:10px;padding:3px 8px;border-radius:4px;border:1px solid var(--border-default);background:var(--bg-surface);color:var(--text-primary)}
+  .a.pri{background:var(--accent);color:#fff;border-color:transparent}
+  .foot{display:flex;align-items:center;gap:10px;padding:11px 16px;border-top:1px solid var(--border-subtle)}
+  .new{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;height:32px;border-radius:var(--r-md);background:var(--grad);color:#fff;font-size:.8125rem;font-weight:var(--w-med)}
+  .cnt{font-size:11px;color:var(--text-muted);font-family:var(--mono)}
+
+  /* ===== faux LLM page ===== */
+  .page{position:absolute;inset:0;background:#fff;overflow:hidden}
+  [data-theme="dark"] .page{background:#0d1117}
+  .chrome{height:36px;background:#1E293B;display:flex;align-items:center;padding:0 12px;gap:8px}
+  [data-theme="dark"] .chrome{background:#0a0e16}
+  .traffic{display:flex;gap:6px}.traffic i{width:11px;height:11px;border-radius:50%;display:block}
+  .traffic i:nth-child(1){background:#FF5F57}.traffic i:nth-child(2){background:#FEBC2E}.traffic i:nth-child(3){background:#28C840}
+  .omni{flex:1;height:22px;border-radius:var(--r-sm);background:#0F172A;display:flex;align-items:center;justify-content:center;color:#94A3B8;font-family:var(--mono);font-size:11px}
+  .pgbody{position:absolute;inset:36px 0 0 0;display:flex;flex-direction:column}
+  .pgmain{flex:1;display:flex;flex-direction:column;padding:40px;filter:blur(1px);opacity:.55}
+  .greet{font-size:1.5rem;font-weight:var(--w-semi);color:var(--text-secondary);text-align:center;margin:auto 0}
+  .input{margin:0 auto 28px;width:min(680px,80%);border:1px solid var(--border-default);border-radius:var(--r-2xl);background:var(--bg-surface);padding:14px 16px;display:flex;align-items:center;gap:10px;box-shadow:var(--sh-sm)}
+  .input .ph{flex:1;color:var(--text-disabled);font-size:.8125rem}
+  .input .mic,.input .snd{width:30px;height:30px;border-radius:50%;display:grid;place-items:center}
+  .input .mic{color:var(--text-muted)}.input .snd{background:var(--accent);color:#fff}
+  .backdrop{position:absolute;inset:36px 0 0 0;background:rgba(15,23,42,.45);backdrop-filter:blur(2px)}
+  [data-theme="dark"] .backdrop{background:rgba(0,0,0,.6)}
+  .overlay{position:absolute;inset:36px 0 0 0;display:flex;align-items:flex-start;justify-content:center;padding-top:11vh}
+
+  /* ===== picker ===== */
+  .picker{width:560px;max-width:90vw;background:var(--bg-surface);border:1px solid var(--border-default);border-radius:var(--r-2xl);box-shadow:var(--sh-2xl);overflow:hidden}
+  .pk-srch{display:flex;align-items:center;gap:12px;padding:16px 20px;border-bottom:1px solid var(--border-subtle);color:var(--text-muted)}
+  .pk-srch .q{flex:1;font-size:1rem;color:var(--text-muted);font-weight:var(--w-med)}
+  .kbd{display:inline-flex;align-items:center;justify-content:center;height:18px;min-width:18px;padding:0 5px;background:var(--bg-surface);border:1px solid var(--border-default);border-radius:4px;font-family:var(--mono);font-size:10px;color:var(--text-secondary)}
+  .pk-meta{padding:8px 20px;background:var(--bg-subtle);color:var(--text-muted);font-size:.75rem;font-weight:var(--w-semi);letter-spacing:.04em;text-transform:uppercase;border-bottom:1px solid var(--border-subtle)}
+  .pk-list{padding:6px}
+  .pk-item{display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:var(--r-md)}
+  .pk-item.on{background:var(--accent-soft);color:var(--text-accent)}
+  .pk-ic{width:32px;height:32px;border-radius:var(--r-md);display:grid;place-items:center;background:var(--bg-subtle);color:var(--text-muted);flex-shrink:0}
+  .pk-item.on .pk-ic{background:var(--accent-soft-2);color:var(--text-accent)}
+  .pk-c{flex:1;min-width:0}.pk-t{font-size:.8125rem;font-weight:var(--w-semi)}
+  .pk-p{font-size:.75rem;color:var(--text-muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .pk-item.on .pk-p{color:var(--text-accent);opacity:.75}
+  .pk-foot{display:flex;align-items:center;justify-content:space-between;padding:10px 20px;border-top:1px solid var(--border-subtle);background:var(--bg-subtle);font-size:.75rem;color:var(--text-muted)}
+  .pk-hints{display:flex;gap:12px}
+
+  /* ===== modal (vars / save) ===== */
+  .modal{width:520px;max-width:90vw;background:var(--bg-surface);border:1px solid var(--border-default);border-radius:var(--r-2xl);box-shadow:var(--sh-2xl);overflow:hidden}
+  .mh{display:flex;align-items:center;gap:12px;padding:16px 20px;border-bottom:1px solid var(--border-subtle)}
+  .mh .ic{width:32px;height:32px;border-radius:var(--r-md);background:var(--grad);color:#fff;display:grid;place-items:center}
+  .mh h3{font-size:.9375rem;font-weight:var(--w-semi);flex:1}.mh .sub{font-size:11px;color:var(--text-muted);margin-top:1px}
+  .mb{padding:16px 20px;display:flex;flex-direction:column;gap:14px}
+  .fl{display:flex;flex-direction:column;gap:6px}
+  .lb{display:flex;align-items:center;gap:8px;font-size:.75rem;font-weight:var(--w-semi);color:var(--text-secondary)}
+  .nt{display:inline-flex;padding:1px 6px;border-radius:4px;background:var(--accent-soft);color:var(--text-accent);font-family:var(--mono);font-size:11px;font-weight:var(--w-semi)}
+  .inp{height:36px;padding:0 12px;background:var(--bg-surface);border:1px solid var(--border-default);border-radius:var(--r-md);color:var(--text-primary);font-size:.8125rem;display:flex;align-items:center}
+  .inp.foc{border-color:var(--violet-500);box-shadow:0 0 0 3px var(--violet-200)}
+  [data-theme="dark"] .inp.foc{box-shadow:0 0 0 3px rgba(139,92,246,.35)}
+  .ta{min-height:84px;padding:8px 12px;background:var(--bg-surface);border:1px solid var(--border-default);border-radius:var(--r-md);font-family:var(--mono);font-size:12px;line-height:1.5;color:var(--text-secondary)}
+  .colorrow{display:flex;align-items:center;gap:8px}
+  .swatch{width:44px;height:36px;border-radius:var(--r-md);border:1px solid var(--border-default);flex-shrink:0}
+  .prev{background:var(--bg-subtle);border:1px solid var(--border-subtle);border-radius:var(--r-md);padding:12px;font-family:var(--mono);font-size:12px;line-height:1.55;color:var(--text-secondary);white-space:pre-wrap}
+  .hl{background:var(--accent-soft);color:var(--text-accent);padding:1px 5px;border-radius:3px;font-weight:var(--w-semi)}
+  .mf{display:flex;align-items:center;gap:12px;padding:12px 20px;border-top:1px solid var(--border-subtle);background:var(--bg-subtle)}
+  .btns{margin-left:auto;display:flex;gap:8px}
+  .btn{height:34px;padding:0 16px;border-radius:var(--r-md);font-size:.8125rem;font-weight:var(--w-med);display:inline-flex;align-items:center;gap:6px}
+  .btn.g{background:transparent;border:1px solid var(--border-default);color:var(--text-secondary)}
+  .btn.p{background:var(--grad);color:#fff;box-shadow:var(--sh-sm)}
+
+  /* ===== options ===== */
+  .opt{width:min(1040px,94vw);background:var(--bg-surface);border:1px solid var(--border-subtle);border-radius:var(--r-2xl);box-shadow:var(--sh-2xl);overflow:hidden}
+  .opt-h{display:flex;align-items:center;gap:12px;padding:16px 24px;border-bottom:1px solid var(--border-subtle)}
+  .opt-mk{width:34px;height:34px;border-radius:var(--r-lg);background:var(--grad);color:#fff;display:grid;place-items:center;box-shadow:var(--sh-sm)}
+  .opt-body{display:grid;grid-template-columns:200px 1fr;gap:24px;padding:24px}
+  .nav{display:flex;flex-direction:column;gap:2px;background:var(--bg-surface);border:1px solid var(--border-subtle);border-radius:var(--r-xl);padding:8px;box-shadow:var(--sh-sm);align-self:start}
+  .nt2{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:var(--r-md);font-size:.8125rem;font-weight:var(--w-med);color:var(--text-secondary)}
+  .nt2.on{background:var(--accent-soft);color:var(--text-accent);font-weight:var(--w-semi)}
+  .nt2 svg{opacity:.7}
+  .sep{height:1px;background:var(--border-subtle);margin:6px 4px}
+  .pt{font-size:1.25rem;font-weight:var(--w-bold);letter-spacing:-.02em;margin-bottom:4px}
+  .pd{color:var(--text-muted);font-size:.8125rem;margin-bottom:20px}
+  .ocard{background:var(--bg-surface);border:1px solid var(--border-subtle);border-radius:var(--r-xl);box-shadow:var(--sh-sm)}
+  .statgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;padding:20px}
+  .stat{text-align:center;padding:16px;background:var(--bg-subtle);border-radius:var(--r-lg)}
+  .stat .v{font-size:1.25rem;font-weight:var(--w-bold);color:var(--text-accent)}.stat .l{font-size:.75rem;color:var(--text-muted);margin-top:2px}
+  .sech{font-size:.75rem;font-weight:var(--w-semi);color:var(--text-muted);letter-spacing:.04em;text-transform:uppercase;margin:16px 0 8px}
+  .bar{display:flex;align-items:center;gap:10px;padding:6px 16px}
+  .bar .bl{width:42%;font-size:.8125rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .track{flex:1;height:8px;background:var(--bg-subtle);border-radius:var(--r-full);overflow:hidden}
+  .track i{display:block;height:100%;background:var(--grad);border-radius:var(--r-full)}
+  .bs{width:48px;text-align:right;font-size:11px;color:var(--text-muted);font-family:var(--mono)}
+
+  /* ===== onboarding ===== */
+  .ob{width:min(960px,94vw);background:var(--bg-surface);border:1px solid var(--border-subtle);border-radius:var(--r-3xl);box-shadow:var(--sh-2xl);overflow:hidden;display:grid;grid-template-columns:340px 1fr;min-height:520px}
+  .ob-hero{background:linear-gradient(160deg,var(--violet-500),var(--violet-700) 55%,var(--violet-900));color:#fff;padding:40px 32px;display:flex;flex-direction:column}
+  .ob-bd{display:flex;align-items:center;gap:12px}
+  .ob-mk{width:44px;height:44px;border-radius:var(--r-xl);background:rgba(255,255,255,.18);display:grid;place-items:center;border:1px solid rgba(255,255,255,.25)}
+  .ob-nm{font-size:1.125rem;font-weight:var(--w-bold)}
+  .ob-ct{margin-top:auto}.ob-ct h2{font-size:1.5rem;font-weight:var(--w-bold);margin-bottom:12px;line-height:1.25}.ob-ct p{font-size:.8125rem;line-height:1.65;opacity:.85}
+  .dots{display:flex;gap:8px;margin-top:32px}.dot{display:flex;align-items:center;gap:8px;opacity:.5}.dot.on{opacity:1}
+  .dot .n{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;font-size:11px;font-weight:var(--w-semi);border:1.5px solid rgba(255,255,255,.4)}
+  .dot.on .n{background:#fff;color:var(--violet-700);border-color:#fff}.dot .l{font-size:11px;font-weight:var(--w-med)}
+  .ob-body{padding:40px 32px;display:flex;flex-direction:column}
+  .kick{font-size:.75rem;font-weight:var(--w-semi);color:var(--text-accent);letter-spacing:.04em;text-transform:uppercase;margin-bottom:6px}
+  .ob-body h3{font-size:1.25rem;font-weight:var(--w-bold);margin-bottom:6px}.ob-body>p{color:var(--text-muted);font-size:.8125rem;margin-bottom:24px;line-height:1.6}
+  .prog{height:3px;background:var(--bg-subtle);border-radius:var(--r-full);overflow:hidden;margin-bottom:24px}.prog i{display:block;height:100%;width:33%;background:var(--grad)}
+  .kbdd{display:flex;align-items:center;gap:10px;justify-content:center;padding:32px;background:var(--bg-subtle);border-radius:var(--r-2xl)}
+  .kbig{height:48px;min-width:48px;padding:0 16px;background:var(--bg-surface);border:1px solid var(--border-default);border-radius:var(--r-lg);font-family:var(--mono);font-size:1.125rem;font-weight:var(--w-semi);box-shadow:var(--sh-sm);display:inline-flex;align-items:center;justify-content:center}
+  .obfoot{display:flex;align-items:center;justify-content:space-between;margin-top:32px;padding-top:20px;border-top:1px solid var(--border-subtle)}
+</style>
+</head>
+<body>
+
+<!-- =========== POPUP =========== -->
+<div class="frame" data-shot="popup">
+  <div class="sp" style="width:600px;height:600px">
+    <div class="sp-head">
+      <div class="mark"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12l-2 8 4 5-7-2-7 4 2-9-4-4z"/></svg></div>
+      <div class="nm">SnapPrompt</div>
+      <div class="hacts">
+        <div class="ib"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div>
+        <div class="ib"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18"/></svg></div>
+        <div class="ib"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M15 4v16"/></svg></div>
+        <div class="ib"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></div>
+      </div>
+    </div>
+    <div class="tb">
+      <div class="srch"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><span style="font-size:.8125rem">프롬프트 검색...</span><span class="kbd" style="margin-left:auto">⌘K</span></div>
+      <div class="chips">
+        <span class="chip on"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>전체 폴더 <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></span>
+        <span class="chip"><svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15 8 22 9 17 14 18 21 12 18 6 21 7 14 2 9 9 8"/></svg> 즐겨찾기</span>
+        <span class="sort">최근 사용 ▾</span>
+      </div>
+    </div>
+    <div class="body">
+      <div class="side">
+        <div class="fld on"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>전체<span class="c">12</span></div>
+        <div class="fld"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>코딩<span class="c">5</span></div>
+        <div class="fld nest"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>리뷰<span class="c">3</span></div>
+        <div class="fld"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>영어<span class="c">3</span></div>
+        <div class="fld" style="color:var(--text-disabled)"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/></svg>분류 없음<span class="c">1</span></div>
+        <div class="slbl">Tags</div>
+        <div class="fld"><span style="color:var(--text-accent)">#</span>리뷰<span class="c">3</span></div>
+        <div class="fld"><span style="color:var(--text-accent)">#</span>영어<span class="c">5</span></div>
+      </div>
+      <div class="list">
+        <div class="card"><div class="h"><div class="chk"></div><svg class="star" width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15 8 22 9 17 14 18 21 12 18 6 21 7 14 2 9 9 8"/></svg><div class="ct">코드 리뷰 (한국어)</div><span class="vb">2 vars</span></div><div class="cp">{{언어}}로 다음 코드를 리뷰해줘. 보안·성능·가독성 관점에서...</div><div class="cm"><span class="tag">코딩</span><span class="tag">리뷰</span><div class="acts"><span class="a">복사</span><span class="a pri">삽입</span></div></div></div>
+        <div class="card"><div class="h"><div class="chk"></div><div class="ct">영어 이메일 답장</div></div><div class="cp">Write a professional reply in English. Keep it concise...</div><div class="cm"><span class="tag">이메일</span><div class="acts"><span class="a">복사</span><span class="a pri">삽입</span></div></div></div>
+        <div class="card"><div class="h"><div class="chk"></div><svg class="star" width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15 8 22 9 17 14 18 21 12 18 6 21 7 14 2 9 9 8"/></svg><div class="ct">3줄 요약</div><span class="vb">1 var</span></div><div class="cp">다음 내용을 핵심만 3줄로 요약해줘...</div><div class="cm"><span class="tag">요약</span><div class="acts"><span class="a">복사</span><span class="a pri">삽입</span></div></div></div>
+      </div>
+    </div>
+    <div class="foot"><div class="new"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>새 프롬프트</div><span class="cnt">12개</span></div>
+  </div>
+</div>
+
+<!-- =========== PICKER (dark, on faux ChatGPT) =========== -->
+<div class="frame" data-shot="picker">
+  <div class="page">
+    <div class="chrome"><div class="traffic"><i></i><i></i><i></i></div><div class="omni">🔒 chatgpt.com</div></div>
+    <div class="pgbody"><div class="pgmain"><div class="greet">무엇을 도와드릴까요?</div><div class="input"><span class="ph">메시지를 입력하세요…</span><span class="mic"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/></svg></span><span class="snd"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg></span></div></div></div>
+    <div class="backdrop"></div>
+    <div class="overlay">
+      <div class="picker">
+        <div class="pk-srch"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><span class="q">프롬프트 검색하거나 ↑↓로 탐색...</span><span class="kbd">Esc</span></div>
+        <div class="pk-meta">자주 사용 · 최근 사용</div>
+        <div class="pk-list">
+          <div class="pk-item on"><div class="pk-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg></div><div class="pk-c"><div class="pk-t">코드 리뷰 (한국어)</div><div class="pk-p">{{언어}}로 다음 코드를 리뷰해줘. 보안·성능·가독성...</div></div><span class="vb">2 vars</span></div>
+          <div class="pk-item"><div class="pk-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/></svg></div><div class="pk-c"><div class="pk-t">영어 이메일 답장</div><div class="pk-p">Write a professional reply in English...</div></div></div>
+          <div class="pk-item"><div class="pk-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="17" y1="10" x2="3" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="17" y1="18" x2="3" y2="18"/></svg></div><div class="pk-c"><div class="pk-t">3줄 요약</div><div class="pk-p">다음 내용을 핵심만 3줄로 요약해줘...</div></div><span class="vb">1 var</span></div>
+        </div>
+        <div class="pk-foot"><span>SnapPrompt</span><span class="pk-hints"><span><span class="kbd">↑</span><span class="kbd">↓</span> 탐색</span><span><span class="kbd">↵</span> 삽입</span><span><span class="kbd">Esc</span> 닫기</span></span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- =========== VARIABLE MODAL (with color picker) =========== -->
+<div class="frame" data-shot="vars">
+  <div class="modal">
+    <div class="mh"><div class="ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg></div><div style="flex:1"><h3>로고 디자인 프롬프트</h3><div class="sub">3개 변수 채우기</div></div></div>
+    <div class="mb">
+      <div class="fl"><div class="lb"><span class="nt">{{스타일}}</span></div>
+        <div class="inp">미니멀</div></div>
+      <div class="fl"><div class="lb"><span class="nt">{{메인색}}</span></div>
+        <div class="colorrow"><div class="swatch" style="background:#7C3AED"></div><div class="inp" style="flex:1;font-family:var(--mono)">#7C3AED</div></div></div>
+      <div class="fl"><div class="lb"><span class="nt">{{컨셉}}</span></div>
+        <div class="ta">친환경 커피 브랜드</div></div>
+      <div class="fl"><div class="lb">미리보기</div>
+        <div class="prev"><span class="hl">미니멀</span> 스타일의 로고를 디자인해줘. 메인 컬러는 <span class="hl">#7C3AED</span>, 컨셉은 <span class="hl">친환경 커피 브랜드</span>.</div></div>
+    </div>
+    <div class="mf"><span style="font-size:11px;color:var(--text-muted)"><span class="kbd">⌘</span><span class="kbd">↵</span> 삽입</span><div class="btns"><span class="btn g">취소</span><span class="btn p">삽입 <span class="kbd" style="border-color:rgba(255,255,255,.3);background:rgba(255,255,255,.15);color:#fff">⌘↵</span></span></div></div>
+  </div>
+</div>
+
+<!-- =========== SAVE MODAL =========== -->
+<div class="frame" data-shot="save">
+  <div class="page">
+    <div class="chrome"><div class="traffic"><i></i><i></i><i></i></div><div class="omni">🔒 twitter.com</div></div>
+    <div class="pgbody"><div class="pgmain"><div style="max-width:620px;margin:0 auto"><div style="font-size:1.05rem;font-weight:var(--w-bold);margin-bottom:10px">프롬프트 엔지니어링 팁 🧵</div><div style="font-size:.85rem;line-height:1.7;color:var(--text-secondary)">코드 리뷰를 요청할 때 관점을 명시하면 훨씬 좋은 답이 나와요...</div></div></div></div>
+    <div class="backdrop"></div>
+    <div class="overlay">
+      <div class="modal">
+        <div class="mh"><div class="ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12l-2 8 4 5-7-2-7 4 2-9-4-4z"/></svg></div><div style="flex:1"><h3>프롬프트 저장</h3><div class="sub">선택한 텍스트가 본문에 채워졌어요</div></div></div>
+        <div class="mb" style="gap:12px">
+          <div class="fl"><div class="lb">제목</div><div class="inp foc">코드 리뷰 (한국어)</div></div>
+          <div class="fl"><div class="lb">본문</div><div class="ta">{{언어|한국어}}로 다음 코드를 리뷰해줘. 보안, 성능, 가독성 관점에서 개선점을 우선순위와 함께 알려줘. 코드: {{code}}</div></div>
+          <div class="fl"><div class="lb">변수 2개 감지됨</div><div style="display:flex;gap:6px"><span class="nt">{{언어}}</span><span class="nt">{{code}}</span></div></div>
+          <div style="display:flex;gap:12px"><div class="fl" style="flex:1"><div class="lb">폴더</div><div class="inp">코딩 / 리뷰</div></div><div class="fl" style="flex:1"><div class="lb">태그</div><div class="inp">코딩, 리뷰</div></div></div>
+        </div>
+        <div class="mf"><span style="font-size:11px;color:var(--text-muted)"><span class="kbd">⌘</span><span class="kbd">↵</span> 저장</span><div class="btns"><span class="btn g">취소</span><span class="btn p">저장</span></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- =========== OPTIONS (stats) =========== -->
+<div class="frame" data-shot="options">
+  <div class="opt">
+    <div class="opt-h"><div class="opt-mk"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12l-2 8 4 5-7-2-7 4 2-9-4-4z"/></svg></div><div><div style="font-weight:var(--w-bold);font-size:1rem">SnapPrompt</div><div style="font-size:.75rem;color:var(--text-muted)">설정</div></div></div>
+    <div class="opt-body">
+      <div class="nav">
+        <div class="nt2"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="9"/></svg>일반</div>
+        <div class="nt2 on"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>통계</div>
+        <div class="nt2"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg>프롬프트</div>
+        <div class="nt2"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>폴더</div>
+        <div class="nt2"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/></svg>태그</div>
+        <div class="nt2"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/></svg>백업</div>
+        <div class="sep"></div>
+        <div class="nt2"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>데이터</div>
+        <div class="nt2"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>정보</div>
+      </div>
+      <div>
+        <div class="pt">통계</div><div class="pd">프롬프트 사용 현황</div>
+        <div class="ocard statgrid"><div class="stat"><div class="v">12</div><div class="l">프롬프트</div></div><div class="stat"><div class="v">4</div><div class="l">폴더</div></div><div class="stat"><div class="v">87</div><div class="l">총 사용 횟수</div></div><div class="stat"><div class="v">7.3</div><div class="l">프롬프트당 평균</div></div></div>
+        <div class="sech">많이 쓴 프롬프트</div>
+        <div class="ocard" style="padding:14px 0">
+          <div class="bar"><span class="bl">코드 리뷰 (한국어)</span><div class="track"><i style="width:100%"></i></div><span class="bs">32회</span></div>
+          <div class="bar"><span class="bl">3줄 요약</span><div class="track"><i style="width:66%"></i></div><span class="bs">21회</span></div>
+          <div class="bar"><span class="bl">영어 이메일 답장</span><div class="track"><i style="width:44%"></i></div><span class="bs">14회</span></div>
+          <div class="bar"><span class="bl">SQL 쿼리 분석</span><div class="track"><i style="width:31%"></i></div><span class="bs">10회</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- =========== ONBOARDING =========== -->
+<div class="frame" data-shot="onboarding">
+  <div class="ob">
+    <div class="ob-hero">
+      <div class="ob-bd"><div class="ob-mk"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12l-2 8 4 5-7-2-7 4 2-9-4-4z"/></svg></div><div class="ob-nm">SnapPrompt</div></div>
+      <div class="ob-ct"><h2>환영해요 👋</h2><p>좋은 프롬프트를 발견하면 스냅, 필요할 때 한 번에 꺼내 쓰세요. 시작하기 전에 딱 세 가지만 설정해요.</p>
+        <div class="dots"><div class="dot on"><span class="n">1</span><span class="l">단축키</span></div><div class="dot"><span class="n">2</span><span class="l">샘플</span></div><div class="dot"><span class="n">3</span><span class="l">테마·언어</span></div></div></div>
+    </div>
+    <div class="ob-body">
+      <div class="prog"><i></i></div>
+      <div class="kick">STEP 1 / 3</div><h3>단축키 설정</h3><p>어떤 사이트에서든 단축키로 프롬프트 피커를 띄울 수 있어요. Chrome 정책상 단축키는 직접 지정해야 해요.</p>
+      <div style="flex:1"><div class="kbdd"><span class="kbig">⌘</span><span>+</span><span class="kbig">⇧</span><span>+</span><span class="kbig">L</span><span style="margin-left:8px;color:var(--text-muted);font-size:.8125rem">추천</span></div></div>
+      <div class="obfoot"><span style="color:var(--text-muted);font-size:.8125rem">건너뛰기</span><span class="btn p" style="background:var(--grad)">다음 ›</span></div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const params = new URLSearchParams(location.search);
+  const shot = (location.hash.replace('#','') || params.get('shot') || 'popup');
+  const theme = params.get('theme') || (shot === 'picker' ? 'dark' : 'light');
+  document.documentElement.dataset.theme = theme;
+  const el = document.querySelector(`.frame[data-shot="${shot}"]`);
+  if (el) el.classList.add('active');
+</script>
+</body>
+</html>
