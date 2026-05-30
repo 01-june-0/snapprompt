@@ -12,8 +12,9 @@
 import type { Variable, VariableType } from './types';
 
 // 1=name  2=type  3=select options  4=default
+// Whitespace around `:` and `|` is tolerated (e.g. {{name : color}}).
 const VAR_RE =
-  /\{\{\s*([a-zA-Z0-9_\-가-힣]+)\s*(?::([a-zA-Z]+)(?:\(([^)]*)\))?)?\s*(?:\|([^}]*))?\s*\}\}/g;
+  /\{\{\s*([a-zA-Z0-9_\-가-힣]+)\s*(?::\s*([a-zA-Z]+)\s*(?:\(([^)]*)\))?)?\s*(?:\|([^}]*))?\s*\}\}/g;
 
 const MULTILINE_HINT = /code|content|text|본문|코드|내용/i;
 

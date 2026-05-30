@@ -527,7 +527,7 @@ function deriveTitle(text: string): string {
 function renderPreview(body: string, values: Record<string, string>, vars: Variable[]) {
   // Render with filled/empty highlight spans
   const parts: preact.ComponentChildren[] = [];
-  const re = /\{\{\s*([a-zA-Z0-9_\-가-힣]+)\s*(?::[a-zA-Z]+(?:\([^)]*\))?)?\s*(?:\|([^}]*))?\s*\}\}/g;
+  const re = /\{\{\s*([a-zA-Z0-9_\-가-힣]+)\s*(?::\s*[a-zA-Z]+\s*(?:\([^)]*\))?)?\s*(?:\|([^}]*))?\s*\}\}/g;
   let last = 0;
   let m: RegExpExecArray | null;
   const defaults = new Map(vars.map((v) => [v.name, v.defaultValue]));
