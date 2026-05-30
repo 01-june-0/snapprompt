@@ -17,11 +17,10 @@ const VAR_RE =
 
 const MULTILINE_HINT = /code|content|text|본문|코드|내용/i;
 
+const KNOWN_TYPES = ['textarea', 'select', 'date', 'number', 'color', 'text'];
 function parseType(raw: string | undefined, name: string): VariableType {
   const t = (raw ?? '').toLowerCase();
-  if (t === 'textarea' || t === 'select' || t === 'date' || t === 'number' || t === 'text') {
-    return t as VariableType;
-  }
+  if (KNOWN_TYPES.includes(t)) return t as VariableType;
   // no explicit type → heuristic: long-form names become textareas
   return MULTILINE_HINT.test(name) ? 'textarea' : 'text';
 }
@@ -43,6 +42,8 @@ export function extractVariables(body: string): Variable[] {
     let defaultValue = rawDefault !== undefined ? rawDefault.trim() || null : null;
     // a select with no explicit default falls back to its first option
     if (type === 'select' && !defaultValue && options.length) defaultValue = options[0];
+    // a color with no explicit default falls back to a valid hex
+    if (type === 'color' && !defaultValue) defaultValue = '#7C3AED';
     seen.set(name, {
       name,
       type,

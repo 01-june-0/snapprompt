@@ -3,7 +3,7 @@
  * See docs/PRD.md §6
  */
 
-export type VariableType = 'text' | 'textarea' | 'select' | 'date' | 'number';
+export type VariableType = 'text' | 'textarea' | 'select' | 'date' | 'number' | 'color';
 
 export interface Variable {
   /** The `name` part of {{name}} */

@@ -317,6 +317,11 @@ function VarField({
         <input class="sp-input" type="date" value={value} onInput={(e) => onChange((e.target as HTMLInputElement).value)} />
       ) : variable.type === 'number' ? (
         <input class="sp-input" type="number" value={value} onInput={(e) => onChange((e.target as HTMLInputElement).value)} />
+      ) : variable.type === 'color' ? (
+        <div class="sp-color">
+          <input type="color" value={value || '#7C3AED'} onInput={(e) => onChange((e.target as HTMLInputElement).value)} />
+          <input class="sp-input" value={value} placeholder="#7C3AED" onInput={(e) => onChange((e.target as HTMLInputElement).value)} />
+        </div>
       ) : (
         <input class="sp-input" value={value} onInput={(e) => onChange((e.target as HTMLInputElement).value)} />
       )}

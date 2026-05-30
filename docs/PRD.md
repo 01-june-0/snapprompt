@@ -381,6 +381,7 @@ snapprompt:meta        → { schemaVersion: 1 }
 | `{{name:textarea}}` | 여러 줄 |
 | `{{name:number}}` / `{{name:number\|0}}` | 숫자 |
 | `{{name:date}}` | 날짜 (YYYY-MM-DD) |
+| `{{name:color}}` | 컬러 피커 (기본값 `#7C3AED`) |
 | `{{name:select(a,b,c)}}` | 드롭다운 (기본값은 첫 옵션, `\|b`로 지정 가능) |
 
 정규식: `\{\{\s*([a-zA-Z0-9_\-가-힣]+)\s*(?::([a-zA-Z]+)(?:\(([^)]*)\))?)?\s*(?:\|([^}]*))?\s*\}\}`

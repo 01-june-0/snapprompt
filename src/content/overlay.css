@@ -168,6 +168,14 @@
   font-size: 12px; margin: 0 6px 6px 0;
 }
 
+/* Color picker variable */
+.sp-color { display: flex; align-items: center; gap: 8px; }
+.sp-color input[type="color"] {
+  width: 44px; height: 36px; padding: 2px; border: 1px solid var(--border-default);
+  border-radius: var(--radius-md); background: var(--bg-surface); cursor: pointer; flex-shrink: 0;
+}
+.sp-color .sp-input { flex: 1; font-family: var(--font-mono); }
+
 /* Tag autocomplete dropdown */
 .sp-ac {
   position: absolute; left: 0; right: 0; top: calc(100% + 4px); z-index: 5;
