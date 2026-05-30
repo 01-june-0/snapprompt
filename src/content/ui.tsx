@@ -307,8 +307,16 @@ function VarField({
         <span class="sp-name-tag">{`{{${variable.name}}}`}</span>
         {variable.defaultValue && <span style="color:var(--text-muted);font-weight:400">{t('content.default', [variable.defaultValue])}</span>}
       </div>
-      {variable.multiline ? (
+      {variable.type === 'textarea' ? (
         <textarea class="sp-textarea" value={value} onInput={(e) => onChange((e.target as HTMLTextAreaElement).value)} />
+      ) : variable.type === 'select' ? (
+        <select class="sp-input" value={value} onChange={(e) => onChange((e.target as HTMLSelectElement).value)}>
+          {variable.options.map((o) => <option key={o} value={o}>{o}</option>)}
+        </select>
+      ) : variable.type === 'date' ? (
+        <input class="sp-input" type="date" value={value} onInput={(e) => onChange((e.target as HTMLInputElement).value)} />
+      ) : variable.type === 'number' ? (
+        <input class="sp-input" type="number" value={value} onInput={(e) => onChange((e.target as HTMLInputElement).value)} />
       ) : (
         <input class="sp-input" value={value} onInput={(e) => onChange((e.target as HTMLInputElement).value)} />
       )}
@@ -514,7 +522,7 @@ function deriveTitle(text: string): string {
 function renderPreview(body: string, values: Record<string, string>, vars: Variable[]) {
   // Render with filled/empty highlight spans
   const parts: preact.ComponentChildren[] = [];
-  const re = /\{\{\s*([a-zA-Z0-9_\-가-힣]+)\s*(?:\|([^}]*))?\}\}/g;
+  const re = /\{\{\s*([a-zA-Z0-9_\-가-힣]+)\s*(?::[a-zA-Z]+(?:\([^)]*\))?)?\s*(?:\|([^}]*))?\s*\}\}/g;
   let last = 0;
   let m: RegExpExecArray | null;
   const defaults = new Map(vars.map((v) => [v.name, v.defaultValue]));

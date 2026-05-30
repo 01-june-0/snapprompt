@@ -7,6 +7,7 @@ import { search, sortPrompts } from '@shared/search';
 import { extractVariables, substitute, hasVariables } from '@shared/variables';
 import { sendToActiveTab, sendToBackground } from '@shared/messaging';
 import { flattenTree, selfAndDescendants, countInFolder } from '@shared/folders';
+import { renderMarkdown } from '@shared/markdown';
 import { t } from '@shared/i18n';
 import { uuid } from '@shared/id';
 
@@ -343,6 +344,7 @@ function Editor({
   const [folderId, setFolderId] = useState<string | null>(prompt.folderId);
   const [tags, setTags] = useState(prompt.tags.join(', '));
   const [memo, setMemo] = useState(prompt.memo ?? '');
+  const [preview, setPreview] = useState(false);
   const vars = useMemo(() => extractVariables(body), [body]);
 
   async function save() {
@@ -380,8 +382,16 @@ function Editor({
           <input class="pp-input" value={title} onInput={(e) => setTitle((e.target as HTMLInputElement).value)} placeholder={t('common.title')} />
         </div>
         <div class="pp-field">
-          <label class="pp-flabel">{t('common.body')}</label>
-          <textarea class="pp-textarea" value={body} onInput={(e) => setBody((e.target as HTMLTextAreaElement).value)} placeholder={t('popup.bodyPlaceholder')} />
+          <div style="display:flex;align-items:center;gap:8px">
+            <label class="pp-flabel" style="flex:1">{t('common.body')}</label>
+            <div class="pp-seg">
+              <button class={preview ? '' : 'on'} onClick={() => setPreview(false)}>{t('common.edit')}</button>
+              <button class={preview ? 'on' : ''} onClick={() => setPreview(true)}>{t('common.preview')}</button>
+            </div>
+          </div>
+          {preview
+            ? <div class="pp-md" dangerouslySetInnerHTML={{ __html: renderMarkdown(body) }} />
+            : <textarea class="pp-textarea" value={body} onInput={(e) => setBody((e.target as HTMLTextAreaElement).value)} placeholder={t('popup.bodyPlaceholder')} />}
         </div>
         {vars.length > 0 && (
           <div class="pp-field">

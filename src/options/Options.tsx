@@ -13,7 +13,7 @@ import { extractVariables } from '@shared/variables';
 import { t } from '@shared/i18n';
 import { uuid } from '@shared/id';
 
-type Tab = 'general' | 'prompts' | 'folders' | 'tags' | 'backup' | 'shortcuts' | 'data' | 'about';
+type Tab = 'general' | 'stats' | 'prompts' | 'folders' | 'tags' | 'backup' | 'shortcuts' | 'data' | 'about';
 
 export function Options() {
   const [tab, setTab] = useState<Tab>('general');
@@ -48,6 +48,7 @@ export function Options() {
       <div class="op-layout">
         <nav class="op-nav">
           <TabBtn id="general" tab={tab} set={setTab} label={t('opt.nav.general')} />
+          <TabBtn id="stats" tab={tab} set={setTab} label={t('opt.nav.stats')} />
           <TabBtn id="prompts" tab={tab} set={setTab} label={t('opt.nav.prompts')} />
           <TabBtn id="folders" tab={tab} set={setTab} label={t('opt.nav.folders')} />
           <TabBtn id="tags" tab={tab} set={setTab} label={t('opt.nav.tags')} />
@@ -59,6 +60,7 @@ export function Options() {
         </nav>
         <div>
           {tab === 'general' && <General settings={settings} patch={patch} folders={folders} />}
+          {tab === 'stats' && <Stats prompts={prompts} folders={folders} />}
           {tab === 'prompts' && <PromptsManager prompts={prompts} folders={folders} flash={flash} onChange={async (p) => { await setPrompts(p); setLocalPrompts(p); }} />}
           {tab === 'folders' && <Folders folders={folders} onChange={async (f) => { await setFolders(f); setLocalFolders(f); }} />}
           {tab === 'tags' && <Tags prompts={prompts} onChange={async (p) => { await setPrompts(p); setLocalPrompts(p); flash(t('opt.tags.toast.cleaned')); }} />}
@@ -613,8 +615,77 @@ function About({ prompts, folders }: { prompts: Prompt[]; folders: Folder[] }) {
     </>
   );
 }
-function Stat({ v, l }: { v: number; l: string }) {
+function Stat({ v, l }: { v: number | string; l: string }) {
   return <div style="text-align:center;padding:16px;background:var(--bg-subtle);border-radius:10px"><div style="font-size:var(--text-2xl);font-weight:700;color:var(--text-accent)">{v}</div><div style="font-size:var(--text-xs);color:var(--text-muted);margin-top:2px">{l}</div></div>;
+}
+
+/* ---------- Stats (Phase 3) ---------- */
+function Stats({ prompts, folders }: { prompts: Prompt[]; folders: Folder[] }) {
+  const totalUses = prompts.reduce((a, p) => a + p.useCount, 0);
+  const avg = prompts.length ? totalUses / prompts.length : 0;
+  const topUsed = [...prompts].filter((p) => p.useCount > 0).sort((a, b) => b.useCount - a.useCount).slice(0, 8);
+  const maxUse = topUsed[0]?.useCount ?? 1;
+  const tagCounts = (() => {
+    const m = new Map<string, number>();
+    for (const p of prompts) for (const tg of p.tags) m.set(tg, (m.get(tg) ?? 0) + 1);
+    return [...m.entries()].sort((a, b) => b[1] - a[1]).slice(0, 8);
+  })();
+  const maxTag = tagCounts[0]?.[1] ?? 1;
+  const neverUsed = prompts.filter((p) => p.useCount === 0);
+
+  return (
+    <>
+      <h2 class="op-panel-title">{t('opt.nav.stats')}</h2>
+      <p class="op-panel-desc">{t('opt.stats.desc')}</p>
+
+      <div class="op-card" style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;padding:20px">
+        <Stat v={prompts.length} l={t('opt.about.statPrompts')} />
+        <Stat v={folders.length} l={t('opt.about.statFolders')} />
+        <Stat v={totalUses} l={t('opt.stats.totalUses')} />
+        <Stat v={avg.toFixed(1)} l={t('opt.stats.avgUses')} />
+      </div>
+
+      <div class="section-head">{t('opt.stats.topUsed')}</div>
+      <div class="op-card" style="padding:16px;margin-top:8px">
+        {topUsed.length === 0
+          ? <div style="color:var(--text-muted);font-size:var(--text-sm)">{t('opt.stats.empty')}</div>
+          : topUsed.map((p) => <BarRow key={p.id} label={p.title || t('opt.prompts.untitled')} value={p.useCount} max={maxUse} suffix={t('opt.stats.times', [p.useCount])} />)}
+      </div>
+
+      {tagCounts.length > 0 && (
+        <>
+          <div class="section-head">{t('opt.stats.topTags')}</div>
+          <div class="op-card" style="padding:16px;margin-top:8px">
+            {tagCounts.map(([tag, cnt]) => <BarRow key={tag} label={'#' + tag} value={cnt} max={maxTag} suffix={String(cnt)} accent />)}
+          </div>
+        </>
+      )}
+
+      {neverUsed.length > 0 && (
+        <>
+          <div class="section-head">{t('opt.stats.neverUsed')} ({neverUsed.length})</div>
+          <div class="op-card" style="margin-top:8px">
+            <div class="op-list">
+              {neverUsed.slice(0, 10).map((p) => (
+                <div class="op-row" key={p.id}><span class="op-row-title" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{p.title || t('opt.prompts.untitled')}</span></div>
+              ))}
+              {neverUsed.length > 10 && <div class="op-row"><span class="op-row-sub">{t('opt.stats.more', [neverUsed.length - 10])}</span></div>}
+            </div>
+          </div>
+        </>
+      )}
+    </>
+  );
+}
+
+function BarRow({ label, value, max, suffix, accent }: { label: string; value: number; max: number; suffix: string; accent?: boolean }) {
+  return (
+    <div style="display:flex;align-items:center;gap:10px;padding:5px 0">
+      <span style="width:42%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:var(--text-sm)">{label}</span>
+      <div class="op-bar" style="flex:1"><div style={`width:${Math.max(4, (value / max) * 100)}%${accent ? '' : ''}`} /></div>
+      <span class="op-row-sub" style="width:52px;text-align:right">{suffix}</span>
+    </div>
+  );
 }
 
 /* ---------- shared ---------- */

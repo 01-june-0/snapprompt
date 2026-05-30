@@ -3,14 +3,20 @@
  * See docs/PRD.md §6
  */
 
+export type VariableType = 'text' | 'textarea' | 'select' | 'date' | 'number';
+
 export interface Variable {
-  /** The `name` part of {{name}} or {{name|default}} */
+  /** The `name` part of {{name}} */
   name: string;
+  /** Input type, parsed from `{{name:type(...)}}` (Phase 3) */
+  type: VariableType;
   /** The `default` part of {{name|default}}, or null */
   defaultValue: string | null;
+  /** Options for `type: 'select'`, parsed from `{{name:select(a,b,c)}}` */
+  options: string[];
   /** Last entered value (used when settings.rememberVariableValues is on) */
   lastValue: string | null;
-  /** Whether to render a multi-line textarea for this variable */
+  /** Whether to render a multi-line textarea (true when type === 'textarea') */
   multiline: boolean;
 }
 
