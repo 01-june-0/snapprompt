@@ -6,23 +6,29 @@
  * - install → onboarding, schema init
  * - periodic backup alarm (Phase 2 hook) + snapshots
  */
-import { ensureSchema, takeSnapshot, recordUsage } from '@shared/store';
+import { ensureSchema, takeSnapshot, recordUsage, getSettings } from '@shared/store';
 import { onMessage } from '@shared/messaging';
+import { setLocale, t } from '@shared/i18n';
 import { maybeAutoBackup, runBackupDownload } from './autobackup';
 import type { Message } from '@shared/types';
 
 const CTX_SAVE = 'snapprompt-save-selection';
+const CTX_OPEN = 'snapprompt-open-picker';
+
+/** (Re)build the context menus, localized to the current language setting. */
+async function buildMenus() {
+  const settings = await getSettings();
+  setLocale(settings.language);
+  await chrome.contextMenus.removeAll();
+  chrome.contextMenus.create({ id: CTX_SAVE, title: t('ctx.save'), contexts: ['selection'] });
+  chrome.contextMenus.create({ id: CTX_OPEN, title: t('ctx.open'), contexts: ['page', 'editable'] });
+}
 
 /* ---------- lifecycle ---------- */
 
 chrome.runtime.onInstalled.addListener(async (details) => {
   await ensureSchema();
-
-  chrome.contextMenus.create({
-    id: CTX_SAVE,
-    title: 'SnapPrompt에 저장',
-    contexts: ['selection'],
-  });
+  await buildMenus();
 
   if (details.reason === 'install') {
     // open onboarding (options page) on first install
@@ -30,11 +36,18 @@ chrome.runtime.onInstalled.addListener(async (details) => {
   }
 });
 
+// Rebuild menus on SW startup (locale may have changed) so titles stay localized.
+chrome.runtime.onStartup.addListener(() => { void buildMenus(); });
+
 /* ---------- context menu ---------- */
 
 chrome.contextMenus.onClicked.addListener(async (info, tab) => {
-  if (info.menuItemId !== CTX_SAVE || !tab?.id) return;
-  await openSaveModal(tab.id, info.selectionText ?? '', info.pageUrl ?? tab.url ?? '');
+  if (!tab?.id) return;
+  if (info.menuItemId === CTX_SAVE) {
+    await openSaveModal(tab.id, info.selectionText ?? '', info.pageUrl ?? tab.url ?? '');
+  } else if (info.menuItemId === CTX_OPEN) {
+    await sendToTab(tab.id, { type: 'OPEN_PICKER' });
+  }
 });
 
 /* ---------- keyboard commands ---------- */

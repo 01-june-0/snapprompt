@@ -309,6 +309,7 @@ function Editor({
   const [body, setBody] = useState(prompt.body);
   const [folderId, setFolderId] = useState<string | null>(prompt.folderId);
   const [tags, setTags] = useState(prompt.tags.join(', '));
+  const [memo, setMemo] = useState(prompt.memo ?? '');
   const vars = useMemo(() => extractVariables(body), [body]);
 
   async function save() {
@@ -318,7 +319,8 @@ function Editor({
       title: title.trim() || firstLine(body) || t('common.newPrompt'),
       body,
       folderId,
-      tags: tags.split(',').map((t) => t.trim().replace(/^#/, '')).filter(Boolean),
+      tags: tags.split(',').map((tag) => tag.trim().replace(/^#/, '')).filter(Boolean),
+      memo: memo.trim() || null,
       variables: vars,
       updatedAt: now,
       createdAt: isNew ? now : prompt.createdAt,
@@ -326,6 +328,7 @@ function Editor({
     onSaved();
   }
   async function remove() {
+    if (!confirm(t('popup.deleteConfirm'))) return;
     await deletePrompt(prompt.id);
     onDeleted();
   }
@@ -363,6 +366,10 @@ function Editor({
         <div class="pp-field">
           <label class="pp-flabel">{t('common.tags')} <span style="font-weight:400;color:var(--text-muted)">{t('common.commaSeparated')}</span></label>
           <input class="pp-input" value={tags} placeholder={t('common.tagsPlaceholder')} onInput={(e) => setTags((e.target as HTMLInputElement).value)} />
+        </div>
+        <div class="pp-field">
+          <label class="pp-flabel">{t('common.memo')} <span style="font-weight:400;color:var(--text-muted)">{t('common.optional')}</span></label>
+          <input class="pp-input" value={memo} placeholder={t('common.memoPlaceholder')} onInput={(e) => setMemo((e.target as HTMLInputElement).value)} />
         </div>
       </div>
       <div class="pp-detail-foot">

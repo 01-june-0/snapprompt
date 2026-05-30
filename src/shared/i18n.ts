@@ -33,8 +33,13 @@ const ko: Record<string, string> = {
   'common.tagsPlaceholder': '코딩, 리뷰',
   'common.source': '출처',
   'common.preview': '미리보기',
+  'common.memo': '메모',
+  'common.optional': '선택',
+  'common.memoPlaceholder': '이 프롬프트를 언제 쓰는지 등...',
   'common.detectedVars': '감지된 변수 {0}개',
   'common.varsCount': '{0} vars',
+  'ctx.save': 'SnapPrompt에 저장',
+  'ctx.open': 'SnapPrompt 열기',
 
   // popup
   'popup.search': '프롬프트 검색...',
@@ -147,6 +152,8 @@ const ko: Record<string, string> = {
 
   // options backup
   'opt.backup.desc': '내부 스냅샷은 항상 자동, 외부 백업은 선택 사항',
+  'opt.backup.staleWarn': '마지막 외부 백업이 {0}일 전이에요. JSON으로 내보내 두는 걸 권장해요.',
+  'opt.backup.exportNow': '지금 내보내기',
   'opt.backup.auto': '자동 백업',
   'opt.backup.autoHint': '켜면 다운로드 폴더에 주기적으로 JSON 저장',
   'opt.backup.freq': '백업 주기',
@@ -245,8 +252,13 @@ const en: Record<string, string> = {
   'common.tagsPlaceholder': 'coding, review',
   'common.source': 'Source',
   'common.preview': 'Preview',
+  'common.memo': 'Memo',
+  'common.optional': 'optional',
+  'common.memoPlaceholder': 'When you use this prompt, etc.',
   'common.detectedVars': '{0} variable(s) detected',
   'common.varsCount': '{0} vars',
+  'ctx.save': 'Save to SnapPrompt',
+  'ctx.open': 'Open SnapPrompt',
 
   'popup.search': 'Search prompts...',
   'popup.openWindow': 'Open in window',
@@ -351,6 +363,8 @@ const en: Record<string, string> = {
   'opt.tags.toast.cleaned': 'Tags updated',
 
   'opt.backup.desc': 'Internal snapshots are automatic; external backup is optional',
+  'opt.backup.staleWarn': 'Last external backup was {0} days ago. Consider exporting a JSON backup.',
+  'opt.backup.exportNow': 'Export now',
   'opt.backup.auto': 'Automatic backup',
   'opt.backup.autoHint': 'Periodically saves a JSON file to your downloads',
   'opt.backup.freq': 'Backup interval',

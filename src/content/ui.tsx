@@ -323,6 +323,8 @@ function SaveModal({ text, sourceUrl }: { text: string; sourceUrl: string }) {
   const [folders, setFolders] = useState<Folder[]>([]);
   const [folderId, setFolderId] = useState<string | null>(null);
   const [tagsInput, setTagsInput] = useState('');
+  const [memo, setMemo] = useState('');
+  const [source, setSource] = useState(sourceUrl);
   const [existing, setExisting] = useState<Prompt[]>([]);
   const [tagFocused, setTagFocused] = useState(false);
 
@@ -369,9 +371,9 @@ function SaveModal({ text, sourceUrl }: { text: string; sourceUrl: string }) {
       body,
       variables: vars,
       folderId,
-      tags: tagsInput.split(',').map((t) => t.trim().replace(/^#/, '')).filter(Boolean),
-      memo: null,
-      sourceUrl: sourceUrl || null,
+      tags: tagsInput.split(',').map((tg) => tg.trim().replace(/^#/, '')).filter(Boolean),
+      memo: memo.trim() || null,
+      sourceUrl: source.trim() || null,
       favorite: false,
       createdAt: now,
       updatedAt: now,
@@ -456,12 +458,14 @@ function SaveModal({ text, sourceUrl }: { text: string; sourceUrl: string }) {
               </div>
             )}
           </div>
-          {sourceUrl && (
-            <div class="sp-field">
-              <div class="sp-label">{t('common.source')}</div>
-              <div class="sp-section-tag" style="max-width:100%;overflow:hidden;text-overflow:ellipsis">{sourceUrl}</div>
-            </div>
-          )}
+          <div class="sp-field">
+            <div class="sp-label">{t('common.memo')} <span style="font-weight:400;color:var(--text-muted)">{t('common.optional')}</span></div>
+            <input class="sp-input" value={memo} placeholder={t('common.memoPlaceholder')} onInput={(e) => setMemo((e.target as HTMLInputElement).value)} />
+          </div>
+          <div class="sp-field">
+            <div class="sp-label">{t('common.source')}</div>
+            <input class="sp-input" value={source} onInput={(e) => setSource((e.target as HTMLInputElement).value)} />
+          </div>
         </div>
         <div class="sp-modal-foot">
           <span style="font-size:11px;color:var(--text-muted)"><span class="sp-kbd">⌘</span><span class="sp-kbd">↵</span> {t('common.save')}</span>
