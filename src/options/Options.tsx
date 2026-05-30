@@ -1,14 +1,15 @@
 import { useEffect, useMemo, useState } from 'preact/hooks';
-import type { Settings, Prompt, Folder, ThemePref, LanguagePref, BackupFrequency, Snapshot } from '@shared/types';
+import type { Settings, Prompt, Folder, ThemePref, LanguagePref, BackupFrequency, Snapshot, BackupFile } from '@shared/types';
 import {
   getSettings, setSettings, getPrompts, setPrompts, getFolders, setFolders,
   getSnapshots, restoreSnapshot, subscribe,
 } from '@shared/store';
 import { applyTheme } from '@shared/theme';
-import { buildBackup, downloadBackup, importBackup } from '@shared/backup';
+import { buildBackup, downloadBackup, importBackup, type ImportStrategy } from '@shared/backup';
 import { sendToBackground } from '@shared/messaging';
 import { flattenTree, wouldCycle, folderPath } from '@shared/folders';
 import { search } from '@shared/search';
+import { extractVariables } from '@shared/variables';
 import { t } from '@shared/i18n';
 import { uuid } from '@shared/id';
 
@@ -78,6 +79,16 @@ function TabBtn({ id, tab, set, label }: { id: Tab; tab: Tab; set: (t: Tab) => v
 
 /* ---------- General ---------- */
 function General({ settings, patch, folders }: { settings: Settings; patch: (p: Partial<Settings>) => void; folders: Folder[] }) {
+  const [host, setHost] = useState('');
+  function addHost() {
+    const h = host.trim().replace(/^https?:\/\//, '').replace(/\/.*$/, '');
+    if (!h || settings.disabledHosts.includes(h)) { setHost(''); return; }
+    patch({ disabledHosts: [...settings.disabledHosts, h] });
+    setHost('');
+  }
+  function removeHost(h: string) {
+    patch({ disabledHosts: settings.disabledHosts.filter((x) => x !== h) });
+  }
   return (
     <>
       <h2 class="op-panel-title">{t('opt.nav.general')}</h2>
@@ -108,6 +119,22 @@ function General({ settings, patch, folders }: { settings: Settings; patch: (p: 
             {flattenTree(folders).map((f) => <option key={f.id} value={f.id}>{indent(f.depth)}{f.name}</option>)}
           </select>
         </div>
+      </div>
+
+      <div class="op-card" style="padding:16px">
+        <div class="op-setting-label">{t('opt.sites')}</div>
+        <div class="op-setting-hint" style="margin-bottom:10px">{t('opt.sites.hint')}</div>
+        <div style="display:flex;gap:8px;margin-bottom:10px">
+          <input class="op-input" style="flex:1" value={host} placeholder={t('opt.sites.placeholder')} onInput={(e) => setHost((e.target as HTMLInputElement).value)} onKeyDown={(e) => e.key === 'Enter' && addHost()} />
+          <button class="op-btn primary sm" onClick={addHost}>{t('common.add')}</button>
+        </div>
+        {settings.disabledHosts.length === 0
+          ? <div style="font-size:11px;color:var(--text-muted)">{t('opt.sites.empty')}</div>
+          : <div style="display:flex;flex-wrap:wrap;gap:8px">
+              {settings.disabledHosts.map((h) => (
+                <span class="op-tagchip" key={h}>{h}<button onClick={() => removeHost(h)}><Close /></button></span>
+              ))}
+            </div>}
       </div>
     </>
   );
@@ -198,6 +225,7 @@ function PromptsManager({
   const [query, setQuery] = useState('');
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [tagToAdd, setTagToAdd] = useState('');
+  const [editing, setEditing] = useState<Prompt | null>(null);
 
   const visible = useMemo(
     () => (query.trim() ? search(prompts, query).map((r) => r.prompt) : prompts),
@@ -236,6 +264,18 @@ function PromptsManager({
     setSelected(new Set());
   }
 
+  if (editing) {
+    return (
+      <OptPromptEditor
+        prompt={editing}
+        folders={folders}
+        onCancel={() => setEditing(null)}
+        onSave={(upd) => { onChange(prompts.map((p) => (p.id === upd.id ? upd : p))); setEditing(null); flash(t('popup.toast.saved')); }}
+        onDelete={() => { onChange(prompts.filter((p) => p.id !== editing.id)); setEditing(null); flash(t('popup.toast.deleted')); }}
+      />
+    );
+  }
+
   return (
     <>
       <h2 class="op-panel-title">{t('opt.nav.prompts')}</h2>
@@ -268,15 +308,90 @@ function PromptsManager({
         <div class="op-list">
           {visible.length === 0 && <div class="op-row"><span class="op-row-title" style="color:var(--text-muted)">{query ? t('opt.prompts.emptySearch') : t('opt.prompts.emptyNone')}</span></div>}
           {visible.map((p) => (
-            <label class="op-row" key={p.id} style="cursor:pointer">
+            <div class="op-row" key={p.id}>
               <input type="checkbox" checked={selected.has(p.id)} onChange={() => toggle(p.id)} />
-              <div style="flex:1;min-width:0">
+              <div style="flex:1;min-width:0;cursor:pointer" onClick={() => setEditing(p)}>
                 <div class="op-row-title" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{p.title || t('opt.prompts.untitled')}</div>
                 <div class="op-row-sub">{folderPath(folders, p.folderId)}{p.tags.length ? ' · ' + p.tags.map((tg) => '#' + tg).join(' ') : ''}</div>
               </div>
               {p.variables.length > 0 && <span class="op-row-sub" style="flex-shrink:0;color:var(--text-accent)">{t('common.varsCount', [p.variables.length])}</span>}
-            </label>
+              <button class="op-btn secondary sm" onClick={() => setEditing(p)}>{t('opt.prompts.edit')}</button>
+            </div>
           ))}
+        </div>
+      </div>
+    </>
+  );
+}
+
+/* ---------- Inline prompt editor (in PromptsManager) ---------- */
+function OptPromptEditor({
+  prompt, folders, onSave, onCancel, onDelete,
+}: {
+  prompt: Prompt; folders: Folder[];
+  onSave: (p: Prompt) => void; onCancel: () => void; onDelete: () => void;
+}) {
+  const [title, setTitle] = useState(prompt.title);
+  const [body, setBody] = useState(prompt.body);
+  const [folderId, setFolderId] = useState<string | null>(prompt.folderId);
+  const [tags, setTags] = useState(prompt.tags.join(', '));
+  const [memo, setMemo] = useState(prompt.memo ?? '');
+
+  function save() {
+    onSave({
+      ...prompt,
+      title: title.trim() || t('common.newPrompt'),
+      body,
+      folderId,
+      tags: tags.split(',').map((tg) => tg.trim().replace(/^#/, '')).filter(Boolean),
+      memo: memo.trim() || null,
+      variables: extractVariables(body),
+      updatedAt: Date.now(),
+    });
+  }
+  function del() {
+    if (!confirm(t('popup.deleteConfirm'))) return;
+    onDelete();
+  }
+
+  return (
+    <>
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+        <button class="op-btn secondary sm" onClick={onCancel}>← {t('common.back')}</button>
+        <h2 class="op-panel-title" style="margin:0;font-size:var(--text-xl)">{t('opt.prompts.edit')}</h2>
+      </div>
+      <div class="op-card" style="padding:20px;display:flex;flex-direction:column;gap:14px">
+        <div>
+          <label class="op-setting-label">{t('common.title')}</label>
+          <input class="op-input" style="width:100%;margin-top:6px" value={title} onInput={(e) => setTitle((e.target as HTMLInputElement).value)} />
+        </div>
+        <div>
+          <label class="op-setting-label">{t('common.body')}</label>
+          <textarea style="width:100%;margin-top:6px;min-height:160px;padding:10px;background:var(--bg-surface);border:1px solid var(--border-default);border-radius:var(--r-md,8px);color:var(--text-primary);font-family:var(--font-mono);font-size:12.5px;line-height:1.55;resize:vertical" value={body} onInput={(e) => setBody((e.target as HTMLTextAreaElement).value)} />
+        </div>
+        <div style="display:flex;gap:12px;flex-wrap:wrap">
+          <div style="flex:1;min-width:160px">
+            <label class="op-setting-label">{t('common.folder')}</label>
+            <select class="op-select" style="width:100%;margin-top:6px" value={folderId ?? ''} onChange={(e) => setFolderId((e.target as HTMLSelectElement).value || null)}>
+              <option value="">{t('common.uncategorized')}</option>
+              {flattenTree(folders).map((f) => <option key={f.id} value={f.id}>{indent(f.depth)}{f.name}</option>)}
+            </select>
+          </div>
+          <div style="flex:1;min-width:160px">
+            <label class="op-setting-label">{t('common.tags')}</label>
+            <input class="op-input" style="width:100%;margin-top:6px" value={tags} placeholder={t('common.tagsPlaceholder')} onInput={(e) => setTags((e.target as HTMLInputElement).value)} />
+          </div>
+        </div>
+        <div>
+          <label class="op-setting-label">{t('common.memo')}</label>
+          <input class="op-input" style="width:100%;margin-top:6px" value={memo} placeholder={t('common.memoPlaceholder')} onInput={(e) => setMemo((e.target as HTMLInputElement).value)} />
+        </div>
+        <div style="display:flex;gap:8px;margin-top:4px">
+          <button class="op-btn danger sm" onClick={del}>{t('common.delete')}</button>
+          <div style="margin-left:auto;display:flex;gap:8px">
+            <button class="op-btn secondary" onClick={onCancel}>{t('common.cancel')}</button>
+            <button class="op-btn primary" onClick={save}>{t('common.save')}</button>
+          </div>
         </div>
       </div>
     </>
@@ -291,20 +406,33 @@ function Tags({ prompts, onChange }: { prompts: Prompt[]; onChange: (p: Prompt[]
     return [...map.entries()].sort((a, b) => b[1] - a[1]);
   }, [prompts]);
   function removeTag(tag: string) {
-    onChange(prompts.map((p) => ({ ...p, tags: p.tags.filter((t) => t !== tag) })));
+    onChange(prompts.map((p) => ({ ...p, tags: p.tags.filter((tg) => tg !== tag) })));
+  }
+  function renameTag(oldTag: string, raw: string) {
+    const nt = raw.trim().replace(/^#/, '');
+    if (!nt || nt === oldTag) return;
+    // renaming to an existing tag merges (Set dedupes within each prompt)
+    onChange(prompts.map((p) => (
+      p.tags.includes(oldTag)
+        ? { ...p, tags: [...new Set(p.tags.map((tg) => (tg === oldTag ? nt : tg)))], updatedAt: Date.now() }
+        : p
+    )));
   }
   return (
     <>
       <h2 class="op-panel-title">{t('opt.nav.tags')}</h2>
       <p class="op-panel-desc">{t('opt.tags.desc')}</p>
+      <div class="op-banner info" style="margin-bottom:16px">{t('opt.tags.listHint')}</div>
       <div class="op-card">
-        <div class="op-tagwrap">
-          {counts.length === 0 && <span style="color:var(--text-muted);font-size:var(--text-sm)">{t('opt.tags.empty')}</span>}
+        <div class="op-list">
+          {counts.length === 0 && <div class="op-row"><span class="op-row-title" style="color:var(--text-muted)">{t('opt.tags.empty')}</span></div>}
           {counts.map(([tag, cnt]) => (
-            <span class="op-tagchip" key={tag}>
-              <span class="hash">#</span>{tag}<span class="cnt">{cnt}</span>
-              <button onClick={() => removeTag(tag)}><Close /></button>
-            </span>
+            <div class="op-row" key={tag}>
+              <span style="color:var(--text-accent);font-weight:var(--weight-semi)">#</span>
+              <input class="op-input" style="flex:1" value={tag} onChange={(e) => renameTag(tag, (e.target as HTMLInputElement).value)} />
+              <span class="op-row-sub">{cnt}</span>
+              <button class="op-btn secondary sm" onClick={() => removeTag(tag)}>{t('common.delete')}</button>
+            </div>
           ))}
         </div>
       </div>
@@ -315,18 +443,31 @@ function Tags({ prompts, onChange }: { prompts: Prompt[]; onChange: (p: Prompt[]
 /* ---------- Backup ---------- */
 function Backup({ settings, patch, flash, onRestore }: { settings: Settings; patch: (p: Partial<Settings>) => void; flash: (m: string) => void; onRestore: () => void }) {
   const [snapshots, setSnaps] = useState<Snapshot[]>([]);
+  const [pending, setPending] = useState<{ file: BackupFile; conflicts: number } | null>(null);
   useEffect(() => { getSnapshots().then(setSnaps); }, []);
 
   async function doExport() { downloadBackup(await buildBackup()); flash(t('opt.backup.toast.exported')); }
   async function doImport(e: Event) {
-    const file = (e.target as HTMLInputElement).files?.[0];
+    const input = e.target as HTMLInputElement;
+    const file = input.files?.[0];
     if (!file) return;
+    input.value = ''; // allow re-importing the same file
     try {
-      const data = JSON.parse(await file.text());
-      const res = await importBackup(data, 'duplicate');
+      const data = JSON.parse(await file.text()) as BackupFile;
+      const current = await getPrompts();
+      const ids = new Set(current.map((p) => p.id));
+      const conflicts = (data.prompts ?? []).filter((p) => ids.has(p.id)).length;
+      if (conflicts === 0) await runImport(data, 'skip');
+      else setPending({ file: data, conflicts });
+    } catch (err) { flash(t('opt.backup.toast.importFail', [String(err)])); }
+  }
+  async function runImport(file: BackupFile, strategy: ImportStrategy) {
+    try {
+      const res = await importBackup(file, strategy);
       flash(t('opt.backup.toast.imported', [res.added, res.overwritten, res.skipped]));
       onRestore();
     } catch (err) { flash(t('opt.backup.toast.importFail', [String(err)])); }
+    setPending(null);
   }
   async function restore(s: Snapshot) {
     await restoreSnapshot(s.createdAt);
@@ -343,6 +484,17 @@ function Backup({ settings, patch, flash, onRestore }: { settings: Settings; pat
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" /><line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" /></svg>
           <span style="flex:1">{t('opt.backup.staleWarn', [Math.floor((Date.now() - settings.lastBackupAt) / 86_400_000)])}</span>
           <button class="op-btn secondary sm" onClick={doExport}>{t('opt.backup.exportNow')}</button>
+        </div>
+      )}
+      {pending && (
+        <div class="op-banner warn" style="gap:10px;flex-wrap:wrap;margin-bottom:16px">
+          <span style="flex:1;min-width:200px">{t('opt.backup.importConflict', [pending.conflicts])}</span>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="op-btn secondary sm" onClick={() => runImport(pending.file, 'skip')}>{t('opt.backup.skip')}</button>
+            <button class="op-btn secondary sm" onClick={() => runImport(pending.file, 'overwrite')}>{t('opt.backup.overwrite')}</button>
+            <button class="op-btn secondary sm" onClick={() => runImport(pending.file, 'duplicate')}>{t('opt.backup.dup')}</button>
+            <button class="op-btn ghost sm" onClick={() => setPending(null)}>{t('common.cancel')}</button>
+          </div>
         </div>
       )}
       <div class="op-card">

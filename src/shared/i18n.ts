@@ -149,6 +149,19 @@ const ko: Record<string, string> = {
   'opt.tags.desc': '태그 삭제는 전체 프롬프트에 일괄 반영돼요',
   'opt.tags.empty': '태그가 없어요',
   'opt.tags.toast.cleaned': '태그를 정리했어요',
+  'opt.tags.listHint': '이름을 수정하면 전체에 반영돼요. 기존 태그명으로 바꾸면 병합됩니다.',
+
+  // import conflict + per-site (B3 / C1)
+  'opt.backup.importConflict': '{0}개 항목이 기존 프롬프트와 겹쳐요. 어떻게 할까요?',
+  'opt.backup.importNoConflict': '{0}개 프롬프트를 가져올까요?',
+  'opt.backup.skip': '건너뛰기',
+  'opt.backup.overwrite': '덮어쓰기',
+  'opt.backup.dup': '새 ID로 추가',
+  'opt.prompts.edit': '편집',
+  'opt.sites': '사이트별 비활성화',
+  'opt.sites.hint': 'SnapPrompt UI를 끌 사이트 (호스트명)',
+  'opt.sites.placeholder': 'example.com',
+  'opt.sites.empty': '비활성화한 사이트가 없어요',
 
   // options backup
   'opt.backup.desc': '내부 스냅샷은 항상 자동, 외부 백업은 선택 사항',
@@ -361,6 +374,18 @@ const en: Record<string, string> = {
   'opt.tags.desc': 'Deleting a tag applies to all prompts',
   'opt.tags.empty': 'No tags',
   'opt.tags.toast.cleaned': 'Tags updated',
+  'opt.tags.listHint': 'Renaming applies everywhere. Renaming to an existing tag merges them.',
+
+  'opt.backup.importConflict': '{0} item(s) conflict with existing prompts. What to do?',
+  'opt.backup.importNoConflict': 'Import {0} prompt(s)?',
+  'opt.backup.skip': 'Skip',
+  'opt.backup.overwrite': 'Overwrite',
+  'opt.backup.dup': 'Add as new',
+  'opt.prompts.edit': 'Edit',
+  'opt.sites': 'Per-site disable',
+  'opt.sites.hint': 'Sites where the SnapPrompt UI is turned off (hostname)',
+  'opt.sites.placeholder': 'example.com',
+  'opt.sites.empty': 'No disabled sites',
 
   'opt.backup.desc': 'Internal snapshots are automatic; external backup is optional',
   'opt.backup.staleWarn': 'Last external backup was {0} days ago. Consider exporting a JSON backup.',

@@ -27,6 +27,7 @@ export function App() {
   const [toast, setToast] = useState<string | null>(null);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [dropTarget, setDropTarget] = useState<string | null>(null);
+  const [selectedTags, setSelectedTags] = useState<Set<string>>(new Set());
 
   async function reload() {
     const [p, f] = await Promise.all([getPrompts(), getFolders()]);
@@ -51,9 +52,25 @@ export function App() {
       list = list.filter((p) => p.folderId && ids.has(p.folderId));
     }
     if (favOnly) list = list.filter((p) => p.favorite);
+    if (selectedTags.size) list = list.filter((p) => [...selectedTags].every((tg) => p.tags.includes(tg)));
     const searched = search(list, query).map((r) => r.prompt);
     return query.trim() ? searched : sortPrompts(searched, sort);
-  }, [prompts, folders, query, favOnly, sort, folderFilter]);
+  }, [prompts, folders, query, favOnly, sort, folderFilter, selectedTags]);
+
+  const allTags = useMemo(() => {
+    const m = new Map<string, number>();
+    for (const p of prompts) for (const tg of p.tags) m.set(tg, (m.get(tg) ?? 0) + 1);
+    return [...m.entries()].sort((a, b) => b[1] - a[1]);
+  }, [prompts]);
+
+  function toggleTag(tag: string) {
+    setSelectedTags((s) => {
+      const n = new Set(s);
+      if (n.has(tag)) n.delete(tag);
+      else n.add(tag);
+      return n;
+    });
+  }
 
   const activeFolderLabel = useMemo(() => {
     if (folderFilter === 'all') return t('popup.allFolders');
@@ -229,6 +246,22 @@ export function App() {
             >
               <DashIcon /> {t('common.uncategorized')} <span class="pp-fcount">{prompts.filter((p) => !p.folderId).length}</span>
             </button>
+
+            {allTags.length > 0 && (
+              <>
+                <div class="pp-side-label">{t('common.tags')}</div>
+                {allTags.map(([tag, cnt]) => (
+                  <button
+                    key={tag}
+                    class={`pp-folder${selectedTags.has(tag) ? ' active' : ''}`}
+                    onClick={() => toggleTag(tag)}
+                  >
+                    <span style="color:var(--text-accent)">#</span><span class="pp-fname">{tag}</span>
+                    <span class="pp-fcount">{cnt}</span>
+                  </button>
+                ))}
+              </>
+            )}
           </aside>
         )}
 

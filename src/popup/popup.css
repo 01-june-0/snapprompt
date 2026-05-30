@@ -74,6 +74,8 @@ html.mode-panel body {
 .pp-folder .pp-fname { overflow: hidden; text-overflow: ellipsis; }
 .pp-folder svg { flex-shrink: 0; }
 .pp-fcount { margin-left: auto; font-size: 10px; color: var(--text-muted); font-family: var(--font-mono); }
+.pp-side-label { font-size: 10px; font-weight: var(--weight-semi); color: var(--text-muted);
+  letter-spacing: var(--tracking-wide); text-transform: uppercase; padding: 10px 8px 4px; }
 .pp-folder.active .pp-fcount { color: var(--text-accent); opacity: .8; }
 
 .pp-card {

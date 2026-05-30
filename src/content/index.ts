@@ -12,8 +12,19 @@ import { setLocale } from '@shared/i18n';
 import { getSettings, subscribe } from '@shared/store';
 import { startFocusTracking, isEditable } from './insertion';
 
-// resolve UI language from settings (and keep it in sync)
-getSettings().then((s) => setLocale(s.language));
+// Per-site disable (C1 / F9.9): when the current host is disabled, the content
+// UI (picker, save modal, floating button) stays inert.
+let siteDisabled = false;
+function hostMatches(hosts: string[]): boolean {
+  const h = location.hostname;
+  return hosts.some((d) => !!d && (h === d || h.endsWith('.' + d)));
+}
+
+// resolve UI language + per-site disable from settings (and keep in sync)
+getSettings().then((s) => {
+  setLocale(s.language);
+  siteDisabled = hostMatches(s.disabledHosts);
+});
 
 // Track the page's last-focused editable from the start so the popup can
 // insert into it even after the popup steals focus. Cheap, runs on every page.
@@ -84,11 +95,12 @@ function positionFloat() {
   floatingTarget.value = { x, y };
 }
 
-getSettings().then((s) => (floatingEnabled.value = s.floatingButton));
+getSettings().then((s) => (floatingEnabled.value = s.floatingButton && !hostMatches(s.disabledHosts)));
 subscribe(() => getSettings().then((s) => {
-  floatingEnabled.value = s.floatingButton;
+  floatingEnabled.value = s.floatingButton && !hostMatches(s.disabledHosts);
+  siteDisabled = hostMatches(s.disabledHosts);
   setLocale(s.language);
-  if (!s.floatingButton) { floatEl = null; floatingTarget.value = null; }
+  if (!floatingEnabled.value) { floatEl = null; floatingTarget.value = null; }
 }));
 
 document.addEventListener('focusin', () => {
@@ -109,6 +121,10 @@ window.addEventListener('scroll', () => { if (floatEl) positionFloat(); }, true)
 window.addEventListener('resize', () => { if (floatEl) positionFloat(); });
 
 onMessage((msg) => {
+  // On a disabled site, the content UI stays inert (PING still answers).
+  if (siteDisabled && msg.type !== 'PING') {
+    return { ok: false, error: 'disabled on this site' };
+  }
   switch (msg.type) {
     case 'OPEN_PICKER':
       ensureMounted();
