@@ -4,7 +4,7 @@ import { signal } from '@preact/signals';
 import type { Prompt, Folder, Variable } from '@shared/types';
 import { getPrompts, getFolders, upsertPrompt, getSettings } from '@shared/store';
 import { search, rankForPicker } from '@shared/search';
-import { extractVariables, substitute, mergeVariables } from '@shared/variables';
+import { extractVariables, substitute, mergeVariables, applyConditionals } from '@shared/variables';
 import { flattenTree } from '@shared/folders';
 import { insertText, copyToClipboard, captureActiveElement } from './insertion';
 import { sendToBackground } from '@shared/messaging';
@@ -221,6 +221,23 @@ function VariableModal({ prompt, mode }: { prompt: Prompt; mode: 'insert' | 'cop
     for (const v of vars) init[v.name] = v.defaultValue ?? '';
     return init;
   });
+  const [presets, setPresets] = useState(prompt.presets ?? []);
+  const [namingPreset, setNamingPreset] = useState(false);
+  const [presetName, setPresetName] = useState('');
+
+  function loadPreset(name: string) {
+    const p = presets.find((x) => x.name === name);
+    if (p) setValues((v) => ({ ...v, ...p.values }));
+  }
+  async function savePreset() {
+    const nm = presetName.trim();
+    if (!nm) { setNamingPreset(false); return; }
+    const next = [...presets.filter((p) => p.name !== nm), { name: nm, values: { ...values } }];
+    setPresets(next);
+    await upsertPrompt({ ...prompt, presets: next });
+    setNamingPreset(false);
+    setPresetName('');
+  }
 
   useEffect(() => {
     getSettings().then((s) => {
@@ -272,6 +289,24 @@ function VariableModal({ prompt, mode }: { prompt: Prompt; mode: 'insert' | 'cop
           <button class="sp-close" onClick={close}><IconClose /></button>
         </div>
         <div class="sp-modal-body">
+          <div class="sp-presetbar">
+            {presets.length > 0 && (
+              <select class="sp-input" value="" onChange={(e) => { loadPreset((e.target as HTMLSelectElement).value); (e.target as HTMLSelectElement).value = ''; }}>
+                <option value="">{t('content.presetSelect')}</option>
+                {presets.map((p) => <option key={p.name} value={p.name}>{p.name}</option>)}
+              </select>
+            )}
+            {namingPreset ? (
+              <>
+                <input class="sp-input" autoFocus value={presetName} placeholder={t('content.presetName')}
+                  onInput={(e) => setPresetName((e.target as HTMLInputElement).value)}
+                  onKeyDown={(e) => { if (e.key === 'Enter') void savePreset(); if (e.key === 'Escape') setNamingPreset(false); }} />
+                <button class="sp-btn primary" onClick={() => void savePreset()}>{t('common.save')}</button>
+              </>
+            ) : (
+              <button class="sp-btn ghost" onClick={() => setNamingPreset(true)}>★ {t('content.savePreset')}</button>
+            )}
+          </div>
           {vars.map((v) => (
             <VarField
               key={v.name}
@@ -307,7 +342,14 @@ function VarField({
         <span class="sp-name-tag">{`{{${variable.name}}}`}</span>
         {variable.defaultValue && <span style="color:var(--text-muted);font-weight:400">{t('content.default', [variable.defaultValue])}</span>}
       </div>
-      {variable.type === 'textarea' ? (
+      {variable.type === 'boolean' ? (
+        <label class="sp-toggle">
+          <input type="checkbox" checked={value === 'true'} onChange={(e) => onChange((e.target as HTMLInputElement).checked ? 'true' : '')} />
+          <span class="track" />
+        </label>
+      ) : variable.type === 'code' ? (
+        <textarea class="sp-textarea" value={value} placeholder={variable.options[0] ? variable.options[0] : ''} onInput={(e) => onChange((e.target as HTMLTextAreaElement).value)} />
+      ) : variable.type === 'textarea' ? (
         <textarea class="sp-textarea" value={value} onInput={(e) => onChange((e.target as HTMLTextAreaElement).value)} />
       ) : variable.type === 'select' ? (
         <select class="sp-input" value={value} onChange={(e) => onChange((e.target as HTMLSelectElement).value)}>
@@ -524,8 +566,9 @@ function deriveTitle(text: string): string {
   const line = text.split('\n')[0].trim();
   return line.length > 60 ? line.slice(0, 60) + '…' : line || t('common.newPrompt');
 }
-function renderPreview(body: string, values: Record<string, string>, vars: Variable[]) {
-  // Render with filled/empty highlight spans
+function renderPreview(rawBody: string, values: Record<string, string>, vars: Variable[]) {
+  // Resolve {{#if}} blocks first so the preview reflects the toggles.
+  const body = applyConditionals(rawBody, values);
   const parts: preact.ComponentChildren[] = [];
   const re = /\{\{\s*([a-zA-Z0-9_\-가-힣]+)\s*(?::\s*[a-zA-Z]+\s*(?:\([^)]*\))?)?\s*(?:\|([^}]*))?\s*\}\}/g;
   let last = 0;

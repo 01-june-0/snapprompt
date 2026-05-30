@@ -3,7 +3,16 @@
  * See docs/PRD.md §6
  */
 
-export type VariableType = 'text' | 'textarea' | 'select' | 'date' | 'number' | 'color';
+export type VariableType =
+  | 'text' | 'textarea' | 'select' | 'date' | 'number' | 'color'
+  | 'boolean' // toggle; controls {{#if name}} blocks
+  | 'code';   // multi-line; wrapped in ``` on insert (options[0] = language)
+
+/** A named set of variable values that can be applied at once. */
+export interface VariablePreset {
+  name: string;
+  values: Record<string, string>;
+}
 
 export interface Variable {
   /** The `name` part of {{name}} */
@@ -31,6 +40,8 @@ export interface Prompt {
   memo: string | null;
   sourceUrl: string | null;
   favorite: boolean;
+  /** Saved fill-sets for the variables (Round A). */
+  presets?: VariablePreset[];
   createdAt: number;
   updatedAt: number;
   lastUsedAt: number | null;

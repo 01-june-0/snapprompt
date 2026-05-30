@@ -168,6 +168,19 @@
   font-size: 12px; margin: 0 6px 6px 0;
 }
 
+/* Preset bar (variable modal) */
+.sp-presetbar { display: flex; align-items: center; gap: 8px; padding-bottom: 4px; border-bottom: 1px solid var(--border-subtle); }
+.sp-presetbar .sp-input { height: 32px; flex: 1; min-width: 0; }
+.sp-presetbar .sp-btn { height: 32px; white-space: nowrap; }
+
+/* Boolean toggle variable */
+.sp-toggle { display: inline-flex; cursor: pointer; }
+.sp-toggle input { display: none; }
+.sp-toggle .track { width: 40px; height: 22px; border-radius: var(--radius-full); background: var(--border-default); position: relative; transition: background var(--duration-fast); }
+.sp-toggle .track::after { content: ''; width: 18px; height: 18px; border-radius: 50%; background: #fff; box-shadow: var(--shadow-sm); position: absolute; top: 2px; left: 2px; transition: transform var(--duration-fast); }
+.sp-toggle input:checked + .track { background: var(--accent); }
+.sp-toggle input:checked + .track::after { transform: translateX(18px); }
+
 /* Color picker variable */
 .sp-color { display: flex; align-items: center; gap: 8px; }
 .sp-color input[type="color"] {
