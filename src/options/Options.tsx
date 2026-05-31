@@ -10,6 +10,7 @@ import { sendToBackground } from '@shared/messaging';
 import { flattenTree, wouldCycle, folderPath } from '@shared/folders';
 import { search } from '@shared/search';
 import { extractVariables } from '@shared/variables';
+import { STARTER_PACKS, buildPack, type StarterPack } from '@shared/starterpacks';
 import { t } from '@shared/i18n';
 import { uuid } from '@shared/id';
 
@@ -33,6 +34,15 @@ export function Options() {
     const next = await setSettings(p);
     setLocalSettings(next);
     if (p.theme) applyTheme(p.theme);
+  }
+  async function addStarterPack(pack: StarterPack) {
+    const folderName = t('pack.' + pack.id);
+    const { folder, prompts: ps } = buildPack(pack, folderName);
+    const nextFolders = [...folders, folder];
+    const nextPrompts = [...ps, ...prompts];
+    await Promise.all([setFolders(nextFolders), setPrompts(nextPrompts)]);
+    setLocalFolders(nextFolders); setLocalPrompts(nextPrompts);
+    flash(t('opt.packs.added', [folderName, ps.length]));
   }
 
   if (!settings) return null;
@@ -59,7 +69,7 @@ export function Options() {
           <TabBtn id="about" tab={tab} set={setTab} label={t('opt.nav.about')} />
         </nav>
         <div>
-          {tab === 'general' && <General settings={settings} patch={patch} folders={folders} />}
+          {tab === 'general' && <General settings={settings} patch={patch} folders={folders} addPack={addStarterPack} />}
           {tab === 'stats' && <Stats prompts={prompts} folders={folders} />}
           {tab === 'prompts' && <PromptsManager prompts={prompts} folders={folders} flash={flash} onChange={async (p) => { await setPrompts(p); setLocalPrompts(p); }} />}
           {tab === 'folders' && <Folders folders={folders} onChange={async (f) => { await setFolders(f); setLocalFolders(f); }} />}
@@ -80,7 +90,7 @@ function TabBtn({ id, tab, set, label }: { id: Tab; tab: Tab; set: (t: Tab) => v
 }
 
 /* ---------- General ---------- */
-function General({ settings, patch, folders }: { settings: Settings; patch: (p: Partial<Settings>) => void; folders: Folder[] }) {
+function General({ settings, patch, folders, addPack }: { settings: Settings; patch: (p: Partial<Settings>) => void; folders: Folder[]; addPack: (p: StarterPack) => void }) {
   const [host, setHost] = useState('');
   function addHost() {
     const h = host.trim().replace(/^https?:\/\//, '').replace(/\/.*$/, '');
@@ -120,6 +130,16 @@ function General({ settings, patch, folders }: { settings: Settings; patch: (p: 
             <option value="">{t('common.uncategorized')}</option>
             {flattenTree(folders).map((f) => <option key={f.id} value={f.id}>{indent(f.depth)}{f.name}</option>)}
           </select>
+        </div>
+      </div>
+
+      <div class="op-card" style="padding:16px;margin-bottom:16px">
+        <div class="op-setting-label">{t('opt.packs')}</div>
+        <div class="op-setting-hint" style="margin-bottom:10px">{t('opt.packs.hint')}</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          {STARTER_PACKS.map((p) => (
+            <button class="op-btn secondary sm" key={p.id} onClick={() => addPack(p)}>+ {t('pack.' + p.id)} ({p.prompts.length})</button>
+          ))}
         </div>
       </div>
 

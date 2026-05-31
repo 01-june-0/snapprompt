@@ -267,6 +267,15 @@ export function App() {
         )}
 
         <div class="pp-body">
+          {folderFilter === 'all' && !favOnly && !query && selectedTags.size === 0 && prompts.some((p) => p.favorite) && (
+            <div class="pp-pinbar">
+              {prompts.filter((p) => p.favorite).slice(0, 8).map((p) => (
+                <button class="pp-pin" key={p.id} title={p.title} onClick={() => void doInsert(p)}>
+                  <StarIcon size={11} /> <span>{p.title}</span>
+                </button>
+              ))}
+            </div>
+          )}
           {visible.length === 0 ? (
             <div class="pp-empty">
               <div class="ill"><SearchIcon size={28} /></div>

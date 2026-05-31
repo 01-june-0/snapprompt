@@ -41,6 +41,8 @@ const ko: Record<string, string> = {
   'common.varsCount': '{0} vars',
   'ctx.save': 'SnapPrompt에 저장',
   'ctx.open': 'SnapPrompt 열기',
+  'omni.default': '프롬프트 검색 — 선택하면 클립보드에 복사돼요',
+  'omni.copied': '복사',
 
   // popup
   'popup.search': '프롬프트 검색...',
@@ -144,6 +146,12 @@ const ko: Record<string, string> = {
   'opt.folders.namePlaceholder': '새 폴더 이름',
   'opt.folders.parentHint': '상위 폴더를 선택하면 하위 폴더로 만들어져요',
   'opt.folders.empty': '폴더가 없어요',
+  'opt.packs': '스타터 팩',
+  'opt.packs.hint': '도메인별 기본 프롬프트 묶음을 폴더로 추가해요',
+  'opt.packs.added': '"{0}" 팩을 추가했어요 ({1}개)',
+  'pack.image': '이미지 생성',
+  'pack.coding': '코딩',
+  'pack.writing': '글쓰기',
 
   // options prompts manager
   'opt.prompts.desc': '전체 프롬프트를 검색하고 다중 선택해 한 번에 정리하세요',
@@ -288,6 +296,8 @@ const en: Record<string, string> = {
   'common.varsCount': '{0} vars',
   'ctx.save': 'Save to SnapPrompt',
   'ctx.open': 'Open SnapPrompt',
+  'omni.default': 'Search your prompts — pick one to copy it',
+  'omni.copied': 'Copied',
 
   'popup.search': 'Search prompts...',
   'popup.openWindow': 'Open in window',
@@ -386,6 +396,12 @@ const en: Record<string, string> = {
   'opt.folders.namePlaceholder': 'New folder name',
   'opt.folders.parentHint': 'Pick a parent to create a subfolder',
   'opt.folders.empty': 'No folders',
+  'opt.packs': 'Starter packs',
+  'opt.packs.hint': 'Add a domain starter set of prompts as a folder',
+  'opt.packs.added': 'Added "{0}" pack ({1} prompts)',
+  'pack.image': 'Image gen',
+  'pack.coding': 'Coding',
+  'pack.writing': 'Writing',
 
   'opt.prompts.desc': 'Search all prompts and organize them in bulk',
   'opt.prompts.search': 'Search title, body, tags',

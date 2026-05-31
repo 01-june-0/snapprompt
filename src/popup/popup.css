@@ -76,6 +76,15 @@ html.mode-panel body {
 .pp-fcount { margin-left: auto; font-size: 10px; color: var(--text-muted); font-family: var(--font-mono); }
 .pp-side-label { font-size: 10px; font-weight: var(--weight-semi); color: var(--text-muted);
   letter-spacing: var(--tracking-wide); text-transform: uppercase; padding: 10px 8px 4px; }
+
+/* favorites pin bar */
+.pp-pinbar { display: flex; flex-wrap: wrap; gap: 6px; padding: 12px 12px 0; }
+.pp-pin { display: inline-flex; align-items: center; gap: 5px; max-width: 160px; height: 26px; padding: 0 10px;
+  border-radius: var(--radius-full); border: 1px solid var(--border-accent); background: var(--accent-soft);
+  color: var(--text-accent); font-size: 11px; font-weight: var(--weight-medium); cursor: pointer; }
+.pp-pin:hover { background: var(--accent-soft-2); }
+.pp-pin span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pp-pin svg { color: var(--warning-500); flex-shrink: 0; }
 .pp-folder.active .pp-fcount { color: var(--text-accent); opacity: .8; }
 
 .pp-card {

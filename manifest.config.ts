@@ -25,6 +25,9 @@ export default defineManifest({
   side_panel: {
     default_path: 'src/popup/index.html?mode=panel',
   },
+  omnibox: {
+    keyword: 'sp',
+  },
   background: {
     service_worker: 'src/background/index.ts',
     type: 'module',

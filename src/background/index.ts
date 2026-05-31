@@ -6,9 +6,11 @@
  * - install → onboarding, schema init
  * - periodic backup alarm (Phase 2 hook) + snapshots
  */
-import { ensureSchema, takeSnapshot, recordUsage, getSettings } from '@shared/store';
+import { ensureSchema, takeSnapshot, recordUsage, getSettings, getPrompts } from '@shared/store';
 import { onMessage } from '@shared/messaging';
 import { setLocale, t } from '@shared/i18n';
+import { search, rankForPicker } from '@shared/search';
+import { substitute, extractVariables } from '@shared/variables';
 import { maybeAutoBackup, runBackupDownload } from './autobackup';
 import type { Message } from '@shared/types';
 
@@ -96,6 +98,61 @@ onMessage((msg: Message, sender) => {
       return { ok: false as const, error: 'unhandled message' };
   }
 });
+
+/* ---------- omnibox: "sp <query>" → search & copy ---------- */
+
+chrome.omnibox.onInputStarted.addListener(async () => {
+  const s = await getSettings();
+  setLocale(s.language);
+  chrome.omnibox.setDefaultSuggestion({ description: t('omni.default') });
+});
+
+function escapeXml(s: string): string {
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+chrome.omnibox.onInputChanged.addListener(async (text, suggest) => {
+  const prompts = await getPrompts();
+  const matched = text.trim()
+    ? search(prompts, text).map((r) => r.prompt)
+    : rankForPicker(prompts);
+  suggest(
+    matched.slice(0, 6).map((p) => {
+      const preview = p.body.replace(/\s+/g, ' ').trim().slice(0, 60);
+      return { content: p.id, description: `<match>${escapeXml(p.title)}</match> <dim>${escapeXml(preview)}</dim>` };
+    }),
+  );
+});
+
+chrome.omnibox.onInputEntered.addListener(async (text) => {
+  const prompts = await getPrompts();
+  const prompt = prompts.find((p) => p.id === text) ?? search(prompts, text).map((r) => r.prompt)[0];
+  if (!prompt) return;
+  const resolved = substitute(prompt.body, {}, extractVariables(prompt.body));
+  await copyViaActiveTab(resolved);
+  await recordUsage(prompt.id);
+  flashBadge();
+});
+
+async function copyViaActiveTab(textToCopy: string) {
+  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+  if (!tab?.id) return;
+  try {
+    await chrome.scripting.executeScript({
+      target: { tabId: tab.id },
+      func: (txt: string) => navigator.clipboard.writeText(txt),
+      args: [textToCopy],
+    });
+  } catch {
+    /* restricted page (chrome://, web store, etc.) — silently skip */
+  }
+}
+
+function flashBadge() {
+  chrome.action.setBadgeBackgroundColor({ color: '#7C3AED' });
+  chrome.action.setBadgeText({ text: '✓' });
+  setTimeout(() => chrome.action.setBadgeText({ text: '' }), 1500);
+}
 
 /* ---------- backup: daily snapshot (always) + auto-download (if enabled) ---------- */
 
