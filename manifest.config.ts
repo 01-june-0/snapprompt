@@ -25,9 +25,6 @@ export default defineManifest({
   side_panel: {
     default_path: 'src/popup/index.html?mode=panel',
   },
-  omnibox: {
-    keyword: 'sp',
-  },
   background: {
     service_worker: 'src/background/index.ts',
     type: 'module',
@@ -46,10 +43,8 @@ export default defineManifest({
     'contextMenus',
     'downloads',
     'activeTab',
-    'scripting',
     'alarms',
     'sidePanel',
-    'offscreen',
   ],
   host_permissions: ['<all_urls>'],
   commands: {

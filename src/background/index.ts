@@ -6,11 +6,9 @@
  * - install → onboarding, schema init
  * - periodic backup alarm (Phase 2 hook) + snapshots
  */
-import { ensureSchema, takeSnapshot, recordUsage, getSettings, getPrompts } from '@shared/store';
+import { ensureSchema, takeSnapshot, recordUsage, getSettings } from '@shared/store';
 import { onMessage } from '@shared/messaging';
 import { setLocale, t } from '@shared/i18n';
-import { search, rankForPicker } from '@shared/search';
-import { substitute, extractVariables } from '@shared/variables';
 import { maybeAutoBackup, runBackupDownload } from './autobackup';
 import type { Message } from '@shared/types';
 
@@ -98,131 +96,6 @@ onMessage((msg: Message, sender) => {
       return { ok: false as const, error: 'unhandled message' };
   }
 });
-
-/* ---------- omnibox: "sp <query>" → search & copy ---------- */
-
-chrome.omnibox.onInputStarted.addListener(async () => {
-  const s = await getSettings();
-  setLocale(s.language);
-  chrome.omnibox.setDefaultSuggestion({ description: t('omni.default') });
-});
-
-function escapeXml(s: string): string {
-  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-}
-
-chrome.omnibox.onInputChanged.addListener(async (text, suggest) => {
-  const prompts = await getPrompts();
-  const matched = text.trim()
-    ? search(prompts, text).map((r) => r.prompt)
-    : rankForPicker(prompts);
-  suggest(
-    matched.slice(0, 6).map((p) => {
-      const preview = p.body.replace(/\s+/g, ' ').trim().slice(0, 60);
-      return { content: p.id, description: `<match>${escapeXml(p.title)}</match> <dim>${escapeXml(preview)}</dim>` };
-    }),
-  );
-});
-
-chrome.omnibox.onInputEntered.addListener(async (text) => {
-  setBadge('…', '#7C3AED'); // immediate feedback that the handler ran
-  try {
-    const prompts = await getPrompts();
-    const prompt = prompts.find((p) => p.id === text) ?? search(prompts, text).map((r) => r.prompt)[0];
-    if (!prompt) { setBadge('?', '#F59E0B'); clearBadgeLater(); return; }
-    const resolved = substitute(prompt.body, {}, extractVariables(prompt.body));
-    const ok = await copyToClipboard(resolved);
-    await recordUsage(prompt.id);
-    if (ok) {
-      setBadge('✓', '#10B981');
-    } else {
-      setBadge('✗', '#EF4444');
-      chrome.action.setTitle({ title: t('omni.cantCopy') });
-      setTimeout(() => chrome.action.setTitle({ title: 'SnapPrompt' }), 5000);
-    }
-  } catch (e) {
-    console.warn('[SnapPrompt] omnibox error:', e);
-    setBadge('✗', '#EF4444');
-  }
-  clearBadgeLater();
-});
-
-function setBadge(text: string, color: string) {
-  chrome.action.setBadgeBackgroundColor({ color });
-  chrome.action.setBadgeText({ text });
-}
-function clearBadgeLater(ms = 1800) {
-  setTimeout(() => chrome.action.setBadgeText({ text: '' }), ms);
-}
-
-/**
- * Copy text to the clipboard from the service worker via an offscreen document.
- * Works regardless of the active tab (new tab, edge://, etc.).
- */
-let offscreenCreating: Promise<void> | null = null;
-async function ensureOffscreen(): Promise<void> {
-  try {
-    // hasDocument may be missing on some builds — guard it.
-    if (chrome.offscreen.hasDocument && (await chrome.offscreen.hasDocument())) return;
-  } catch { /* fall through to create */ }
-  if (offscreenCreating) { await offscreenCreating; return; }
-  offscreenCreating = chrome.offscreen
-    .createDocument({
-      url: 'offscreen.html',
-      reasons: ['CLIPBOARD' as chrome.offscreen.Reason],
-      justification: 'Copy the selected prompt to the clipboard from the address bar (omnibox).',
-    })
-    .then(() => {})
-    .catch((e) => { if (!String(e).includes('single offscreen')) throw e; }); // already exists → fine
-  try { await offscreenCreating; } finally { offscreenCreating = null; }
-}
-async function copyToClipboard(textToCopy: string): Promise<boolean> {
-  // 1) Active tab injection — the only reliable path: clipboard writes require a
-  //    focused document, and after omnibox enter the active page regains focus.
-  //    Works on normal web pages (where you'd paste); restricted pages can't be scripted.
-  try {
-    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-    if (tab?.id) {
-      const [res] = await chrome.scripting.executeScript({
-        target: { tabId: tab.id },
-        func: (txt: string) => {
-          try {
-            const ta = document.createElement('textarea');
-            ta.value = txt;
-            ta.style.position = 'fixed';
-            ta.style.top = '-9999px';
-            ta.style.opacity = '0';
-            document.body.appendChild(ta);
-            ta.focus();
-            ta.select();
-            const ok = document.execCommand('copy');
-            ta.remove();
-            return ok;
-          } catch { return false; }
-        },
-        args: [textToCopy],
-      });
-      if (res?.result) return true;
-    }
-  } catch {
-    /* restricted page (new tab, edge://, extensions gallery) — fall through */
-  }
-  // 2) offscreen document — silent copy on browsers that allow it (e.g. Chrome).
-  //    Edge blocks clipboard writes from offscreen (no focus), so this may no-op.
-  try {
-    await ensureOffscreen();
-    for (let i = 0; i < 2; i++) {
-      try {
-        const res = (await chrome.runtime.sendMessage({ type: 'SP_COPY', text: textToCopy })) as { ok?: boolean } | undefined;
-        if (res?.ok) return true;
-      } catch { /* listener not ready / no offscreen */ }
-      await new Promise((r) => setTimeout(r, 120));
-    }
-  } catch {
-    /* offscreen unavailable */
-  }
-  return false;
-}
 
 /* ---------- backup: daily snapshot (always) + auto-download (if enabled) ---------- */
 
