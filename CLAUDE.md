@@ -38,6 +38,9 @@ UI가 바뀌어 README 스크린샷을 갱신할 때는 반드시 아래 순서�
 - **i18n**: `chrome.i18n.getMessage`는 브라우저 로케일 고정이라 사용 안 함. `src/shared/i18n.ts`의 커스텀 `t(key, params?)` + `locale` 시그널을 쓴다. 새 UI 문자열은 ko/en 카탈로그 양쪽에 키 추가. 컴포넌트에서 `t()`를 쓰면 언어 변경 시 자동 리렌더.
 - **콘텐츠 스크립트 격리**: 모든 오버레이 UI는 Shadow DOM 안에 렌더. 디자인 토큰은 `:root, :host` 둘 다에 정의해야 Shadow 내부에서 CSS 변수가 해석됨. 다크는 `[data-theme="dark"], :host([data-theme="dark"])`, 테마 속성은 호스트 엘리먼트에 설정.
 - **변수 문법**: `{{name}}` / `{{name|기본값}}` / `{{name:type(...)}}`. 타입: text·textarea·number·date·color·select. 정규식은 콜론/타입 주변 공백 허용. 파서는 `src/shared/variables.ts`.
+- **삽입 텍스트 조립(Round C)**: 최종 텍스트는 항상 `src/shared/assemble.ts`의 `assemblePrompt(prompt, values)` 한 곳에서 만든다(피커·변수모달·팝업 복사 모두 이걸 호출). 순서: `[레퍼런스 URL] [본문(치환)] [--파라미터] [네거티브]`. 일반 프롬프트는 변수 치환만(기존과 동일). 변수 추출 소스는 `variableSource(prompt)`=본문+네거티브.
+- **이미지/영상 프롬프트**: `Prompt.kind`('general'|'image'|'video', 없으면 general). image/video만 생성 옵션 노출 + 변수 없어도 삽입 모달 항상 표시(`isGenerative`). 옵션 데이터: `negativePrompt`/`negativeStyle`('label'|'mj')·`params`(ImageParam[])·`references`. 파라미터 프리셋 팩은 `src/shared/imageparams.ts`(Midjourney=image, Pika=video). 파라미터 토큰 규칙: `{}`가 값 자리, toggle은 플래그만.
+- **공유 편집 컴포넌트**: 이미지/영상 옵션 편집 UI는 `src/components/PromptOptionsEditor.tsx`(자체 `io-*` 클래스 + `prompt-options.css`)를 팝업/옵션 편집기 양쪽에서 재사용. CSS는 두 엔트리(`popup/main.tsx`, `options/main.tsx`)에서 import. 경로 별칭 `@/`=src, `@shared/`=src/shared.
 - **저장소**: `chrome.storage.local` (+ `unlimitedStorage`). 키 네임스페이스/마이그레이션은 `src/shared/store.ts`, 모든 컨텍스트는 `subscribe()`(storage.onChanged)로 동기화.
 - **팝업 모드**: `?mode=window`(분리 창) / `?mode=panel`(사이드 패널) 쿼리로 분기. 삽입 후 닫기는 툴바 팝업만(창/패널은 상주).
 - **git**: 원격 `origin` = github.com/01-june-0/snapprompt (private), HTTPS + gh 토큰. 커밋 메시지 끝에 Co-Authored-By 라인 유지.
