@@ -3,7 +3,6 @@
  * Used by both the popup editor and the options PromptsManager. Self-styled
  * (io-* classes in prompt-options.css) so it looks identical in both places.
  */
-import { useState } from 'preact/hooks';
 import type { PromptKind, NegativeStyle, ImageParam, ReferenceImage, ParamControl, Prompt } from '@shared/types';
 import { t, locale } from '@shared/i18n';
 import { packsForKind, buildParam, blankParam } from '@shared/imageparams';
@@ -24,7 +23,6 @@ const CONTROLS: ParamControl[] = ['text', 'number', 'select', 'toggle'];
 export function PromptOptionsEditor({
   value, onChange, body = '',
 }: { value: ImageOptionsValue; onChange: (v: ImageOptionsValue) => void; body?: string }) {
-  const [showPresets, setShowPresets] = useState(false);
   const lang = locale.value;
   const set = (patch: Partial<ImageOptionsValue>) => onChange({ ...value, ...patch });
   const generative = value.kind === 'image' || value.kind === 'video';
@@ -89,13 +87,13 @@ export function PromptOptionsEditor({
             <div class="io-sec-head">
               <span class="io-sec-title">{t('opt.params.title')}</span>
               <div class="io-sec-actions">
-                {packs.length > 0 && <button type="button" class="io-add" onClick={() => setShowPresets((v) => !v)}>+ {t('opt.params.fromPreset')}</button>}
                 <button type="button" class="io-add" onClick={() => set({ params: [...value.params, blankParam()] })}>+ {t('opt.params.custom')}</button>
               </div>
             </div>
 
-            {showPresets && (
+            {packs.length > 0 && (
               <div class="io-presets">
+                <div class="io-presets-label">{t('opt.params.fromPreset')}</div>
                 {packs.map((pack) => (
                   <div class="io-pack" key={pack.id}>
                     <div class="io-pack-name">{pack.name}</div>
