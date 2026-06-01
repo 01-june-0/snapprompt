@@ -129,22 +129,45 @@ chrome.omnibox.onInputEntered.addListener(async (text) => {
   const prompt = prompts.find((p) => p.id === text) ?? search(prompts, text).map((r) => r.prompt)[0];
   if (!prompt) return;
   const resolved = substitute(prompt.body, {}, extractVariables(prompt.body));
-  await copyViaActiveTab(resolved);
+  const ok = await copyToClipboard(resolved);
   await recordUsage(prompt.id);
-  flashBadge();
+  if (ok) flashBadge();
 });
 
-async function copyViaActiveTab(textToCopy: string) {
-  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-  if (!tab?.id) return;
-  try {
-    await chrome.scripting.executeScript({
-      target: { tabId: tab.id },
-      func: (txt: string) => navigator.clipboard.writeText(txt),
-      args: [textToCopy],
+/**
+ * Copy text to the clipboard from the service worker via an offscreen document.
+ * Works regardless of the active tab (new tab, edge://, etc.).
+ */
+async function ensureOffscreen(): Promise<void> {
+  // @ts-ignore — hasDocument exists in current Chrome/Edge
+  const has = await chrome.offscreen.hasDocument?.();
+  if (!has) {
+    await chrome.offscreen.createDocument({
+      url: 'offscreen.html',
+      reasons: ['CLIPBOARD' as chrome.offscreen.Reason],
+      justification: 'Copy the selected prompt to the clipboard from the address bar (omnibox).',
     });
+  }
+}
+async function trySendCopy(text: string): Promise<boolean> {
+  try {
+    const res = (await chrome.runtime.sendMessage({ type: 'SP_COPY', text })) as { ok?: boolean } | undefined;
+    return !!res?.ok;
   } catch {
-    /* restricted page (chrome://, web store, etc.) — silently skip */
+    return false;
+  }
+}
+async function copyToClipboard(textToCopy: string): Promise<boolean> {
+  try {
+    await ensureOffscreen();
+    if (await trySendCopy(textToCopy)) return true;
+    // first use: the offscreen listener may not be ready yet — retry once
+    await new Promise((r) => setTimeout(r, 200));
+    await ensureOffscreen();
+    return await trySendCopy(textToCopy);
+  } catch (e) {
+    console.warn('[SnapPrompt] clipboard copy failed:', e);
+    return false;
   }
 }
 

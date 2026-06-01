@@ -49,6 +49,7 @@ export default defineManifest({
     'scripting',
     'alarms',
     'sidePanel',
+    'offscreen',
   ],
   host_permissions: ['<all_urls>'],
   commands: {
