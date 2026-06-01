@@ -27,6 +27,7 @@ export function App() {
   const [folders, setFolders] = useState<Folder[]>([]);
   const [query, setQuery] = useState('');
   const [favOnly, setFavOnly] = useState(false);
+  const [kindFilter, setKindFilter] = useState<'all' | 'image' | 'video'>('all');
   const [sort, setSort] = useState<SortMode>('recent-used');
   const [folderFilter, setFolderFilter] = useState<FolderFilter>('all');
   const [showSidebar, setShowSidebar] = useState(false);
@@ -59,10 +60,11 @@ export function App() {
       list = list.filter((p) => p.folderId && ids.has(p.folderId));
     }
     if (favOnly) list = list.filter((p) => p.favorite);
+    if (kindFilter !== 'all') list = list.filter((p) => (p.kind ?? 'general') === kindFilter);
     if (selectedTags.size) list = list.filter((p) => [...selectedTags].every((tg) => p.tags.includes(tg)));
     const searched = search(list, query).map((r) => r.prompt);
     return query.trim() ? searched : sortPrompts(searched, sort);
-  }, [prompts, folders, query, favOnly, sort, folderFilter, selectedTags]);
+  }, [prompts, folders, query, favOnly, kindFilter, sort, folderFilter, selectedTags]);
 
   const allTags = useMemo(() => {
     const m = new Map<string, number>();
@@ -213,6 +215,13 @@ export function App() {
           </button>
           <button class={`pp-chip${favOnly ? ' active' : ''}`} onClick={() => setFavOnly((v) => !v)}>
             <StarIcon size={11} /> {t('popup.favorites')}
+          </button>
+          <button
+            class={`pp-chip${kindFilter !== 'all' ? ' active' : ''}`}
+            title={t('popup.kindFilter')}
+            onClick={() => setKindFilter((k) => (k === 'all' ? 'image' : k === 'image' ? 'video' : 'all'))}
+          >
+            {kindFilter === 'video' ? '🎬' : '🖼'} {kindFilter === 'all' ? t('popup.kindMedia') : kindFilter === 'image' ? t('popup.kindImage') : t('popup.kindVideo')}
           </button>
           <select class="pp-sort" value={sort} onChange={(e) => setSort((e.target as HTMLSelectElement).value as SortMode)}>
             <option value="recent-used">{t('popup.sort.recentUsed')}</option>
