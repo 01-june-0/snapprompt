@@ -3,6 +3,7 @@ import type { Settings, Prompt, Folder, ThemePref, LanguagePref, BackupFrequency
 import {
   getSettings, setSettings, getPrompts, setPrompts, getFolders, setFolders,
   getSnapshots, restoreSnapshot, subscribe,
+  contentChanged, pushVersion, makeVersion,
 } from '@shared/store';
 import { applyTheme } from '@shared/theme';
 import { buildBackup, downloadBackup, importBackup, type ImportStrategy } from '@shared/backup';
@@ -14,6 +15,7 @@ import { STARTER_PACKS, buildPack, type StarterPack } from '@shared/starterpacks
 import { t } from '@shared/i18n';
 import { uuid } from '@shared/id';
 import { PromptOptionsEditor, type ImageOptionsValue } from '@/components/PromptOptionsEditor';
+import { PromptHistory } from '@/components/PromptHistory';
 
 type Tab = 'general' | 'stats' | 'prompts' | 'folders' | 'tags' | 'backup' | 'shortcuts' | 'data' | 'about';
 
@@ -368,7 +370,7 @@ function OptPromptEditor({
   });
 
   function save() {
-    onSave({
+    const next: Prompt = {
       ...prompt,
       title: title.trim() || t('common.newPrompt'),
       body,
@@ -382,7 +384,11 @@ function OptPromptEditor({
       params: img.params,
       references: img.references,
       updatedAt: Date.now(),
-    });
+    };
+    if (contentChanged(prompt, next)) {
+      next.versions = pushVersion(prompt.versions, makeVersion(prompt, prompt.updatedAt));
+    }
+    onSave(next);
   }
   function del() {
     if (!confirm(t('popup.deleteConfirm'))) return;
@@ -422,6 +428,23 @@ function OptPromptEditor({
           <label class="op-setting-label">{t('common.memo')}</label>
           <input class="op-input" style="width:100%;margin-top:6px" value={memo} placeholder={t('common.memoPlaceholder')} onInput={(e) => setMemo((e.target as HTMLInputElement).value)} />
         </div>
+        {(prompt.versions?.length ?? 0) > 0 && (
+          <PromptHistory
+            versions={prompt.versions ?? []}
+            current={{ title, body, kind: img.kind, negativePrompt: img.negativePrompt, negativeStyle: img.negativeStyle, params: img.params, references: img.references }}
+            onRestore={(v) => {
+              setTitle(v.title);
+              setBody(v.body);
+              setImg({
+                kind: v.kind ?? 'general',
+                negativePrompt: v.negativePrompt ?? '',
+                negativeStyle: v.negativeStyle ?? 'label',
+                params: v.params ?? [],
+                references: v.references ?? [],
+              });
+            }}
+          />
+        )}
         <div style="display:flex;gap:8px;margin-top:4px">
           <button class="op-btn danger sm" onClick={del}>{t('common.delete')}</button>
           <div style="margin-left:auto;display:flex;gap:8px">

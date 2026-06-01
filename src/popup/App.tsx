@@ -2,11 +2,13 @@ import { useEffect, useMemo, useState } from 'preact/hooks';
 import type { Prompt, Folder, SortMode } from '@shared/types';
 import {
   getPrompts, setPrompts as persistPrompts, getFolders, upsertPrompt, deletePrompt, subscribe,
+  contentChanged, pushVersion, makeVersion,
 } from '@shared/store';
 import { search, sortPrompts } from '@shared/search';
 import { extractVariables } from '@shared/variables';
 import { assemblePrompt, isGenerative } from '@shared/assemble';
 import { PromptOptionsEditor, type ImageOptionsValue } from '@/components/PromptOptionsEditor';
+import { PromptHistory } from '@/components/PromptHistory';
 import { sendToActiveTab, sendToBackground } from '@shared/messaging';
 import { flattenTree, selfAndDescendants, countInFolder } from '@shared/folders';
 import { renderMarkdown } from '@shared/markdown';
@@ -376,7 +378,7 @@ function Editor({
 
   async function save() {
     const now = Date.now();
-    await upsertPrompt({
+    const next: Prompt = {
       ...prompt,
       title: title.trim() || firstLine(body) || t('common.newPrompt'),
       body,
@@ -391,7 +393,12 @@ function Editor({
       references: img.references,
       updatedAt: now,
       createdAt: isNew ? now : prompt.createdAt,
-    });
+    };
+    // Round D: snapshot the prior content when it actually changed.
+    if (!isNew && contentChanged(prompt, next)) {
+      next.versions = pushVersion(prompt.versions, makeVersion(prompt, prompt.updatedAt));
+    }
+    await upsertPrompt(next);
     onSaved();
   }
   async function remove() {
@@ -449,6 +456,25 @@ function Editor({
           <label class="pp-flabel">{t('common.memo')} <span style="font-weight:400;color:var(--text-muted)">{t('common.optional')}</span></label>
           <input class="pp-input" value={memo} placeholder={t('common.memoPlaceholder')} onInput={(e) => setMemo((e.target as HTMLInputElement).value)} />
         </div>
+        {!isNew && (prompt.versions?.length ?? 0) > 0 && (
+          <div class="pp-field">
+            <PromptHistory
+              versions={prompt.versions ?? []}
+              current={{ title, body, kind: img.kind, negativePrompt: img.negativePrompt, negativeStyle: img.negativeStyle, params: img.params, references: img.references }}
+              onRestore={(v) => {
+                setTitle(v.title);
+                setBody(v.body);
+                setImg({
+                  kind: v.kind ?? 'general',
+                  negativePrompt: v.negativePrompt ?? '',
+                  negativeStyle: v.negativeStyle ?? 'label',
+                  params: v.params ?? [],
+                  references: v.references ?? [],
+                });
+              }}
+            />
+          </div>
+        )}
       </div>
       <div class="pp-detail-foot">
         <button class="pp-btn ghost" onClick={onCancel}>{t('common.cancel')}</button>
