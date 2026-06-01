@@ -34,17 +34,18 @@ export function Onboarding() {
             <div class="ob-dots">
               <Dot n={1} step={step} label={t('ob.dot.shortcut')} />
               <Dot n={2} step={step} label={t('ob.dot.samples')} />
-              <Dot n={3} step={step} label={t('ob.dot.theme')} />
+              <Dot n={3} step={step} label={t('ob.dot.features')} />
+              <Dot n={4} step={step} label={t('ob.dot.theme')} />
             </div>
           </div>
         </div>
 
         <div class="ob-body">
-          <div class="ob-progress"><div style={`width:${(step / 3) * 100}%`} /></div>
+          <div class="ob-progress"><div style={`width:${(step / 4) * 100}%`} /></div>
 
           {step === 1 && (
             <>
-              <div class="ob-kicker">STEP 1 / 3</div>
+              <div class="ob-kicker">STEP 1 / 4</div>
               <h3>{t('ob.step1.title')}</h3>
               <p>{t('ob.step1.desc')}</p>
               <div class="ob-content">
@@ -59,7 +60,7 @@ export function Onboarding() {
 
           {step === 2 && (
             <>
-              <div class="ob-kicker">STEP 2 / 3</div>
+              <div class="ob-kicker">STEP 2 / 4</div>
               <h3>{t('ob.step2.title')}</h3>
               <p>{t('ob.step2.desc')}</p>
               <div class="ob-content">
@@ -81,11 +82,35 @@ export function Onboarding() {
 
           {step === 3 && (
             <>
-              <div class="ob-kicker">STEP 3 / 3</div>
+              <div class="ob-kicker">STEP 3 / 4</div>
               <h3>{t('ob.step3.title')}</h3>
               <p>{t('ob.step3.desc')}</p>
+              <div class="ob-content" style="gap:10px">
+                {([
+                  ['🧩', t('ob.feat.vars.t'), t('ob.feat.vars.d')],
+                  ['🖼', t('ob.feat.image.t'), t('ob.feat.image.d')],
+                  ['🕘', t('ob.feat.history.t'), t('ob.feat.history.d')],
+                  ['🪟', t('ob.feat.modes.t'), t('ob.feat.modes.d')],
+                ] as const).map(([icon, title, desc]) => (
+                  <div class="op-card" key={title} style="padding:12px 14px;display:flex;gap:12px;align-items:flex-start">
+                    <span style="font-size:20px;line-height:1.2">{icon}</span>
+                    <div>
+                      <div style="font-weight:var(--weight-semi);font-size:var(--text-sm)">{title}</div>
+                      <div style="font-size:var(--text-xs);color:var(--text-muted);margin-top:2px;line-height:1.5">{desc}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+
+          {step === 4 && (
+            <>
+              <div class="ob-kicker">STEP 4 / 4</div>
+              <h3>{t('ob.step4.title')}</h3>
+              <p>{t('ob.step4.desc')}</p>
               <div class="ob-content">
-                <div class="op-card" style="padding:16px">{t('ob.step3.body')}</div>
+                <div class="op-card" style="padding:16px">{t('ob.step4.body')}</div>
               </div>
             </>
           )}
@@ -94,7 +119,7 @@ export function Onboarding() {
             <button class="op-btn secondary sm" onClick={finish} style="border:none;color:var(--text-muted)">{t('ob.skip')}</button>
             <div style="display:flex;gap:8px">
               {step > 1 && <button class="op-btn secondary" onClick={() => setStep((s) => s - 1)}>{t('ob.prev')}</button>}
-              {step < 3
+              {step < 4
                 ? <button class="op-btn primary" onClick={() => setStep((s) => s + 1)}>{t('ob.next')}</button>
                 : <button class="op-btn primary" onClick={finish}>{t('ob.start')}</button>}
             </div>
