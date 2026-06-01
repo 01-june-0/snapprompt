@@ -14,6 +14,40 @@ export interface VariablePreset {
   values: Record<string, string>;
 }
 
+/* ---------- Image / video generation domain (Round C) ---------- */
+
+/** What kind of prompt this is. `image`/`video` unlock generation options. */
+export type PromptKind = 'general' | 'image' | 'video';
+
+/** How a negative prompt is appended on insert. */
+export type NegativeStyle =
+  | 'label' // "\nNegative prompt: …"  (Stable Diffusion / generic)
+  | 'mj';   // " --no a, b, c"          (Midjourney)
+
+export type ParamControl = 'select' | 'text' | 'number' | 'toggle';
+
+/**
+ * A toggleable generation parameter appended to the prompt on insert.
+ * `token` is a template whose `{}` is replaced by `value` (e.g. "--ar {}").
+ * For `control: 'toggle'`, the bare `token` (no `{}`) is emitted when enabled.
+ */
+export interface ImageParam {
+  id: string;
+  label: string;
+  token: string;
+  control: ParamControl;
+  value: string;
+  options?: string[];
+  enabled: boolean;
+}
+
+/** A reference image, prepended (as a URL) to the prompt on insert. */
+export interface ReferenceImage {
+  id: string;
+  url: string;
+  note?: string;
+}
+
 export interface Variable {
   /** The `name` part of {{name}} */
   name: string;
@@ -42,6 +76,17 @@ export interface Prompt {
   favorite: boolean;
   /** Saved fill-sets for the variables (Round A). */
   presets?: VariablePreset[];
+  /* ---- image/video generation extras (Round C); absent = general text prompt ---- */
+  /** Prompt kind; missing/undefined is treated as 'general'. */
+  kind?: PromptKind;
+  /** Things to exclude (supports variables/conditionals). */
+  negativePrompt?: string | null;
+  /** How the negative prompt is appended; defaults to 'label'. */
+  negativeStyle?: NegativeStyle;
+  /** Toggleable generation parameters appended to the body. */
+  params?: ImageParam[];
+  /** Reference image URLs prepended to the body. */
+  references?: ReferenceImage[];
   createdAt: number;
   updatedAt: number;
   lastUsedAt: number | null;

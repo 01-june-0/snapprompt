@@ -4,7 +4,8 @@ import { signal } from '@preact/signals';
 import type { Prompt, Folder, Variable } from '@shared/types';
 import { getPrompts, getFolders, upsertPrompt, getSettings } from '@shared/store';
 import { search, rankForPicker } from '@shared/search';
-import { extractVariables, substitute, mergeVariables, applyConditionals } from '@shared/variables';
+import { extractVariables, mergeVariables, applyConditionals } from '@shared/variables';
+import { assemblePrompt, variableSource, isGenerative } from '@shared/assemble';
 import { flattenTree } from '@shared/folders';
 import { insertText, copyToClipboard, captureActiveElement } from './insertion';
 import { sendToBackground } from '@shared/messaging';
@@ -48,16 +49,19 @@ function close() {
  * insert (or copy) immediately. Shared by the picker and the popup's Insert.
  */
 export async function applyPrompt(prompt: Prompt, mode: 'insert' | 'copy') {
-  const vars = extractVariables(prompt.body);
-  if (vars.length > 0) {
+  const vars = extractVariables(variableSource(prompt));
+  // Open the options modal when there are variables, or always for image/video
+  // prompts (so parameters/negative can be toggled before insert).
+  if (vars.length > 0 || isGenerative(prompt)) {
     view.value = { kind: 'variables', prompt, mode };
     return;
   }
+  const text = assemblePrompt(prompt, {});
   if (mode === 'insert') {
-    const res = await insertText(prompt.body);
+    const res = await insertText(text);
     showToast(res === 'inserted' ? t('content.toast.inserted') : t('content.toast.clipboard'));
   } else {
-    await copyToClipboard(prompt.body);
+    await copyToClipboard(text);
     showToast(t('content.toast.clipboard'));
   }
   await sendToBackground({ type: 'PROMPT_USED', promptId: prompt.id });
@@ -214,7 +218,8 @@ function Picker() {
 /* ---------------- Variable modal ---------------- */
 function VariableModal({ prompt, mode }: { prompt: Prompt; mode: 'insert' | 'copy' }) {
   // Merge fresh extraction with the prompt's stored variables to keep lastValue.
-  const vars = useMemo(() => mergeVariables(prompt.body, prompt.variables), [prompt]);
+  // Variables come from the body + negative prompt combined.
+  const vars = useMemo(() => mergeVariables(variableSource(prompt), prompt.variables), [prompt]);
   const [remember, setRemember] = useState(false);
   const [values, setValues] = useState<Record<string, string>>(() => {
     const init: Record<string, string> = {};
@@ -256,7 +261,7 @@ function VariableModal({ prompt, mode }: { prompt: Prompt; mode: 'insert' | 'cop
   }, []);
 
   async function apply() {
-    const text = substitute(prompt.body, values, vars);
+    const text = assemblePrompt({ ...prompt, variables: vars }, values);
     if (mode === 'insert') {
       const res = await insertText(text);
       showToast(res === 'inserted' ? t('content.toast.inserted') : t('content.toast.clipboard'));

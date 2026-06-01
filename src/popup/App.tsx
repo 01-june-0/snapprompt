@@ -4,7 +4,8 @@ import {
   getPrompts, setPrompts as persistPrompts, getFolders, upsertPrompt, deletePrompt, subscribe,
 } from '@shared/store';
 import { search, sortPrompts } from '@shared/search';
-import { extractVariables, substitute, hasVariables } from '@shared/variables';
+import { extractVariables } from '@shared/variables';
+import { assemblePrompt } from '@shared/assemble';
 import { sendToActiveTab, sendToBackground } from '@shared/messaging';
 import { flattenTree, selfAndDescendants, countInFolder } from '@shared/folders';
 import { renderMarkdown } from '@shared/markdown';
@@ -82,9 +83,7 @@ export function App() {
   }, [folderFilter, folders]);
 
   async function doCopy(p: Prompt) {
-    const text = hasVariables(p.body)
-      ? substitute(p.body, {}, extractVariables(p.body))
-      : p.body;
+    const text = assemblePrompt(p, {});
     await navigator.clipboard.writeText(text);
     await sendToBackground({ type: 'PROMPT_USED', promptId: p.id });
     flash(t('popup.toast.copied'));
