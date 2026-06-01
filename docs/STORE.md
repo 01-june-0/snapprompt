@@ -9,9 +9,13 @@
 | 항목 | 위치 / 값 |
 | --- | --- |
 | 업로드 패키지 | `snapprompt-1.0.0.zip` (프로젝트 루트, `dist/`를 압축한 것) |
-| 아이콘 128×128 | 패키지에 포함 (`src/assets/icons/icon-128.png`) |
+| 스토어 아이콘 128×128 | `docs/store/store-icon-128.png` (PNG, 둥근 모서리) |
 | 스토어 스크린샷 1280×800 | `docs/store/popup.png · picker.png · vars.png · image.png · history.png` |
+| 작은 프로모 타일 440×280 | `docs/store/promo-small-440x280.jpg` (JPEG, 알파 없음) |
+| 마키 프로모 타일 1400×560 | `docs/store/promo-marquee-1400x560.jpg` (JPEG, 알파 없음) |
 | 개인정보 처리방침 | `docs/PRIVACY.md` → **공개 URL로 호스팅 필요** (아래 3-c) |
+
+> 그래픽은 `design/promo.html`(아이콘·프로모 타일) + `design/shots.html`(스크린샷)을 헤드리스 Chrome으로 렌더해 생성. 다시 만들려면 각 파일의 캡처 명령 참고.
 
 > 패키지를 다시 만들려면: `npm run build` 후
 > `cd dist && zip -rq ../snapprompt-<버전>.zip . -x "*.map"`
@@ -32,10 +36,11 @@
 - 카테고리: **생산성(Productivity)**
 - 언어: **한국어**(기본), 필요시 영어 추가
 
-**b. 그래픽**
-- 스토어 아이콘: 128×128 (패키지 아이콘 사용)
-- 스크린샷: `docs/store/*.png` 5장 업로드 (1280×800)
-- (선택) 프로모 타일 440×280 — 비공개 게시엔 없어도 됨
+**b. 그래픽** (모두 `docs/store/`에 준비됨)
+- 스토어 아이콘 128×128: `store-icon-128.png`
+- 스크린샷 1280×800 (최대 5장): `popup.png · picker.png · vars.png · image.png · history.png`
+- 작은 프로모 타일 440×280: `promo-small-440x280.jpg`
+- 마키 프로모 타일 1400×560: `promo-marquee-1400x560.jpg` (검색·카테고리 노출 시 사용, 선택)
 
 **c. 개인정보 처리방침 URL (필수)**
 - 리포지토리가 비공개라 그대로는 못 쓰므로, `docs/PRIVACY.md` 내용을 **공개 위치**에 올려 URL 확보:
