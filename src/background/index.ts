@@ -170,22 +170,14 @@ async function ensureOffscreen(): Promise<void> {
     .catch((e) => { if (!String(e).includes('single offscreen')) throw e; }); // already exists → fine
   try { await offscreenCreating; } finally { offscreenCreating = null; }
 }
-async function trySendCopy(text: string): Promise<boolean> {
-  try {
-    const res = (await chrome.runtime.sendMessage({ type: 'SP_COPY', text })) as { ok?: boolean } | undefined;
-    return !!res?.ok;
-  } catch {
-    return false;
-  }
-}
 async function copyToClipboard(textToCopy: string): Promise<boolean> {
   // 1) offscreen document — works regardless of the active tab (new tab, edge://…)
   try {
     await ensureOffscreen();
     try {
-      // @ts-ignore — getContexts is available in current Chrome/Edge
-      const ctx = await chrome.runtime.getContexts?.({ contextTypes: ['OFFSCREEN_DOCUMENT'] });
-      console.log('[SnapPrompt] offscreen contexts:', ctx?.length ?? 'n/a');
+      // @ts-ignore — getContexts signature varies across @types/chrome versions
+      const ctx: any = await chrome.runtime.getContexts?.({ contextTypes: ['OFFSCREEN_DOCUMENT'] });
+      console.log('[SnapPrompt] offscreen contexts:', Array.isArray(ctx) ? ctx.length : 'n/a');
     } catch (e) { console.log('[SnapPrompt] getContexts error:', String(e)); }
     // the offscreen listener may not be ready on first use — retry a few times
     for (let i = 0; i < 6; i++) {
