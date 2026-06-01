@@ -14,7 +14,7 @@ SnapPrompt는 **사용자의 데이터를 수집·전송·공유하지 않습니
 
 권한은 오직 핵심 기능(프롬프트 저장·삽입·백업)을 위해서만 사용됩니다. 자세한 권한별 용도는 스토어 등록 정보를 참고하세요.
 
-문의: <dev3@edmedu.com>
+문의: <kyocustom@gmail.com>
 
 ## English
 
@@ -28,4 +28,4 @@ SnapPrompt **does not collect, transmit, or share any user data.**
 
 Permissions are used solely to provide the core features (saving, inserting, and backing up prompts). See the store listing for a per-permission explanation.
 
-Contact: <dev3@edmedu.com>
+Contact: <kyocustom@gmail.com>
