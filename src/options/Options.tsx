@@ -40,6 +40,7 @@ export function Options() {
   }
   async function addStarterPack(pack: StarterPack) {
     const folderName = t('pack.' + pack.id);
+    if (folders.some((f) => f.name === folderName) && !confirm(t('opt.packs.dupConfirm', [folderName]))) return;
     const { folder, prompts: ps } = buildPack(pack, folderName);
     const nextFolders = [...folders, folder];
     const nextPrompts = [...ps, ...prompts];
@@ -142,9 +143,20 @@ function General({ settings, patch, folders, addPack }: { settings: Settings; pa
         <div class="op-setting-label">{t('opt.packs')}</div>
         <div class="op-setting-hint" style="margin-bottom:10px">{t('opt.packs.hint')}</div>
         <div style="display:flex;gap:8px;flex-wrap:wrap">
-          {STARTER_PACKS.map((p) => (
-            <button class="op-btn secondary sm" key={p.id} onClick={() => addPack(p)}>+ {t('pack.' + p.id)} ({p.prompts.length})</button>
-          ))}
+          {STARTER_PACKS.map((p) => {
+            const added = folders.some((f) => f.name === t('pack.' + p.id));
+            return (
+              <button
+                class="op-btn secondary sm"
+                key={p.id}
+                style={added ? 'opacity:.6' : ''}
+                title={added ? t('opt.packs.reAdd') : undefined}
+                onClick={() => addPack(p)}
+              >
+                {added ? '✓' : '+'} {t('pack.' + p.id)} ({p.prompts.length})
+              </button>
+            );
+          })}
         </div>
       </div>
 
