@@ -182,13 +182,24 @@ async function copyToClipboard(textToCopy: string): Promise<boolean> {
   // 1) offscreen document — works regardless of the active tab (new tab, edge://…)
   try {
     await ensureOffscreen();
+    try {
+      // @ts-ignore — getContexts is available in current Chrome/Edge
+      const ctx = await chrome.runtime.getContexts?.({ contextTypes: ['OFFSCREEN_DOCUMENT'] });
+      console.log('[SnapPrompt] offscreen contexts:', ctx?.length ?? 'n/a');
+    } catch (e) { console.log('[SnapPrompt] getContexts error:', String(e)); }
     // the offscreen listener may not be ready on first use — retry a few times
     for (let i = 0; i < 6; i++) {
-      if (await trySendCopy(textToCopy)) return true;
+      try {
+        const res = (await chrome.runtime.sendMessage({ type: 'SP_COPY', text: textToCopy })) as { ok?: boolean } | undefined;
+        console.log(`[SnapPrompt] SP_COPY attempt ${i} →`, res);
+        if (res?.ok) return true;
+      } catch (e) {
+        console.log(`[SnapPrompt] SP_COPY attempt ${i} threw:`, String(e));
+      }
       await new Promise((r) => setTimeout(r, 120));
     }
   } catch (e) {
-    console.warn('[SnapPrompt] offscreen copy failed:', e);
+    console.warn('[SnapPrompt] offscreen path error:', e);
   }
   // 2) fallback: inject into the active tab (normal pages only)
   try {
