@@ -153,16 +153,22 @@ function clearBadgeLater(ms = 1800) {
  * Copy text to the clipboard from the service worker via an offscreen document.
  * Works regardless of the active tab (new tab, edge://, etc.).
  */
+let offscreenCreating: Promise<void> | null = null;
 async function ensureOffscreen(): Promise<void> {
-  // @ts-ignore — hasDocument exists in current Chrome/Edge
-  const has = await chrome.offscreen.hasDocument?.();
-  if (!has) {
-    await chrome.offscreen.createDocument({
+  try {
+    // hasDocument may be missing on some builds — guard it.
+    if (chrome.offscreen.hasDocument && (await chrome.offscreen.hasDocument())) return;
+  } catch { /* fall through to create */ }
+  if (offscreenCreating) { await offscreenCreating; return; }
+  offscreenCreating = chrome.offscreen
+    .createDocument({
       url: 'offscreen.html',
       reasons: ['CLIPBOARD' as chrome.offscreen.Reason],
       justification: 'Copy the selected prompt to the clipboard from the address bar (omnibox).',
-    });
-  }
+    })
+    .then(() => {})
+    .catch((e) => { if (!String(e).includes('single offscreen')) throw e; }); // already exists → fine
+  try { await offscreenCreating; } finally { offscreenCreating = null; }
 }
 async function trySendCopy(text: string): Promise<boolean> {
   try {
@@ -176,10 +182,11 @@ async function copyToClipboard(textToCopy: string): Promise<boolean> {
   // 1) offscreen document — works regardless of the active tab (new tab, edge://…)
   try {
     await ensureOffscreen();
-    if (await trySendCopy(textToCopy)) return true;
-    await new Promise((r) => setTimeout(r, 200)); // listener may not be ready on first use
-    await ensureOffscreen();
-    if (await trySendCopy(textToCopy)) return true;
+    // the offscreen listener may not be ready on first use — retry a few times
+    for (let i = 0; i < 6; i++) {
+      if (await trySendCopy(textToCopy)) return true;
+      await new Promise((r) => setTimeout(r, 120));
+    }
   } catch (e) {
     console.warn('[SnapPrompt] offscreen copy failed:', e);
   }
