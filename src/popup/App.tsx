@@ -15,6 +15,8 @@ type Screen = { kind: 'list' } | { kind: 'edit'; prompt: Prompt; isNew: boolean 
 type FolderFilter = 'all' | 'none' | string;
 
 const VIEW_MODE = new URLSearchParams(location.search).get('mode'); // null | 'window' | 'panel'
+const CUR_MODE: 'default' | 'window' | 'panel' =
+  VIEW_MODE === 'window' || VIEW_MODE === 'panel' ? VIEW_MODE : 'default';
 
 export function App() {
   const [prompts, setPrompts] = useState<Prompt[]>([]);
@@ -131,25 +133,34 @@ export function App() {
     return selected.has(p.id) && selected.size > 0 ? [...selected] : [p.id];
   }
 
-  /** Open the prompt UI in a freely-movable detached window. */
-  async function openWindow() {
-    await chrome.windows.create({
-      url: chrome.runtime.getURL('src/popup/index.html?mode=window'),
-      type: 'popup',
-      width: 480,
-      height: 640,
-    });
-    window.close();
-  }
-  /** Open the prompt UI docked in the side panel (Chrome 116+). */
-  async function openSidePanel() {
-    try {
-      const win = await chrome.windows.getCurrent();
-      // @ts-ignore — sidePanel.open is newer than some @types/chrome versions
-      await chrome.sidePanel.open({ windowId: win.id });
-      window.close();
-    } catch {
-      flash(t('popup.toast.panelFail'));
+  /**
+   * Switch the open mode and remember it. The toolbar icon will reopen
+   * SnapPrompt in this mode next time (handled by the background action config).
+   */
+  async function selectMode(mode: 'default' | 'window' | 'panel') {
+    if (mode === CUR_MODE) return; // already in this view
+    await sendToBackground({ type: 'SET_POPUP_MODE', mode });
+    if (mode === 'window') {
+      await chrome.windows.create({
+        url: chrome.runtime.getURL('src/popup/index.html?mode=window'),
+        type: 'popup',
+        width: 480,
+        height: 640,
+      });
+      if (VIEW_MODE === null) window.close(); // close the toolbar popup we came from
+    } else if (mode === 'panel') {
+      try {
+        const win = await chrome.windows.getCurrent();
+        // @ts-ignore — sidePanel.open is newer than some @types/chrome versions
+        await chrome.sidePanel.open({ windowId: win.id });
+        if (VIEW_MODE === null) window.close();
+      } catch {
+        flash(t('popup.toast.panelFail'));
+      }
+    } else {
+      // default: future icon clicks open the toolbar popup.
+      if (VIEW_MODE === 'window') window.close();
+      else flash(t('popup.toast.defaultMode'));
     }
   }
   function onFolderDrop(e: DragEvent, folderId: string | null) {
@@ -179,12 +190,11 @@ export function App() {
         <div class="pp-name">SnapPrompt</div>
         <div class="pp-header-actions">
           <button class="pp-icon-btn" title={t('common.newPrompt')} onClick={() => setScreen({ kind: 'edit', prompt: blankPrompt(), isNew: true })}><PlusIcon /></button>
-          {VIEW_MODE === null && (
-            <>
-              <button class="pp-icon-btn" title={t('popup.openWindow')} onClick={() => void openWindow()}><WindowIcon /></button>
-              <button class="pp-icon-btn" title={t('popup.openPanel')} onClick={() => void openSidePanel()}><PanelIcon /></button>
-            </>
-          )}
+          <div class="pp-modes" role="group" aria-label={t('popup.mode')}>
+            <button class={`pp-icon-btn${CUR_MODE === 'default' ? ' active' : ''}`} title={t('popup.openDefault')} onClick={() => void selectMode('default')}><PopupIcon /></button>
+            <button class={`pp-icon-btn${CUR_MODE === 'window' ? ' active' : ''}`} title={t('popup.openWindow')} onClick={() => void selectMode('window')}><WindowIcon /></button>
+            <button class={`pp-icon-btn${CUR_MODE === 'panel' ? ' active' : ''}`} title={t('popup.openPanel')} onClick={() => void selectMode('panel')}><PanelIcon /></button>
+          </div>
           <button class="pp-icon-btn" title={t('common.settings')} onClick={() => sendToBackground({ type: 'OPEN_OPTIONS' })}><GearIcon /></button>
         </div>
       </header>
@@ -456,5 +466,6 @@ const TrashIcon = () => <svg width="14" height="14" viewBox="0 0 24 24" fill="no
 const FolderIcon = ({ size = 12 }: { size?: number }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" /></svg>;
 const ChevDown = () => <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="6 9 12 15 18 9" /></svg>;
 const DashIcon = () => <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9" /></svg>;
+const PopupIcon = () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="9" width="16" height="11" rx="2" /><path d="M12 9V3" /><path d="M9 6l3-3 3 3" /></svg>;
 const WindowIcon = () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2" /><path d="M3 9h18" /></svg>;
 const PanelIcon = () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2" /><path d="M15 4v16" /></svg>;

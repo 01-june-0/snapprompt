@@ -64,6 +64,9 @@ export type BackupFrequency = 'off' | 'daily' | 'weekly' | 'monthly';
 export type InsertionMode = 'auto' | 'clipboard-fallback';
 export type SortMode = 'recent-used' | 'recent-saved' | 'most-used' | 'name';
 
+/** How the toolbar icon opens SnapPrompt; remembered across sessions. */
+export type PopupMode = 'default' | 'window' | 'panel';
+
 export interface Settings {
   floatingButton: boolean;
   backupFrequency: BackupFrequency;
@@ -76,6 +79,8 @@ export interface Settings {
   onboardingCompletedAt: number | null;
   /** Hosts where the content-script UI is disabled (Phase 2) */
   disabledHosts: string[];
+  /** Last-used open mode for the toolbar action (default popup / window / side panel) */
+  popupMode: PopupMode;
 }
 
 export interface Snapshot {
@@ -121,6 +126,7 @@ export const DEFAULT_SETTINGS: Settings = {
   language: 'system',
   onboardingCompletedAt: null,
   disabledHosts: [],
+  popupMode: 'default',
 };
 
 /* ------------------------------------------------------------------ */
@@ -135,6 +141,7 @@ export type Message =
   | { type: 'PROMPT_USED'; promptId: string }
   | { type: 'BACKUP_NOW' }
   | { type: 'OPEN_OPTIONS'; section?: string }
+  | { type: 'SET_POPUP_MODE'; mode: PopupMode }
   | { type: 'PING' };
 
 export type MessageResponse =

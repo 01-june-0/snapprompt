@@ -44,6 +44,8 @@ const ko: Record<string, string> = {
 
   // popup
   'popup.search': '프롬프트 검색...',
+  'popup.mode': '열기 방식',
+  'popup.openDefault': '기본 팝업으로 열기',
   'popup.openWindow': '창으로 열기',
   'popup.openPanel': '사이드 패널로 열기',
   'popup.allFolders': '전체 폴더',
@@ -72,6 +74,7 @@ const ko: Record<string, string> = {
   'popup.toast.inserted': '삽입했어요',
   'popup.toast.insertFallback': '이 페이지엔 삽입할 수 없어 복사했어요',
   'popup.toast.panelFail': '사이드 패널을 열 수 없어요 (Chrome 116+ 필요)',
+  'popup.toast.defaultMode': '이제 아이콘을 누르면 기본 팝업으로 열려요',
   'popup.deleteConfirm': '이 프롬프트를 삭제할까요?',
 
   // content (picker / modals / fab)
@@ -296,6 +299,8 @@ const en: Record<string, string> = {
   'ctx.open': 'Open SnapPrompt',
 
   'popup.search': 'Search prompts...',
+  'popup.mode': 'Open as',
+  'popup.openDefault': 'Open as toolbar popup',
   'popup.openWindow': 'Open in window',
   'popup.openPanel': 'Open in side panel',
   'popup.allFolders': 'All folders',
@@ -324,6 +329,7 @@ const en: Record<string, string> = {
   'popup.toast.inserted': 'Inserted',
   'popup.toast.insertFallback': "Can't insert on this page — copied instead",
   'popup.toast.panelFail': "Couldn't open side panel (needs Chrome 116+)",
+  'popup.toast.defaultMode': 'Clicking the icon now opens the toolbar popup',
   'popup.deleteConfirm': 'Delete this prompt?',
 
   'content.pickerSearch': 'Search prompts or navigate with ↑↓...',
