@@ -160,8 +160,11 @@ const ko: Record<string, string> = {
   'opt.packs.hint': '도메인별 기본 프롬프트 묶음을 폴더로 추가해요',
   'opt.packs.added': '"{0}" 팩을 추가했어요 ({1}개)',
   'pack.image': '이미지 생성',
+  'pack.video': '영상 생성',
   'pack.coding': '코딩',
-  'pack.writing': '글쓰기',
+  'pack.writing': '글쓰기·문서',
+  'pack.marketing': '마케팅·SNS',
+  'pack.work': '업무·생산성',
 
   // options prompts manager
   'opt.prompts.desc': '전체 프롬프트를 검색하고 다중 선택해 한 번에 정리하세요',
@@ -473,8 +476,11 @@ const en: Record<string, string> = {
   'opt.packs.hint': 'Add a domain starter set of prompts as a folder',
   'opt.packs.added': 'Added "{0}" pack ({1} prompts)',
   'pack.image': 'Image gen',
+  'pack.video': 'Video gen',
   'pack.coding': 'Coding',
-  'pack.writing': 'Writing',
+  'pack.writing': 'Writing & docs',
+  'pack.marketing': 'Marketing & social',
+  'pack.work': 'Work & productivity',
 
   'opt.prompts.desc': 'Search all prompts and organize them in bulk',
   'opt.prompts.search': 'Search title, body, tags',

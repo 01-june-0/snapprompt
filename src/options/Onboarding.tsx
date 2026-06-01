@@ -74,7 +74,7 @@ export function Onboarding() {
                   </div>
                 ))}
                 <div style="font-size:11px;color:var(--text-muted);text-align:center;margin-top:8px">
-                  {addSamples ? t('ob.samplesAdd', [3]) : t('ob.samplesNone')} · {t('ob.samplesToggleHint')}
+                  {addSamples ? t('ob.samplesAdd', [buildSamplePrompts().length]) : t('ob.samplesNone')} · {t('ob.samplesToggleHint')}
                 </div>
               </div>
             </>
