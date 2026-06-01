@@ -1,6 +1,7 @@
 import { render } from 'preact';
 import '@shared/tokens.css';
 import './options.css';
+import '@/components/prompt-options.css';
 import { Options } from './Options';
 import { Onboarding } from './Onboarding';
 import { getSettings, subscribe } from '@shared/store';

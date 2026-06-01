@@ -1,6 +1,7 @@
 import { render } from 'preact';
 import '@shared/tokens.css';
 import './popup.css';
+import '@/components/prompt-options.css';
 import { App } from './App';
 import { getSettings, subscribe } from '@shared/store';
 import { applyTheme, watchSystemTheme } from '@shared/theme';

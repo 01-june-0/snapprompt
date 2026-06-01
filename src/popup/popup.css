@@ -145,6 +145,7 @@ html.mode-panel body {
 .pp-card-head { display: flex; align-items: center; gap: 8px; }
 .pp-card-title { font-weight: var(--weight-semi); font-size: var(--text-sm); flex: 1;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pp-kind { flex-shrink: 0; font-size: 12px; line-height: 1; }
 .pp-fav { color: var(--warning-500); flex-shrink: 0; background: none; border: none; cursor: pointer; padding: 0; display: grid; place-items: center; }
 .pp-fav.off { color: var(--text-disabled); }
 .pp-card-preview { color: var(--text-muted); font-size: var(--text-xs); line-height: 1.35; margin-top: 6px;

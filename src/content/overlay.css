@@ -67,6 +67,7 @@
 .sp-item-content { flex: 1; min-width: 0; }
 .sp-item-title { font-size: var(--text-sm); font-weight: var(--weight-semi);
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sp-kind { margin-right: 4px; }
 .sp-item-preview { font-size: var(--text-xs); color: var(--text-muted);
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
 .sp-item.active .sp-item-preview { color: var(--text-accent); opacity: .75; }

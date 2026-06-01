@@ -13,6 +13,7 @@ import { extractVariables } from '@shared/variables';
 import { STARTER_PACKS, buildPack, type StarterPack } from '@shared/starterpacks';
 import { t } from '@shared/i18n';
 import { uuid } from '@shared/id';
+import { PromptOptionsEditor, type ImageOptionsValue } from '@/components/PromptOptionsEditor';
 
 type Tab = 'general' | 'stats' | 'prompts' | 'folders' | 'tags' | 'backup' | 'shortcuts' | 'data' | 'about';
 
@@ -358,6 +359,13 @@ function OptPromptEditor({
   const [folderId, setFolderId] = useState<string | null>(prompt.folderId);
   const [tags, setTags] = useState(prompt.tags.join(', '));
   const [memo, setMemo] = useState(prompt.memo ?? '');
+  const [img, setImg] = useState<ImageOptionsValue>({
+    kind: prompt.kind ?? 'general',
+    negativePrompt: prompt.negativePrompt ?? '',
+    negativeStyle: prompt.negativeStyle ?? 'label',
+    params: prompt.params ?? [],
+    references: prompt.references ?? [],
+  });
 
   function save() {
     onSave({
@@ -367,7 +375,12 @@ function OptPromptEditor({
       folderId,
       tags: tags.split(',').map((tg) => tg.trim().replace(/^#/, '')).filter(Boolean),
       memo: memo.trim() || null,
-      variables: extractVariables(body),
+      variables: extractVariables(body + '\n' + img.negativePrompt),
+      kind: img.kind,
+      negativePrompt: img.negativePrompt.trim() || null,
+      negativeStyle: img.negativeStyle,
+      params: img.params,
+      references: img.references,
       updatedAt: Date.now(),
     });
   }
@@ -389,8 +402,9 @@ function OptPromptEditor({
         </div>
         <div>
           <label class="op-setting-label">{t('common.body')}</label>
-          <textarea style="width:100%;margin-top:6px;min-height:160px;padding:10px;background:var(--bg-surface);border:1px solid var(--border-default);border-radius:var(--r-md,8px);color:var(--text-primary);font-family:var(--font-mono);font-size:12.5px;line-height:1.55;resize:vertical" value={body} onInput={(e) => setBody((e.target as HTMLTextAreaElement).value)} />
+          <textarea style="width:100%;margin-top:6px;min-height:160px;padding:10px;background:var(--bg-surface);border:1px solid var(--border-default);border-radius:var(--radius-md);color:var(--text-primary);font-family:var(--font-mono);font-size:12.5px;line-height:1.55;resize:vertical" value={body} onInput={(e) => setBody((e.target as HTMLTextAreaElement).value)} />
         </div>
+        <PromptOptionsEditor value={img} onChange={setImg} />
         <div style="display:flex;gap:12px;flex-wrap:wrap">
           <div style="flex:1;min-width:160px">
             <label class="op-setting-label">{t('common.folder')}</label>

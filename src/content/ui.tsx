@@ -191,7 +191,10 @@ function Picker() {
             >
               <div class="sp-item-icon"><IconVars /></div>
               <div class="sp-item-content">
-                <div class="sp-item-title">{r.prompt.title}</div>
+                <div class="sp-item-title">
+                  {isGenerative(r.prompt) && <span class="sp-kind">{r.prompt.kind === 'video' ? '🎬' : '🖼'}</span>}
+                  {r.prompt.title}
+                </div>
                 <div class="sp-item-preview">{firstLine(r.prompt.body)}</div>
               </div>
               <div class="sp-item-meta">

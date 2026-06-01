@@ -5,7 +5,8 @@ import {
 } from '@shared/store';
 import { search, sortPrompts } from '@shared/search';
 import { extractVariables } from '@shared/variables';
-import { assemblePrompt } from '@shared/assemble';
+import { assemblePrompt, isGenerative } from '@shared/assemble';
+import { PromptOptionsEditor, type ImageOptionsValue } from '@/components/PromptOptionsEditor';
 import { sendToActiveTab, sendToBackground } from '@shared/messaging';
 import { flattenTree, selfAndDescendants, countInFolder } from '@shared/folders';
 import { renderMarkdown } from '@shared/markdown';
@@ -321,6 +322,7 @@ export function App() {
                   <button class={`pp-fav${p.favorite ? '' : ' off'}`} onClick={(e) => { e.stopPropagation(); void toggleFav(p); }}>
                     <StarIcon size={13} filled={p.favorite} />
                   </button>
+                  {isGenerative(p) && <span class="pp-kind">{p.kind === 'video' ? '🎬' : '🖼'}</span>}
                   <div class="pp-card-title">{p.title}</div>
                   {p.variables.length > 0 && <span class="pp-vars">{p.variables.length} vars</span>}
                 </div>
@@ -363,7 +365,14 @@ function Editor({
   const [tags, setTags] = useState(prompt.tags.join(', '));
   const [memo, setMemo] = useState(prompt.memo ?? '');
   const [preview, setPreview] = useState(false);
-  const vars = useMemo(() => extractVariables(body), [body]);
+  const [img, setImg] = useState<ImageOptionsValue>({
+    kind: prompt.kind ?? 'general',
+    negativePrompt: prompt.negativePrompt ?? '',
+    negativeStyle: prompt.negativeStyle ?? 'label',
+    params: prompt.params ?? [],
+    references: prompt.references ?? [],
+  });
+  const vars = useMemo(() => extractVariables(body + '\n' + img.negativePrompt), [body, img.negativePrompt]);
 
   async function save() {
     const now = Date.now();
@@ -375,6 +384,11 @@ function Editor({
       tags: tags.split(',').map((tag) => tag.trim().replace(/^#/, '')).filter(Boolean),
       memo: memo.trim() || null,
       variables: vars,
+      kind: img.kind,
+      negativePrompt: img.negativePrompt.trim() || null,
+      negativeStyle: img.negativeStyle,
+      params: img.params,
+      references: img.references,
       updatedAt: now,
       createdAt: isNew ? now : prompt.createdAt,
     });
@@ -410,6 +424,9 @@ function Editor({
           {preview
             ? <div class="pp-md" dangerouslySetInnerHTML={{ __html: renderMarkdown(body) }} />
             : <textarea class="pp-textarea" value={body} onInput={(e) => setBody((e.target as HTMLTextAreaElement).value)} placeholder={t('popup.bodyPlaceholder')} />}
+        </div>
+        <div class="pp-field">
+          <PromptOptionsEditor value={img} onChange={setImg} />
         </div>
         {vars.length > 0 && (
           <div class="pp-field">
