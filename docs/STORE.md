@@ -79,11 +79,20 @@ SnapPrompt
 ```
 
 ### 간단한 설명 (Short description, ≤132자)
+
+**한국어**
 ```
 웹서핑 중 발견한 LLM 프롬프트를 저장하고, 어떤 입력창에서든 단축키로 꺼내 변수까지 채워 삽입하는 프롬프트 매니저. 모든 데이터는 로컬 저장.
 ```
 
+**English**
+```
+Save LLM prompts and pull them into any text field with a shortcut — fill the variables, then insert. All data stays local.
+```
+
 ### 자세한 설명 (Detailed description)
+
+**한국어**
 ```
 SnapPrompt는 흩어진 LLM 프롬프트를 한곳에 모으고, 필요할 때 어디서든 바로 꺼내 쓰게 해주는 프롬프트 매니저입니다. 모든 데이터는 외부 서버 없이 브라우저에만 저장됩니다.
 
@@ -112,6 +121,37 @@ SnapPrompt는 흩어진 LLM 프롬프트를 한곳에 모으고, 필요할 때 �
 
 ■ 프라이버시
 · 모든 데이터는 브라우저에 로컬 저장. 수집·전송·추적 없음. JSON 백업/복원과 자동 스냅샷 지원.
+```
+
+**English**
+```
+SnapPrompt brings your scattered LLM prompts into one place and lets you pull them up anywhere you need them. All data is stored only in your browser — no external servers.
+
+■ Save
+· Select text on any page → right-click or shortcut to save instantly
+· Variables are auto-detected; near-duplicate prompts trigger a warning
+
+■ Recall
+· Open a search picker with a shortcut in any input — ChatGPT, Claude, Gemini, and more
+· Pick one and it's inserted into the focused field (falls back to clipboard copy on restricted pages)
+
+■ Variable templates (8 types + conditional blocks)
+· {{name}} · {{name|default}} · dropdown · date · number · color · toggle · code block
+· Fill them in a form with live preview, and reuse your recent values
+
+■ Image & video generation options
+· Midjourney/Pika parameter toggles, negative prompts, reference images
+· Auto-assembled as [references] + [body] + [parameters] + [negative]
+
+■ Organize & track
+· Unlimited folder tree, tags, favorite pins, drag & drop
+· Edit version history, restore, A/B compare, insertion log with recent-value reuse
+
+■ Three open modes
+· Toolbar popup · detached window · side panel (remembers your last one)
+
+■ Privacy
+· All data stays local in your browser. No collection, transmission, or tracking. JSON backup/restore and automatic snapshots included.
 ```
 
 ### 단일 목적 문구 (Single purpose)
