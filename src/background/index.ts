@@ -183,7 +183,7 @@ async function copyToClipboard(textToCopy: string): Promise<boolean> {
     for (let i = 0; i < 6; i++) {
       try {
         const res = (await chrome.runtime.sendMessage({ type: 'SP_COPY', text: textToCopy })) as { ok?: boolean } | undefined;
-        console.log(`[SnapPrompt] SP_COPY attempt ${i} →`, res);
+        console.log(`[SnapPrompt] SP_COPY attempt ${i} →`, JSON.stringify(res));
         if (res?.ok) return true;
       } catch (e) {
         console.log(`[SnapPrompt] SP_COPY attempt ${i} threw:`, String(e));
