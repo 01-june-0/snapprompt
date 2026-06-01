@@ -125,14 +125,29 @@ chrome.omnibox.onInputChanged.addListener(async (text, suggest) => {
 });
 
 chrome.omnibox.onInputEntered.addListener(async (text) => {
-  const prompts = await getPrompts();
-  const prompt = prompts.find((p) => p.id === text) ?? search(prompts, text).map((r) => r.prompt)[0];
-  if (!prompt) return;
-  const resolved = substitute(prompt.body, {}, extractVariables(prompt.body));
-  const ok = await copyToClipboard(resolved);
-  await recordUsage(prompt.id);
-  if (ok) flashBadge();
+  setBadge('…', '#7C3AED'); // immediate feedback that the handler ran
+  try {
+    const prompts = await getPrompts();
+    const prompt = prompts.find((p) => p.id === text) ?? search(prompts, text).map((r) => r.prompt)[0];
+    if (!prompt) { setBadge('?', '#F59E0B'); clearBadgeLater(); return; }
+    const resolved = substitute(prompt.body, {}, extractVariables(prompt.body));
+    const ok = await copyToClipboard(resolved);
+    await recordUsage(prompt.id);
+    setBadge(ok ? '✓' : '✗', ok ? '#10B981' : '#EF4444');
+  } catch (e) {
+    console.warn('[SnapPrompt] omnibox error:', e);
+    setBadge('✗', '#EF4444');
+  }
+  clearBadgeLater();
 });
+
+function setBadge(text: string, color: string) {
+  chrome.action.setBadgeBackgroundColor({ color });
+  chrome.action.setBadgeText({ text });
+}
+function clearBadgeLater(ms = 1800) {
+  setTimeout(() => chrome.action.setBadgeText({ text: '' }), ms);
+}
 
 /**
  * Copy text to the clipboard from the service worker via an offscreen document.
@@ -158,23 +173,44 @@ async function trySendCopy(text: string): Promise<boolean> {
   }
 }
 async function copyToClipboard(textToCopy: string): Promise<boolean> {
+  // 1) offscreen document — works regardless of the active tab (new tab, edge://…)
   try {
     await ensureOffscreen();
     if (await trySendCopy(textToCopy)) return true;
-    // first use: the offscreen listener may not be ready yet — retry once
-    await new Promise((r) => setTimeout(r, 200));
+    await new Promise((r) => setTimeout(r, 200)); // listener may not be ready on first use
     await ensureOffscreen();
-    return await trySendCopy(textToCopy);
+    if (await trySendCopy(textToCopy)) return true;
   } catch (e) {
-    console.warn('[SnapPrompt] clipboard copy failed:', e);
-    return false;
+    console.warn('[SnapPrompt] offscreen copy failed:', e);
   }
-}
-
-function flashBadge() {
-  chrome.action.setBadgeBackgroundColor({ color: '#7C3AED' });
-  chrome.action.setBadgeText({ text: '✓' });
-  setTimeout(() => chrome.action.setBadgeText({ text: '' }), 1500);
+  // 2) fallback: inject into the active tab (normal pages only)
+  try {
+    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    if (tab?.id) {
+      const [res] = await chrome.scripting.executeScript({
+        target: { tabId: tab.id },
+        func: (txt: string) => {
+          try {
+            const ta = document.createElement('textarea');
+            ta.value = txt;
+            ta.style.position = 'fixed';
+            ta.style.opacity = '0';
+            document.body.appendChild(ta);
+            ta.focus();
+            ta.select();
+            const ok = document.execCommand('copy');
+            ta.remove();
+            return ok;
+          } catch { return false; }
+        },
+        args: [textToCopy],
+      });
+      if (res?.result) return true;
+    }
+  } catch (e) {
+    console.warn('[SnapPrompt] active-tab copy failed:', e);
+  }
+  return false;
 }
 
 /* ---------- backup: daily snapshot (always) + auto-download (if enabled) ---------- */
