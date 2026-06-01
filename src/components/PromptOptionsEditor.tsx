@@ -3,10 +3,10 @@
  * Used by both the popup editor and the options PromptsManager. Self-styled
  * (io-* classes in prompt-options.css) so it looks identical in both places.
  */
-import type { PromptKind, NegativeStyle, ImageParam, ReferenceImage, ParamControl, Prompt } from '@shared/types';
+import type { PromptKind, NegativeStyle, ImageParam, ReferenceImage, ParamControl } from '@shared/types';
 import { t, locale } from '@shared/i18n';
 import { packsForKind, buildParam, blankParam } from '@shared/imageparams';
-import { renderParam, assemblePrompt } from '@shared/assemble';
+import { renderParam, assemblePrompt, synthPrompt } from '@shared/assemble';
 import { uuid } from '@shared/id';
 
 export interface ImageOptionsValue {
@@ -156,21 +156,10 @@ export function PromptOptionsEditor({
           {/* assembled output preview */}
           <div class="io-section">
             <div class="io-sec-head"><span class="io-sec-title">{t('opt.output.title')}</span></div>
-            <code class="io-output">{assemblePrompt(syntheticPrompt(body, value), {}) || '—'}</code>
+            <code class="io-output">{assemblePrompt(synthPrompt({ body, ...value }), {}) || '—'}</code>
           </div>
         </>
       )}
     </div>
   );
-}
-
-/** Minimal Prompt shape for previewing the assembled output in the editor. */
-function syntheticPrompt(body: string, v: ImageOptionsValue): Prompt {
-  return {
-    id: '', title: '', body, variables: [], folderId: null, tags: [],
-    memo: null, sourceUrl: null, favorite: false,
-    kind: v.kind, negativePrompt: v.negativePrompt, negativeStyle: v.negativeStyle,
-    params: v.params, references: v.references,
-    createdAt: 0, updatedAt: 0, lastUsedAt: null, useCount: 0,
-  };
 }

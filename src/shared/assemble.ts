@@ -10,11 +10,33 @@
  *
  * Used by the content picker, the variable modal, and the popup's copy path.
  */
-import type { Prompt, PromptKind, ImageParam, ReferenceImage } from './types';
+import type { Prompt, PromptKind, NegativeStyle, ImageParam, ReferenceImage } from './types';
 import { substitute, mergeVariables } from './variables';
 
-export function kindOf(p: Prompt): PromptKind {
+function kindOf(p: Prompt): PromptKind {
   return p.kind ?? 'general';
+}
+
+/** Content fields needed to assemble/preview a prompt without a full record. */
+export type PromptContent = {
+  title?: string;
+  body: string;
+  kind?: PromptKind;
+  negativePrompt?: string | null;
+  negativeStyle?: NegativeStyle;
+  params?: ImageParam[];
+  references?: ReferenceImage[];
+};
+
+/** Build a throwaway Prompt from editable content, for assemble/preview. */
+export function synthPrompt(c: PromptContent): Prompt {
+  return {
+    id: '', title: c.title ?? '', body: c.body, variables: [], folderId: null, tags: [],
+    memo: null, sourceUrl: null, favorite: false,
+    kind: c.kind, negativePrompt: c.negativePrompt, negativeStyle: c.negativeStyle,
+    params: c.params, references: c.references,
+    createdAt: 0, updatedAt: 0, lastUsedAt: null, useCount: 0,
+  };
 }
 
 /** image & video prompts get the generation-options pipeline (and always-on modal). */
@@ -55,7 +77,7 @@ export function renderReferences(refs?: ReferenceImage[]): string {
 }
 
 /** The negative-prompt chunk, already formatted per style (no leading separator). */
-export function renderNegative(
+function renderNegative(
   prompt: Prompt,
   values: Record<string, string>,
   vars = mergeVariables(variableSource(prompt), prompt.variables),

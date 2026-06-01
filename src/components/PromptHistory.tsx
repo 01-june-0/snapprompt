@@ -7,7 +7,8 @@
 import { useState } from 'preact/hooks';
 import type { PromptVersion, Prompt } from '@shared/types';
 import { t, locale } from '@shared/i18n';
-import { assemblePrompt } from '@shared/assemble';
+import { assemblePrompt, synthPrompt } from '@shared/assemble';
+import { firstLine } from '@shared/text';
 
 export interface HistoryContent {
   title: string;
@@ -34,20 +35,6 @@ function rel(at: number): string {
   return new Date(at).toLocaleDateString(locale.value === 'ko' ? 'ko-KR' : 'en-US');
 }
 
-function asPrompt(c: HistoryContent): Prompt {
-  return {
-    id: '', title: c.title, body: c.body, variables: [], folderId: null, tags: [],
-    memo: null, sourceUrl: null, favorite: false,
-    kind: c.kind, negativePrompt: c.negativePrompt, negativeStyle: c.negativeStyle,
-    params: c.params, references: c.references,
-    createdAt: 0, updatedAt: 0, lastUsedAt: null, useCount: 0,
-  };
-}
-
-function firstLine(s: string): string {
-  return s.replace(/\s+/g, ' ').trim().slice(0, 80) || '—';
-}
-
 export function PromptHistory({
   versions, current, onRestore,
 }: { versions: PromptVersion[]; current: HistoryContent; onRestore: (v: PromptVersion) => void }) {
@@ -71,7 +58,7 @@ export function PromptHistory({
           <label class="dh-pick"><input type="checkbox" checked={sel.includes(CURRENT)} onChange={() => toggle(CURRENT)} /></label>
           <div class="dh-row-main">
             <div class="dh-row-time">{t('hist.current')}</div>
-            <div class="dh-row-prev">{firstLine(current.body)}</div>
+            <div class="dh-row-prev">{firstLine(current.body) || '—'}</div>
           </div>
         </div>
         {versions.map((v, i) => (
@@ -79,7 +66,7 @@ export function PromptHistory({
             <label class="dh-pick"><input type="checkbox" checked={sel.includes(String(i))} onChange={() => toggle(String(i))} /></label>
             <div class="dh-row-main">
               <div class="dh-row-time">{rel(v.at)}</div>
-              <div class="dh-row-prev">{firstLine(v.body)}</div>
+              <div class="dh-row-prev">{firstLine(v.body) || '—'}</div>
             </div>
             <button type="button" class="dh-restore" onClick={() => onRestore(v)}>{t('hist.restore')}</button>
           </div>
@@ -93,7 +80,7 @@ export function PromptHistory({
             return (
               <div class="dh-col" key={k}>
                 <div class="dh-col-head">{k === CURRENT ? t('hist.current') : rel(versions[Number(k)].at)}</div>
-                <code class="dh-col-body">{assemblePrompt(asPrompt(c), {}) || '—'}</code>
+                <code class="dh-col-body">{assemblePrompt(synthPrompt(c), {}) || '—'}</code>
               </div>
             );
           })}

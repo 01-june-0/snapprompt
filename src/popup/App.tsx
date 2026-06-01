@@ -12,6 +12,7 @@ import { PromptHistory } from '@/components/PromptHistory';
 import { sendToActiveTab, sendToBackground } from '@shared/messaging';
 import { flattenTree, selfAndDescendants, countInFolder } from '@shared/folders';
 import { renderMarkdown } from '@shared/markdown';
+import { firstLine } from '@shared/text';
 import { t } from '@shared/i18n';
 import { uuid } from '@shared/id';
 
@@ -501,9 +502,6 @@ function blankPrompt(): Prompt {
     memo: null, sourceUrl: null, favorite: false, createdAt: now, updatedAt: now,
     lastUsedAt: null, useCount: 0,
   };
-}
-function firstLine(body: string): string {
-  return body.replace(/\s+/g, ' ').trim().slice(0, 80);
 }
 
 const Mark = () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12l-2 8 4 5-7-2-7 4 2-9-4-4z" /></svg>;

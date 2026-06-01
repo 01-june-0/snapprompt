@@ -7,6 +7,7 @@ import { search, rankForPicker } from '@shared/search';
 import { extractVariables, mergeVariables, applyConditionals } from '@shared/variables';
 import { assemblePrompt, variableSource, isGenerative, renderReferences, renderParams } from '@shared/assemble';
 import { flattenTree } from '@shared/folders';
+import { firstLine } from '@shared/text';
 import { insertText, copyToClipboard, captureActiveElement } from './insertion';
 import { sendToBackground } from '@shared/messaging';
 import { t } from '@shared/i18n';
@@ -621,9 +622,6 @@ function Backdrop({ position, children }: { position: 'top' | 'center'; children
   );
 }
 
-function firstLine(body: string): string {
-  return body.replace(/\s+/g, ' ').trim().slice(0, 80);
-}
 function normalizeBody(body: string): string {
   return body.replace(/\s+/g, ' ').trim();
 }
