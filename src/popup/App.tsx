@@ -27,7 +27,7 @@ export function App() {
   const [folders, setFolders] = useState<Folder[]>([]);
   const [query, setQuery] = useState('');
   const [favOnly, setFavOnly] = useState(false);
-  const [kindFilter, setKindFilter] = useState<'all' | 'image' | 'video'>('all');
+  const [kindFilter, setKindFilter] = useState<'all' | 'general' | 'image' | 'video'>('all');
   const [sort, setSort] = useState<SortMode>('recent-used');
   const [folderFilter, setFolderFilter] = useState<FolderFilter>('all');
   const [showSidebar, setShowSidebar] = useState(false);
@@ -219,9 +219,9 @@ export function App() {
           <button
             class={`pp-chip${kindFilter !== 'all' ? ' active' : ''}`}
             title={t('popup.kindFilter')}
-            onClick={() => setKindFilter((k) => (k === 'all' ? 'image' : k === 'image' ? 'video' : 'all'))}
+            onClick={() => setKindFilter((k) => (k === 'all' ? 'general' : k === 'general' ? 'image' : k === 'image' ? 'video' : 'all'))}
           >
-            {kindFilter === 'video' ? '🎬' : '🖼'} {kindFilter === 'all' ? t('popup.kindMedia') : kindFilter === 'image' ? t('popup.kindImage') : t('popup.kindVideo')}
+            {kindFilter === 'all' ? t('popup.kindAll') : t(`opt.kind.${kindFilter}`)}
           </button>
           <select class="pp-sort" value={sort} onChange={(e) => setSort((e.target as HTMLSelectElement).value as SortMode)}>
             <option value="recent-used">{t('popup.sort.recentUsed')}</option>
