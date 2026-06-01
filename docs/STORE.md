@@ -42,10 +42,12 @@
 - 작은 프로모 타일 440×280: `promo-small-440x280.jpg`
 - 마키 프로모 타일 1400×560: `promo-marquee-1400x560.jpg` (검색·카테고리 노출 시 사용, 선택)
 
-**c. 개인정보 처리방침 URL (필수)**
-- 리포지토리가 비공개라 그대로는 못 쓰므로, `docs/PRIVACY.md` 내용을 **공개 위치**에 올려 URL 확보:
-  - 가장 간단: <https://gist.github.com> 에 공개 Gist로 붙여넣기 → 그 URL 사용, 또는
-  - GitHub Pages / 메모 서비스 등 아무 공개 페이지
+**c. 개인정보 처리방침 URL (필수)** — ✅ 준비됨
+- 공개 Gist로 게시 완료. 아래 URL을 그대로 등록:
+  ```
+  https://gist.github.com/01-june-0/fbb55ecf763df7ea02af4b364e952f79
+  ```
+- 내용을 고치면 Gist도 갱신: `gh gist edit fbb55ecf763df7ea02af4b364e952f79 docs/PRIVACY.md`
 
 ## 4. 개인정보 보호(Privacy practices) 탭 — 심사 핵심
 - **단일 목적(Single purpose)**: 아래 "단일 목적 문구" 붙여넣기
