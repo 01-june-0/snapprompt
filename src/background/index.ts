@@ -6,7 +6,8 @@
  * - install → onboarding, schema init
  * - periodic backup alarm (Phase 2 hook) + snapshots
  */
-import { ensureSchema, takeSnapshot, recordUsage, getSettings, setSettings } from '@shared/store';
+import { ensureSchema, takeSnapshot, recordUsage, addInsertion, getSettings, setSettings, getPrompts } from '@shared/store';
+import { uuid } from '@shared/id';
 import { onMessage } from '@shared/messaging';
 import { setLocale, t } from '@shared/i18n';
 import { maybeAutoBackup, runBackupDownload } from './autobackup';
@@ -119,8 +120,16 @@ chrome.commands.onCommand.addListener(async (command, tab) => {
 
 onMessage((msg: Message, sender) => {
   switch (msg.type) {
-    case 'PROMPT_USED':
-      return recordUsage(msg.promptId).then(() => ({ ok: true as const }));
+    case 'PROMPT_USED': {
+      const { promptId, text, values, host } = msg;
+      const work = recordUsage(promptId).then(async () => {
+        if (text === undefined) return;
+        const prompts = await getPrompts();
+        const title = prompts.find((p) => p.id === promptId)?.title ?? '';
+        await addInsertion({ id: uuid(), promptId, at: Date.now(), title, text, values: values ?? {}, host });
+      });
+      return work.then(() => ({ ok: true as const }));
+    }
     case 'SAVE_SELECTION': {
       const tabId = sender.tab?.id;
       if (tabId) void openSaveModal(tabId, msg.text, msg.sourceUrl);

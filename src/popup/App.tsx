@@ -86,7 +86,7 @@ export function App() {
   async function doCopy(p: Prompt) {
     const text = assemblePrompt(p, {});
     await navigator.clipboard.writeText(text);
-    await sendToBackground({ type: 'PROMPT_USED', promptId: p.id });
+    await sendToBackground({ type: 'PROMPT_USED', promptId: p.id, text, values: {} });
     flash(t('popup.toast.copied'));
   }
   async function doInsert(p: Prompt) {

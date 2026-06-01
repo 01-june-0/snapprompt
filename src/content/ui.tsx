@@ -64,7 +64,7 @@ export async function applyPrompt(prompt: Prompt, mode: 'insert' | 'copy') {
     await copyToClipboard(text);
     showToast(t('content.toast.clipboard'));
   }
-  await sendToBackground({ type: 'PROMPT_USED', promptId: prompt.id });
+  await sendToBackground({ type: 'PROMPT_USED', promptId: prompt.id, text, values: {}, host: location.host });
   close();
 }
 
@@ -281,7 +281,7 @@ function VariableModal({ prompt, mode }: { prompt: Prompt; mode: 'insert' | 'cop
       const updatedVars = vars.map((v) => ({ ...v, lastValue: values[v.name] ?? v.lastValue ?? null }));
       await upsertPrompt({ ...prompt, variables: updatedVars });
     }
-    await sendToBackground({ type: 'PROMPT_USED', promptId: prompt.id });
+    await sendToBackground({ type: 'PROMPT_USED', promptId: prompt.id, text, values, host: location.host });
     close();
   }
 

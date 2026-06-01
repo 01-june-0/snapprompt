@@ -9,11 +9,15 @@ import {
   DEFAULT_SETTINGS,
   SCHEMA_VERSION,
   MAX_SNAPSHOTS,
+  MAX_VERSIONS,
+  MAX_INSERTIONS,
   type Prompt,
   type Folder,
   type Settings,
   type Snapshot,
   type Meta,
+  type PromptVersion,
+  type InsertionRecord,
 } from './types';
 
 type Area = chrome.storage.StorageArea;
@@ -61,6 +65,58 @@ export async function recordUsage(id: string): Promise<void> {
   p.useCount += 1;
   p.lastUsedAt = Date.now();
   await setPrompts(prompts);
+}
+
+/* ---------- History: edit versions (Round D) ---------- */
+
+/** Snapshot a prompt's current editable content as a version entry. */
+export function makeVersion(p: Pick<Prompt,
+  'title' | 'body' | 'kind' | 'negativePrompt' | 'negativeStyle' | 'params' | 'references'>,
+  at: number,
+): PromptVersion {
+  return {
+    at,
+    title: p.title,
+    body: p.body,
+    kind: p.kind,
+    negativePrompt: p.negativePrompt,
+    negativeStyle: p.negativeStyle,
+    params: p.params,
+    references: p.references,
+  };
+}
+
+/** True when the editable content of two prompts/versions differs. */
+export function contentChanged(
+  a: Pick<Prompt, 'title' | 'body' | 'negativePrompt' | 'kind' | 'params' | 'references' | 'negativeStyle'>,
+  b: Pick<Prompt, 'title' | 'body' | 'negativePrompt' | 'kind' | 'params' | 'references' | 'negativeStyle'>,
+): boolean {
+  const norm = (p: typeof a) => JSON.stringify({
+    title: p.title, body: p.body, kind: p.kind ?? 'general',
+    negativePrompt: p.negativePrompt ?? '', negativeStyle: p.negativeStyle ?? 'label',
+    params: p.params ?? [], references: p.references ?? [],
+  });
+  return norm(a) !== norm(b);
+}
+
+/** Prepend a version, dropping the oldest beyond MAX_VERSIONS. */
+export function pushVersion(versions: PromptVersion[] | undefined, v: PromptVersion): PromptVersion[] {
+  return [v, ...(versions ?? [])].slice(0, MAX_VERSIONS);
+}
+
+/* ---------- History: insertion log (Round D) ---------- */
+
+export async function getInsertions(): Promise<InsertionRecord[]> {
+  return getRaw<InsertionRecord[]>(STORAGE_KEYS.insertions, []);
+}
+
+export async function addInsertion(rec: InsertionRecord): Promise<void> {
+  const list = await getInsertions();
+  await setRaw(STORAGE_KEYS.insertions, [rec, ...list].slice(0, MAX_INSERTIONS));
+}
+
+export async function clearInsertions(): Promise<void> {
+  await setRaw(STORAGE_KEYS.insertions, []);
 }
 
 /* ---------- Folders ---------- */

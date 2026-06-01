@@ -48,6 +48,34 @@ export interface ReferenceImage {
   note?: string;
 }
 
+/* ---------- History / iteration (Round D) ---------- */
+
+/** A snapshot of a prompt's editable content, captured on each edit. */
+export interface PromptVersion {
+  at: number;
+  title: string;
+  body: string;
+  kind?: PromptKind;
+  negativePrompt?: string | null;
+  negativeStyle?: NegativeStyle;
+  params?: ImageParam[];
+  references?: ReferenceImage[];
+}
+
+/** A log entry for one insertion/copy of a prompt. */
+export interface InsertionRecord {
+  id: string;
+  promptId: string;
+  at: number;
+  title: string;
+  /** The final assembled text that was inserted/copied. */
+  text: string;
+  /** Variable values used at that time. */
+  values: Record<string, string>;
+  /** Host the prompt was used on, when known. */
+  host?: string;
+}
+
 export interface Variable {
   /** The `name` part of {{name}} */
   name: string;
@@ -87,6 +115,8 @@ export interface Prompt {
   params?: ImageParam[];
   /** Reference image URLs prepended to the body. */
   references?: ReferenceImage[];
+  /** Edit-history snapshots (Round D); newest first, capped at MAX_VERSIONS. */
+  versions?: PromptVersion[];
   createdAt: number;
   updatedAt: number;
   lastUsedAt: number | null;
@@ -155,10 +185,15 @@ export const STORAGE_KEYS = {
   folders: 'snapprompt:folders',
   settings: 'snapprompt:settings',
   snapshots: 'snapprompt:snapshots',
+  insertions: 'snapprompt:insertions',
   meta: 'snapprompt:meta',
 } as const;
 
 export const MAX_SNAPSHOTS = 7;
+/** Per-prompt edit-history snapshots kept (Round D). */
+export const MAX_VERSIONS = 15;
+/** Global insertion-log entries kept (Round D). */
+export const MAX_INSERTIONS = 200;
 
 export const DEFAULT_SETTINGS: Settings = {
   floatingButton: true,
@@ -183,7 +218,7 @@ export type Message =
   | { type: 'SAVE_SELECTION'; text: string; sourceUrl: string }
   | { type: 'CAPTURE_AND_SAVE' }
   | { type: 'INSERT_PROMPT'; promptId: string }
-  | { type: 'PROMPT_USED'; promptId: string }
+  | { type: 'PROMPT_USED'; promptId: string; text?: string; values?: Record<string, string>; host?: string }
   | { type: 'BACKUP_NOW' }
   | { type: 'OPEN_OPTIONS'; section?: string }
   | { type: 'SET_POPUP_MODE'; mode: PopupMode }
