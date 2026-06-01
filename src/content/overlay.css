@@ -148,6 +148,19 @@
   padding: 1px 5px; border-radius: 3px; font-weight: var(--weight-semi); }
 .sp-preview .empty { background: var(--bg-muted); color: var(--text-muted);
   text-decoration: line-through; }
+.sp-preview .sp-pre-ref { color: var(--text-muted); word-break: break-all; }
+.sp-preview .sp-pre-params { color: var(--text-accent); }
+.sp-preview .sp-pre-neg { color: var(--text-muted); margin-top: 4px; }
+
+/* per-insert parameter toggles */
+.sp-params { display: flex; flex-direction: column; gap: 8px; }
+.sp-param-row { display: flex; align-items: center; gap: 10px; }
+.sp-param-row.off { opacity: 0.5; }
+.sp-param-row .sp-toggle .track { width: 34px; height: 19px; }
+.sp-param-row .sp-toggle .track::after { width: 15px; height: 15px; }
+.sp-param-row .sp-toggle input:checked + .track::after { transform: translateX(15px); }
+.sp-param-name { flex: 1; font-size: 13px; color: var(--text-primary); }
+.sp-param-val { flex: 0 0 120px; height: 30px; }
 .sp-modal-foot {
   display: flex; align-items: center; gap: 12px; padding: 12px 20px;
   border-top: 1px solid var(--border-subtle); background: var(--bg-subtle); flex-shrink: 0;

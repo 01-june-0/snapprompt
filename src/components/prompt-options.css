@@ -95,6 +95,13 @@ select.io-input { height: 30px; }
   align-self: flex-start; max-width: 100%; overflow-wrap: anywhere;
 }
 
+/* assembled output preview */
+.io-output {
+  display: block; font-family: var(--font-mono); font-size: 12px; line-height: 1.55;
+  color: var(--text-secondary); white-space: pre-wrap; word-break: break-word;
+  background: var(--bg-subtle); border-radius: var(--radius-sm); padding: 10px;
+}
+
 /* negative style radios */
 .io-neg-style { display: flex; gap: 16px; }
 .io-radio { display: inline-flex; align-items: center; gap: 5px; font-size: var(--text-sm); color: var(--text-secondary); cursor: pointer; }

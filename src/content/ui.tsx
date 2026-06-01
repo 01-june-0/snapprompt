@@ -1,11 +1,11 @@
 /** Content-script overlay UI: picker, variable modal, save modal, toast. */
 import { useEffect, useRef, useState, useMemo } from 'preact/hooks';
 import { signal } from '@preact/signals';
-import type { Prompt, Folder, Variable } from '@shared/types';
+import type { Prompt, Folder, Variable, ImageParam } from '@shared/types';
 import { getPrompts, getFolders, upsertPrompt, getSettings } from '@shared/store';
 import { search, rankForPicker } from '@shared/search';
 import { extractVariables, mergeVariables, applyConditionals } from '@shared/variables';
-import { assemblePrompt, variableSource, isGenerative } from '@shared/assemble';
+import { assemblePrompt, variableSource, isGenerative, renderReferences, renderParams } from '@shared/assemble';
 import { flattenTree } from '@shared/folders';
 import { insertText, copyToClipboard, captureActiveElement } from './insertion';
 import { sendToBackground } from '@shared/messaging';
@@ -232,6 +232,11 @@ function VariableModal({ prompt, mode }: { prompt: Prompt; mode: 'insert' | 'cop
   const [presets, setPresets] = useState(prompt.presets ?? []);
   const [namingPreset, setNamingPreset] = useState(false);
   const [presetName, setPresetName] = useState('');
+  // Per-insert parameter toggles (image/video); start from the stored params.
+  const [params, setParams] = useState<ImageParam[]>(() => (prompt.params ?? []).map((p) => ({ ...p })));
+  const generative = isGenerative(prompt);
+  const setParam = (id: string, patch: Partial<ImageParam>) =>
+    setParams((ps) => ps.map((p) => (p.id === id ? { ...p, ...patch } : p)));
 
   function loadPreset(name: string) {
     const p = presets.find((x) => x.name === name);
@@ -264,7 +269,7 @@ function VariableModal({ prompt, mode }: { prompt: Prompt; mode: 'insert' | 'cop
   }, []);
 
   async function apply() {
-    const text = assemblePrompt({ ...prompt, variables: vars }, values);
+    const text = assemblePrompt({ ...prompt, variables: vars, params }, values);
     if (mode === 'insert') {
       const res = await insertText(text);
       showToast(res === 'inserted' ? t('content.toast.inserted') : t('content.toast.clipboard'));
@@ -292,7 +297,7 @@ function VariableModal({ prompt, mode }: { prompt: Prompt; mode: 'insert' | 'cop
           <div class="sp-modal-head-icon"><IconVars /></div>
           <div style="flex:1">
             <h3>{prompt.title}</h3>
-            <div class="sub">{t('content.varModalSub', [vars.length])}</div>
+            <div class="sub">{vars.length > 0 ? t('content.varModalSub', [vars.length]) : t('content.optModalSub')}</div>
           </div>
           <button class="sp-close" onClick={close}><IconClose /></button>
         </div>
@@ -323,9 +328,34 @@ function VariableModal({ prompt, mode }: { prompt: Prompt; mode: 'insert' | 'cop
               onChange={(val) => setValues((s) => ({ ...s, [v.name]: val }))}
             />
           ))}
+          {generative && params.length > 0 && (
+            <div class="sp-field">
+              <div class="sp-label">{t('opt.params.title')}</div>
+              <div class="sp-params">
+                {params.map((p) => (
+                  <div class={`sp-param-row${p.enabled ? '' : ' off'}`} key={p.id}>
+                    <label class="sp-toggle">
+                      <input type="checkbox" checked={p.enabled} onChange={(e) => setParam(p.id, { enabled: (e.target as HTMLInputElement).checked })} />
+                      <span class="track" />
+                    </label>
+                    <span class="sp-param-name">{p.label || p.token}</span>
+                    {p.control !== 'toggle' && (
+                      p.control === 'select' && p.options?.length ? (
+                        <select class="sp-input sp-param-val" value={p.value} onChange={(e) => setParam(p.id, { value: (e.target as HTMLSelectElement).value })}>
+                          {p.options.map((o) => <option key={o} value={o}>{o}</option>)}
+                        </select>
+                      ) : (
+                        <input class="sp-input sp-param-val" type={p.control === 'number' ? 'number' : 'text'} value={p.value} onInput={(e) => setParam(p.id, { value: (e.target as HTMLInputElement).value })} />
+                      )
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
           <div class="sp-field">
             <div class="sp-label">{t('common.preview')}</div>
-            <div class="sp-preview">{renderPreview(prompt.body, values, vars)}</div>
+            <div class="sp-preview">{assembledPreview(prompt, values, vars, params, generative)}</div>
           </div>
         </div>
         <div class="sp-modal-foot">
@@ -574,6 +604,36 @@ function deriveTitle(text: string): string {
   const line = text.split('\n')[0].trim();
   return line.length > 60 ? line.slice(0, 60) + '…' : line || t('common.newPrompt');
 }
+/** Highlighted preview of the full assembled output (refs + body + params + negative). */
+function assembledPreview(
+  prompt: Prompt,
+  values: Record<string, string>,
+  vars: Variable[],
+  params: ImageParam[],
+  generative: boolean,
+) {
+  const parts: preact.ComponentChildren[] = [];
+  if (generative) {
+    const refs = renderReferences(prompt.references);
+    if (refs) parts.push(<div class="sp-pre-ref" key="ref">{refs}</div>);
+  }
+  parts.push(<span key="body">{renderPreview(prompt.body, values, vars)}</span>);
+  if (generative) {
+    const ptext = renderParams(params);
+    if (ptext) parts.push(<span class="sp-pre-params" key="params">{' ' + ptext}</span>);
+    const neg = prompt.negativePrompt;
+    if (neg && neg.trim()) {
+      const body = renderPreview(neg, values, vars);
+      parts.push(
+        (prompt.negativeStyle ?? 'label') === 'mj'
+          ? <span class="sp-pre-neg" key="neg">{' --no '}{body}</span>
+          : <div class="sp-pre-neg" key="neg">Negative prompt: {body}</div>,
+      );
+    }
+  }
+  return parts;
+}
+
 function renderPreview(rawBody: string, values: Record<string, string>, vars: Variable[]) {
   // Resolve {{#if}} blocks first so the preview reflects the toggles.
   const body = applyConditionals(rawBody, values);

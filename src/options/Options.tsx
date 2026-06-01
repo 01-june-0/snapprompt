@@ -404,7 +404,7 @@ function OptPromptEditor({
           <label class="op-setting-label">{t('common.body')}</label>
           <textarea style="width:100%;margin-top:6px;min-height:160px;padding:10px;background:var(--bg-surface);border:1px solid var(--border-default);border-radius:var(--radius-md);color:var(--text-primary);font-family:var(--font-mono);font-size:12.5px;line-height:1.55;resize:vertical" value={body} onInput={(e) => setBody((e.target as HTMLTextAreaElement).value)} />
         </div>
-        <PromptOptionsEditor value={img} onChange={setImg} />
+        <PromptOptionsEditor value={img} onChange={setImg} body={body} />
         <div style="display:flex;gap:12px;flex-wrap:wrap">
           <div style="flex:1;min-width:160px">
             <label class="op-setting-label">{t('common.folder')}</label>

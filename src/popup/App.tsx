@@ -426,7 +426,7 @@ function Editor({
             : <textarea class="pp-textarea" value={body} onInput={(e) => setBody((e.target as HTMLTextAreaElement).value)} placeholder={t('popup.bodyPlaceholder')} />}
         </div>
         <div class="pp-field">
-          <PromptOptionsEditor value={img} onChange={setImg} />
+          <PromptOptionsEditor value={img} onChange={setImg} body={body} />
         </div>
         {vars.length > 0 && (
           <div class="pp-field">
