@@ -160,6 +160,55 @@
   .track i{display:block;height:100%;background:var(--grad);border-radius:var(--r-full)}
   .bs{width:48px;text-align:right;font-size:11px;color:var(--text-muted);font-family:var(--mono)}
 
+  /* ===== Round C/D additions ===== */
+  /* mode switch + pin bar + kind badge (popup) */
+  .modesw{display:inline-flex;gap:2px;padding:2px;border-radius:var(--r-md);background:var(--bg-subtle)}
+  .modesw .m{width:26px;height:24px;border-radius:var(--r-sm);display:grid;place-items:center;color:var(--text-muted)}
+  .modesw .m.on{background:var(--grad);color:#fff}
+  .pinbar{display:flex;gap:6px;flex-wrap:wrap;padding:10px 10px 2px}
+  .pin{display:inline-flex;align-items:center;gap:5px;height:26px;padding:0 10px;border-radius:var(--r-full);border:1px solid var(--border-default);background:var(--bg-surface);font-size:11px;color:var(--text-secondary)}
+  .pin .star{color:var(--warning-500)}
+  .kind{font-size:13px;flex-shrink:0}
+  /* param toggles + recent chips (vars modal) */
+  .ptog{display:flex;flex-direction:column;gap:9px}
+  .prow{display:flex;align-items:center;gap:10px}
+  .prow.off{opacity:.5}
+  .sw{width:34px;height:19px;border-radius:var(--r-full);background:var(--accent);position:relative;flex-shrink:0}
+  .sw.off{background:var(--border-default)}
+  .sw::after{content:'';width:15px;height:15px;border-radius:50%;background:#fff;position:absolute;top:2px;left:17px}
+  .sw.off::after{left:2px}
+  .pname{flex:1;font-size:13px}
+  .pval{height:28px;padding:0 9px;border:1px solid var(--border-default);border-radius:var(--r-sm);background:var(--bg-surface);font-size:12px;display:inline-flex;align-items:center;color:var(--text-secondary);font-family:var(--mono)}
+  .recent{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+  .rlbl{font-size:11px;color:var(--text-muted)}
+  .rchip{padding:3px 9px;border-radius:var(--r-full);border:1px solid var(--border-default);background:var(--bg-surface);font-size:11px;color:var(--text-secondary)}
+  /* image options editor */
+  .ioseg{display:inline-flex;gap:2px;padding:2px;border-radius:var(--r-md);background:var(--bg-subtle)}
+  .ioseg .s{padding:5px 13px;border-radius:var(--r-sm);font-size:.75rem;color:var(--text-secondary);font-weight:var(--w-med)}
+  .ioseg .s.on{background:var(--grad);color:#fff}
+  .iosec{border:1px solid var(--border-subtle);border-radius:var(--r-md);padding:12px;display:flex;flex-direction:column;gap:10px;background:var(--bg-surface)}
+  .iohd{font-size:.75rem;font-weight:var(--w-semi);color:var(--text-primary)}
+  .iochips{display:flex;flex-wrap:wrap;gap:5px}
+  .iochip{padding:3px 9px;border-radius:var(--r-full);border:1px solid var(--border-default);background:var(--bg-surface);font-size:11px;color:var(--text-secondary)}
+  .iopack{font-size:11px;color:var(--text-muted)}
+  .ioout{font-family:var(--mono);font-size:11.5px;line-height:1.55;color:var(--text-secondary);background:var(--bg-subtle);border-radius:var(--r-sm);padding:10px;white-space:pre-wrap}
+  .iotok{font-family:var(--mono);font-size:11px;color:var(--text-accent);background:var(--bg-subtle);padding:2px 7px;border-radius:4px;align-self:flex-start}
+  /* history */
+  .dhwrap{border:1px solid var(--border-subtle);border-radius:var(--r-md);padding:12px;display:flex;flex-direction:column;gap:8px;background:var(--bg-surface)}
+  .dhhd{display:flex;align-items:center;justify-content:space-between}
+  .dhrow{display:flex;align-items:center;gap:9px;padding:7px 8px;border-radius:var(--r-sm);border:1px solid transparent}
+  .dhrow.sel{border-color:var(--border-accent);background:var(--accent-soft)}
+  .dhck{width:15px;height:15px;border:1.5px solid var(--border-default);border-radius:3px;flex-shrink:0;display:grid;place-items:center}
+  .dhrow.sel .dhck{background:var(--accent);border-color:var(--accent);color:#fff}
+  .dhm{flex:1;min-width:0}
+  .dht{font-size:11px;color:var(--text-secondary);font-weight:var(--w-med)}
+  .dhp{font-size:11px;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .dhre{font-size:11px;padding:3px 10px;border:1px solid var(--border-default);border-radius:var(--r-sm);color:var(--text-secondary)}
+  .dhcmp{display:flex;gap:8px}
+  .dhcol{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}
+  .dhch{font-size:11px;font-weight:var(--w-semi);color:var(--text-accent)}
+  .dhcb{font-family:var(--mono);font-size:11px;line-height:1.5;color:var(--text-secondary);background:var(--bg-subtle);border-radius:var(--r-sm);padding:8px;white-space:pre-wrap}
+
   /* ===== onboarding ===== */
   .ob{width:min(960px,94vw);background:var(--bg-surface);border:1px solid var(--border-subtle);border-radius:var(--r-3xl);box-shadow:var(--sh-2xl);overflow:hidden;display:grid;grid-template-columns:340px 1fr;min-height:520px}
   .ob-hero{background:linear-gradient(160deg,var(--violet-500),var(--violet-700) 55%,var(--violet-900));color:#fff;padding:40px 32px;display:flex;flex-direction:column}
@@ -189,8 +238,11 @@
       <div class="nm">SnapPrompt</div>
       <div class="hacts">
         <div class="ib"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div>
-        <div class="ib"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18"/></svg></div>
-        <div class="ib"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M15 4v16"/></svg></div>
+        <div class="modesw">
+          <div class="m on"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="9" width="16" height="11" rx="2"/><path d="M12 9V3"/><path d="M9 6l3-3 3 3"/></svg></div>
+          <div class="m"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18"/></svg></div>
+          <div class="m"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M15 4v16"/></svg></div>
+        </div>
         <div class="ib"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></div>
       </div>
     </div>
@@ -214,9 +266,14 @@
         <div class="fld"><span style="color:var(--text-accent)">#</span>영어<span class="c">5</span></div>
       </div>
       <div class="list">
+        <div class="pinbar">
+          <span class="pin"><svg class="star" width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15 8 22 9 17 14 18 21 12 18 6 21 7 14 2 9 9 8"/></svg>코드 리뷰</span>
+          <span class="pin"><svg class="star" width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15 8 22 9 17 14 18 21 12 18 6 21 7 14 2 9 9 8"/></svg>로고 디자인</span>
+          <span class="pin"><svg class="star" width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15 8 22 9 17 14 18 21 12 18 6 21 7 14 2 9 9 8"/></svg>3줄 요약</span>
+        </div>
         <div class="card"><div class="h"><div class="chk"></div><svg class="star" width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15 8 22 9 17 14 18 21 12 18 6 21 7 14 2 9 9 8"/></svg><div class="ct">코드 리뷰 (한국어)</div><span class="vb">2 vars</span></div><div class="cp">{{언어}}로 다음 코드를 리뷰해줘. 보안·성능·가독성 관점에서...</div><div class="cm"><span class="tag">코딩</span><span class="tag">리뷰</span><div class="acts"><span class="a">복사</span><span class="a pri">삽입</span></div></div></div>
-        <div class="card"><div class="h"><div class="chk"></div><div class="ct">영어 이메일 답장</div></div><div class="cp">Write a professional reply in English. Keep it concise...</div><div class="cm"><span class="tag">이메일</span><div class="acts"><span class="a">복사</span><span class="a pri">삽입</span></div></div></div>
-        <div class="card"><div class="h"><div class="chk"></div><svg class="star" width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15 8 22 9 17 14 18 21 12 18 6 21 7 14 2 9 9 8"/></svg><div class="ct">3줄 요약</div><span class="vb">1 var</span></div><div class="cp">다음 내용을 핵심만 3줄로 요약해줘...</div><div class="cm"><span class="tag">요약</span><div class="acts"><span class="a">복사</span><span class="a pri">삽입</span></div></div></div>
+        <div class="card"><div class="h"><div class="chk"></div><svg class="star" width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15 8 22 9 17 14 18 21 12 18 6 21 7 14 2 9 9 8"/></svg><span class="kind">🖼</span><div class="ct">로고 디자인 (Midjourney)</div><span class="vb">3 vars</span></div><div class="cp">{{스타일}} 로고, 컨셉은 {{컨셉}}. 메인 컬러 {{메인색}} --ar 1:1 --v 6.1</div><div class="cm"><span class="tag">이미지</span><span class="tag">로고</span><div class="acts"><span class="a">복사</span><span class="a pri">삽입</span></div></div></div>
+        <div class="card"><div class="h"><div class="chk"></div><div class="ct">3줄 요약</div><span class="vb">1 var</span></div><div class="cp">다음 내용을 핵심만 3줄로 요약해줘...</div><div class="cm"><span class="tag">요약</span><div class="acts"><span class="a">복사</span><span class="a pri">삽입</span></div></div></div>
       </div>
     </div>
     <div class="foot"><div class="new"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>새 프롬프트</div><span class="cnt">12개</span></div>
@@ -235,7 +292,7 @@
         <div class="pk-meta">자주 사용 · 최근 사용</div>
         <div class="pk-list">
           <div class="pk-item on"><div class="pk-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg></div><div class="pk-c"><div class="pk-t">코드 리뷰 (한국어)</div><div class="pk-p">{{언어}}로 다음 코드를 리뷰해줘. 보안·성능·가독성...</div></div><span class="vb">2 vars</span></div>
-          <div class="pk-item"><div class="pk-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/></svg></div><div class="pk-c"><div class="pk-t">영어 이메일 답장</div><div class="pk-p">Write a professional reply in English...</div></div></div>
+          <div class="pk-item"><div class="pk-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-5-5L5 21"/></svg></div><div class="pk-c"><div class="pk-t"><span class="kind">🖼</span> 로고 디자인 (Midjourney)</div><div class="pk-p">{{스타일}} 로고, 컨셉은 {{컨셉}} --ar 1:1 --v 6.1...</div></div><span class="vb">3 vars</span></div>
           <div class="pk-item"><div class="pk-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="17" y1="10" x2="3" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="17" y1="18" x2="3" y2="18"/></svg></div><div class="pk-c"><div class="pk-t">3줄 요약</div><div class="pk-p">다음 내용을 핵심만 3줄로 요약해줘...</div></div><span class="vb">1 var</span></div>
         </div>
         <div class="pk-foot"><span>SnapPrompt</span><span class="pk-hints"><span><span class="kbd">↑</span><span class="kbd">↓</span> 탐색</span><span><span class="kbd">↵</span> 삽입</span><span><span class="kbd">Esc</span> 닫기</span></span></div>
@@ -244,19 +301,26 @@
   </div>
 </div>
 
-<!-- =========== VARIABLE MODAL (with color picker) =========== -->
+<!-- =========== VARIABLE / OPTIONS MODAL (image prompt) =========== -->
 <div class="frame" data-shot="vars">
   <div class="modal">
-    <div class="mh"><div class="ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg></div><div style="flex:1"><h3>로고 디자인 프롬프트</h3><div class="sub">3개 변수 채우기</div></div></div>
+    <div class="mh"><div class="ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg></div><div style="flex:1"><h3>🖼 로고 디자인 (Midjourney)</h3><div class="sub">3개 변수 채우기</div></div></div>
     <div class="mb">
+      <div class="recent"><span class="rlbl">최근 사용값</span><span class="rchip">미니멀 · 친환경 커피</span><span class="rchip">레트로 · 게임 스튜디오</span></div>
       <div class="fl"><div class="lb"><span class="nt">{{스타일}}</span></div>
         <div class="inp">미니멀</div></div>
+      <div class="fl"><div class="lb"><span class="nt">{{컨셉}}</span></div>
+        <div class="inp">친환경 커피 브랜드</div></div>
       <div class="fl"><div class="lb"><span class="nt">{{메인색}}</span></div>
         <div class="colorrow"><div class="swatch" style="background:#7C3AED"></div><div class="inp" style="flex:1;font-family:var(--mono)">#7C3AED</div></div></div>
-      <div class="fl"><div class="lb"><span class="nt">{{컨셉}}</span></div>
-        <div class="ta">친환경 커피 브랜드</div></div>
+      <div class="fl"><div class="lb">파라미터</div>
+        <div class="ptog">
+          <div class="prow"><span class="sw"></span><span class="pname">화면비</span><span class="pval">--ar 1:1</span></div>
+          <div class="prow"><span class="sw"></span><span class="pname">버전</span><span class="pval">--v 6.1</span></div>
+          <div class="prow off"><span class="sw off"></span><span class="pname">Raw 스타일</span><span class="pval">--style raw</span></div>
+        </div></div>
       <div class="fl"><div class="lb">미리보기</div>
-        <div class="prev"><span class="hl">미니멀</span> 스타일의 로고를 디자인해줘. 메인 컬러는 <span class="hl">#7C3AED</span>, 컨셉은 <span class="hl">친환경 커피 브랜드</span>.</div></div>
+        <div class="prev"><span class="hl">미니멀</span> 스타일 로고, 컨셉은 <span class="hl">친환경 커피 브랜드</span>. 메인 컬러 <span class="hl">#7C3AED</span> <span style="color:var(--text-accent)">--ar 1:1 --v 6.1</span></div></div>
     </div>
     <div class="mf"><span style="font-size:11px;color:var(--text-muted)"><span class="kbd">⌘</span><span class="kbd">↵</span> 삽입</span><div class="btns"><span class="btn g">취소</span><span class="btn p">삽입 <span class="kbd" style="border-color:rgba(255,255,255,.3);background:rgba(255,255,255,.15);color:#fff">⌘↵</span></span></div></div>
   </div>
@@ -291,6 +355,7 @@
       <div class="nav">
         <div class="nt2"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="9"/></svg>일반</div>
         <div class="nt2 on"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>통계</div>
+        <div class="nt2"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>기록</div>
         <div class="nt2"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg>프롬프트</div>
         <div class="nt2"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>폴더</div>
         <div class="nt2"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/></svg>태그</div>
@@ -311,6 +376,48 @@
         </div>
       </div>
     </div>
+  </div>
+</div>
+
+<!-- =========== IMAGE OPTIONS EDITOR =========== -->
+<div class="frame" data-shot="image">
+  <div class="modal" style="width:560px">
+    <div class="mh"><div class="ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-5-5L5 21"/></svg></div><div style="flex:1"><h3>로고 디자인</h3><div class="sub">이미지·영상 생성 옵션</div></div></div>
+    <div class="mb" style="gap:12px">
+      <div class="fl"><div class="lb">본문</div><div class="ta" style="min-height:48px">{{스타일}} 스타일의 로고. 컨셉은 {{컨셉}}, 메인 컬러 {{메인색}}.</div></div>
+      <div style="display:flex;align-items:center;gap:10px"><span style="font-size:.75rem;font-weight:var(--w-semi);color:var(--text-secondary)">종류</span>
+        <div class="ioseg"><span class="s">일반</span><span class="s on">🖼 이미지</span><span class="s">🎬 영상</span></div></div>
+      <div class="iosec">
+        <div class="iohd">파라미터</div>
+        <div><div class="iopack" style="margin-bottom:5px">Midjourney</div><div class="iochips"><span class="iochip">+ 화면비</span><span class="iochip">+ 버전</span><span class="iochip">+ 스타일화</span><span class="iochip">+ 카오스</span><span class="iochip">+ Raw 스타일</span><span class="iochip">+ 시드</span></div></div>
+        <div class="prow"><span class="sw"></span><span class="pname">화면비</span><span class="pval">1:1</span><span class="iotok">--ar 1:1</span></div>
+        <div class="prow"><span class="sw"></span><span class="pname">버전</span><span class="pval">6.1</span><span class="iotok">--v 6.1</span></div>
+      </div>
+      <div class="iosec"><div class="iohd">네거티브 프롬프트</div><div class="ta" style="min-height:38px">blurry, text, watermark, low quality</div></div>
+      <div class="iosec"><div class="iohd">출력 미리보기</div><div class="ioout">{{스타일}} 스타일의 로고. 컨셉은 {{컨셉}}, 메인 컬러 {{메인색}}. --ar 1:1 --v 6.1
+Negative prompt: blurry, text, watermark, low quality</div></div>
+    </div>
+    <div class="mf"><div class="btns"><span class="btn g">취소</span><span class="btn p">저장</span></div></div>
+  </div>
+</div>
+
+<!-- =========== HISTORY (versions + compare) =========== -->
+<div class="frame" data-shot="history">
+  <div class="modal" style="width:560px">
+    <div class="mh"><div class="ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div><div style="flex:1"><h3>코드 리뷰 (한국어)</h3><div class="sub">변경 기록 · 버전 비교</div></div></div>
+    <div class="mb" style="gap:12px">
+      <div class="dhwrap">
+        <div class="dhhd"><span class="iohd">변경 기록</span><span class="iopack">버전 3개</span></div>
+        <div class="dhrow sel"><span class="dhck"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span><div class="dhm"><div class="dht">현재 (편집 중)</div><div class="dhp">{{언어}}로 다음 코드를 보안·성능·가독성 관점에서 리뷰...</div></div></div>
+        <div class="dhrow sel"><span class="dhck"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span><div class="dhm"><div class="dht">2시간 전</div><div class="dhp">{{언어}}로 코드를 리뷰해줘. 개선점을 알려줘.</div></div><span class="dhre">되돌리기</span></div>
+        <div class="dhrow"><span class="dhck"></span><div class="dhm"><div class="dht">어제</div><div class="dhp">코드 리뷰해줘: {{code}}</div></div><span class="dhre">되돌리기</span></div>
+      </div>
+      <div class="dhcmp">
+        <div class="dhcol"><div class="dhch">현재 (편집 중)</div><div class="dhcb">{{언어}}로 다음 코드를 보안·성능·가독성 관점에서 우선순위와 함께 리뷰해줘.</div></div>
+        <div class="dhcol"><div class="dhch">2시간 전</div><div class="dhcb">{{언어}}로 코드를 리뷰해줘. 개선점을 알려줘.</div></div>
+      </div>
+    </div>
+    <div class="mf"><div class="btns"><span class="btn g">닫기</span><span class="btn p">저장</span></div></div>
   </div>
 </div>
 

@@ -28,7 +28,8 @@ UI가 바뀌어 README 스크린샷을 갱신할 때는 반드시 아래 순서�
      --force-device-scale-factor=2 --window-size=<W>x<H> \
      --screenshot="docs/images/<이름>.png" "$F#<이름>" --virtual-time-budget=2000
    ```
-   - 화면별 window-size: popup 760x700 · picker 1100x680 · vars 720x600 · save 1040x680 · options 1120x820 · onboarding 1040x620
+   - 화면별 window-size: popup 760x760 · picker 1100x680 · vars 760x900 · save 1040x680 · image 760x960 · history 900x680 · options 1120x840 · onboarding 1040x620
+   - 프레임 목록(data-shot): popup · picker · vars · save · image(이미지/영상 옵션 편집기) · history(버전·비교) · options · onboarding
 3. README는 `<img src="docs/images/<이름>.png" width="...">`로 참조.
 4. 커밋/푸시. 이미지로 push가 끊기면 `git config http.postBuffer 524288000` 후 재시도.
 
