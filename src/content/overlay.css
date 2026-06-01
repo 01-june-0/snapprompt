@@ -187,6 +187,16 @@
 .sp-presetbar .sp-input { height: 32px; flex: 1; min-width: 0; }
 .sp-presetbar .sp-btn { height: 32px; white-space: nowrap; }
 
+/* recent fill-set chips (Round D) */
+.sp-recent { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; }
+.sp-recent-label { font-size: 11px; color: var(--text-muted); }
+.sp-recent-chip {
+  border: 1px solid var(--border-default); background: var(--bg-surface); cursor: pointer;
+  padding: 3px 9px; border-radius: var(--radius-full); font-size: 11px; color: var(--text-secondary);
+  max-width: 220px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.sp-recent-chip:hover { color: var(--text-accent); border-color: var(--border-accent); }
+
 /* Boolean toggle variable */
 .sp-toggle { display: inline-flex; cursor: pointer; }
 .sp-toggle input { display: none; }

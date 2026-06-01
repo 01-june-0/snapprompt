@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useState } from 'preact/hooks';
-import type { Settings, Prompt, Folder, ThemePref, LanguagePref, BackupFrequency, Snapshot, BackupFile } from '@shared/types';
+import type { Settings, Prompt, Folder, ThemePref, LanguagePref, BackupFrequency, Snapshot, BackupFile, InsertionRecord } from '@shared/types';
 import {
   getSettings, setSettings, getPrompts, setPrompts, getFolders, setFolders,
   getSnapshots, restoreSnapshot, subscribe,
-  contentChanged, pushVersion, makeVersion,
+  contentChanged, pushVersion, makeVersion, getInsertions, clearInsertions,
 } from '@shared/store';
 import { applyTheme } from '@shared/theme';
 import { buildBackup, downloadBackup, importBackup, type ImportStrategy } from '@shared/backup';
@@ -12,12 +12,12 @@ import { flattenTree, wouldCycle, folderPath } from '@shared/folders';
 import { search } from '@shared/search';
 import { extractVariables } from '@shared/variables';
 import { STARTER_PACKS, buildPack, type StarterPack } from '@shared/starterpacks';
-import { t } from '@shared/i18n';
+import { t, locale } from '@shared/i18n';
 import { uuid } from '@shared/id';
 import { PromptOptionsEditor, type ImageOptionsValue } from '@/components/PromptOptionsEditor';
 import { PromptHistory } from '@/components/PromptHistory';
 
-type Tab = 'general' | 'stats' | 'prompts' | 'folders' | 'tags' | 'backup' | 'shortcuts' | 'data' | 'about';
+type Tab = 'general' | 'stats' | 'history' | 'prompts' | 'folders' | 'tags' | 'backup' | 'shortcuts' | 'data' | 'about';
 
 export function Options() {
   const [tab, setTab] = useState<Tab>('general');
@@ -62,6 +62,7 @@ export function Options() {
         <nav class="op-nav">
           <TabBtn id="general" tab={tab} set={setTab} label={t('opt.nav.general')} />
           <TabBtn id="stats" tab={tab} set={setTab} label={t('opt.nav.stats')} />
+          <TabBtn id="history" tab={tab} set={setTab} label={t('opt.nav.history')} />
           <TabBtn id="prompts" tab={tab} set={setTab} label={t('opt.nav.prompts')} />
           <TabBtn id="folders" tab={tab} set={setTab} label={t('opt.nav.folders')} />
           <TabBtn id="tags" tab={tab} set={setTab} label={t('opt.nav.tags')} />
@@ -74,6 +75,7 @@ export function Options() {
         <div>
           {tab === 'general' && <General settings={settings} patch={patch} folders={folders} addPack={addStarterPack} />}
           {tab === 'stats' && <Stats prompts={prompts} folders={folders} />}
+          {tab === 'history' && <History prompts={prompts} flash={flash} />}
           {tab === 'prompts' && <PromptsManager prompts={prompts} folders={folders} flash={flash} onChange={async (p) => { await setPrompts(p); setLocalPrompts(p); }} />}
           {tab === 'folders' && <Folders folders={folders} onChange={async (f) => { await setFolders(f); setLocalFolders(f); }} />}
           {tab === 'tags' && <Tags prompts={prompts} onChange={async (p) => { await setPrompts(p); setLocalPrompts(p); flash(t('opt.tags.toast.cleaned')); }} />}
@@ -451,6 +453,58 @@ function OptPromptEditor({
             <button class="op-btn secondary" onClick={onCancel}>{t('common.cancel')}</button>
             <button class="op-btn primary" onClick={save}>{t('common.save')}</button>
           </div>
+        </div>
+      </div>
+    </>
+  );
+}
+
+/* ---------- History (insertion log, Round D) ---------- */
+function History({ prompts, flash }: { prompts: Prompt[]; flash: (m: string) => void }) {
+  const [records, setRecords] = useState<InsertionRecord[]>([]);
+  useEffect(() => { getInsertions().then(setRecords); }, []);
+
+  const titleOf = (r: InsertionRecord) =>
+    prompts.find((p) => p.id === r.promptId)?.title || r.title || t('common.newPrompt');
+
+  async function clearAll() {
+    if (!confirm(t('opt.history.clearConfirm'))) return;
+    await clearInsertions();
+    setRecords([]);
+    flash(t('opt.history.cleared'));
+  }
+  async function copy(text: string) {
+    await navigator.clipboard.writeText(text);
+    flash(t('popup.toast.copied'));
+  }
+
+  return (
+    <>
+      <h2 class="op-panel-title">{t('opt.nav.history')}</h2>
+      <p class="op-panel-desc">{t('opt.history.desc')}</p>
+      {records.length > 0 && (
+        <div style="display:flex;justify-content:flex-end;margin-bottom:12px">
+          <button class="op-btn secondary sm" onClick={() => void clearAll()}>{t('opt.history.clearAll')}</button>
+        </div>
+      )}
+      <div class="op-card">
+        <div class="op-list">
+          {records.length === 0 && (
+            <div class="op-row"><span class="op-row-title" style="color:var(--text-muted)">{t('opt.history.empty')}</span></div>
+          )}
+          {records.map((r) => (
+            <div class="op-row" key={r.id} style="align-items:flex-start">
+              <div style="flex:1;min-width:0">
+                <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+                  <span class="op-row-title">{titleOf(r)}</span>
+                  <span class="op-row-sub">{new Date(r.at).toLocaleString(locale.value === 'ko' ? 'ko-KR' : 'en-US')}</span>
+                  {r.host && <span class="op-row-sub">· {r.host}</span>}
+                </div>
+                <div style="margin-top:4px;font-family:var(--font-mono);font-size:11.5px;color:var(--text-muted);white-space:pre-wrap;word-break:break-word;max-height:60px;overflow:hidden">{r.text.slice(0, 240)}</div>
+              </div>
+              <button class="op-btn secondary sm" onClick={() => void copy(r.text)}>{t('common.copy')}</button>
+            </div>
+          ))}
         </div>
       </div>
     </>

@@ -2,7 +2,7 @@
 import { useEffect, useRef, useState, useMemo } from 'preact/hooks';
 import { signal } from '@preact/signals';
 import type { Prompt, Folder, Variable, ImageParam } from '@shared/types';
-import { getPrompts, getFolders, upsertPrompt, getSettings } from '@shared/store';
+import { getPrompts, getFolders, upsertPrompt, getSettings, getInsertions } from '@shared/store';
 import { search, rankForPicker } from '@shared/search';
 import { extractVariables, mergeVariables, applyConditionals } from '@shared/variables';
 import { assemblePrompt, variableSource, isGenerative, renderReferences, renderParams } from '@shared/assemble';
@@ -234,6 +234,7 @@ function VariableModal({ prompt, mode }: { prompt: Prompt; mode: 'insert' | 'cop
   const [presetName, setPresetName] = useState('');
   // Per-insert parameter toggles (image/video); start from the stored params.
   const [params, setParams] = useState<ImageParam[]>(() => (prompt.params ?? []).map((p) => ({ ...p })));
+  const [recentFills, setRecentFills] = useState<Record<string, string>[]>([]);
   const generative = isGenerative(prompt);
   const setParam = (id: string, patch: Partial<ImageParam>) =>
     setParams((ps) => ps.map((p) => (p.id === id ? { ...p, ...patch } : p)));
@@ -265,6 +266,22 @@ function VariableModal({ prompt, mode }: { prompt: Prompt; mode: 'insert' | 'cop
         });
       }
     });
+    // recent fill-sets for this prompt (last 3 distinct), from the insertion log
+    if (vars.length > 0) {
+      getInsertions().then((list) => {
+        const seen = new Set<string>();
+        const out: Record<string, string>[] = [];
+        for (const r of list) {
+          if (r.promptId !== prompt.id || !r.values || Object.keys(r.values).length === 0) continue;
+          const key = JSON.stringify(r.values);
+          if (seen.has(key)) continue;
+          seen.add(key);
+          out.push(r.values);
+          if (out.length >= 3) break;
+        }
+        setRecentFills(out);
+      });
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -320,6 +337,16 @@ function VariableModal({ prompt, mode }: { prompt: Prompt; mode: 'insert' | 'cop
               <button class="sp-btn ghost" onClick={() => setNamingPreset(true)}>★ {t('content.savePreset')}</button>
             )}
           </div>
+          {recentFills.length > 0 && (
+            <div class="sp-recent">
+              <span class="sp-recent-label">{t('hist.recentFills')}</span>
+              {recentFills.map((fill, i) => (
+                <button key={i} class="sp-recent-chip" title={Object.entries(fill).map(([k, v]) => `${k}: ${v}`).join('\n')} onClick={() => setValues((s) => ({ ...s, ...fill }))}>
+                  {Object.values(fill).filter(Boolean).join(' · ').slice(0, 32) || '—'}
+                </button>
+              ))}
+            </div>
+          )}
           {vars.map((v) => (
             <VarField
               key={v.name}
