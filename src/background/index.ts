@@ -133,7 +133,13 @@ chrome.omnibox.onInputEntered.addListener(async (text) => {
     const resolved = substitute(prompt.body, {}, extractVariables(prompt.body));
     const ok = await copyToClipboard(resolved);
     await recordUsage(prompt.id);
-    setBadge(ok ? '✓' : '✗', ok ? '#10B981' : '#EF4444');
+    if (ok) {
+      setBadge('✓', '#10B981');
+    } else {
+      setBadge('✗', '#EF4444');
+      chrome.action.setTitle({ title: t('omni.cantCopy') });
+      setTimeout(() => chrome.action.setTitle({ title: 'SnapPrompt' }), 5000);
+    }
   } catch (e) {
     console.warn('[SnapPrompt] omnibox error:', e);
     setBadge('✗', '#EF4444');
@@ -171,29 +177,9 @@ async function ensureOffscreen(): Promise<void> {
   try { await offscreenCreating; } finally { offscreenCreating = null; }
 }
 async function copyToClipboard(textToCopy: string): Promise<boolean> {
-  // 1) offscreen document — works regardless of the active tab (new tab, edge://…)
-  try {
-    await ensureOffscreen();
-    try {
-      // @ts-ignore — getContexts signature varies across @types/chrome versions
-      const ctx: any = await chrome.runtime.getContexts?.({ contextTypes: ['OFFSCREEN_DOCUMENT'] });
-      console.log('[SnapPrompt] offscreen contexts:', Array.isArray(ctx) ? ctx.length : 'n/a');
-    } catch (e) { console.log('[SnapPrompt] getContexts error:', String(e)); }
-    // the offscreen listener may not be ready on first use — retry a few times
-    for (let i = 0; i < 6; i++) {
-      try {
-        const res = (await chrome.runtime.sendMessage({ type: 'SP_COPY', text: textToCopy })) as { ok?: boolean } | undefined;
-        console.log(`[SnapPrompt] SP_COPY attempt ${i} →`, JSON.stringify(res));
-        if (res?.ok) return true;
-      } catch (e) {
-        console.log(`[SnapPrompt] SP_COPY attempt ${i} threw:`, String(e));
-      }
-      await new Promise((r) => setTimeout(r, 120));
-    }
-  } catch (e) {
-    console.warn('[SnapPrompt] offscreen path error:', e);
-  }
-  // 2) fallback: inject into the active tab (normal pages only)
+  // 1) Active tab injection — the only reliable path: clipboard writes require a
+  //    focused document, and after omnibox enter the active page regains focus.
+  //    Works on normal web pages (where you'd paste); restricted pages can't be scripted.
   try {
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
     if (tab?.id) {
@@ -204,6 +190,7 @@ async function copyToClipboard(textToCopy: string): Promise<boolean> {
             const ta = document.createElement('textarea');
             ta.value = txt;
             ta.style.position = 'fixed';
+            ta.style.top = '-9999px';
             ta.style.opacity = '0';
             document.body.appendChild(ta);
             ta.focus();
@@ -217,8 +204,22 @@ async function copyToClipboard(textToCopy: string): Promise<boolean> {
       });
       if (res?.result) return true;
     }
-  } catch (e) {
-    console.warn('[SnapPrompt] active-tab copy failed:', e);
+  } catch {
+    /* restricted page (new tab, edge://, extensions gallery) — fall through */
+  }
+  // 2) offscreen document — silent copy on browsers that allow it (e.g. Chrome).
+  //    Edge blocks clipboard writes from offscreen (no focus), so this may no-op.
+  try {
+    await ensureOffscreen();
+    for (let i = 0; i < 2; i++) {
+      try {
+        const res = (await chrome.runtime.sendMessage({ type: 'SP_COPY', text: textToCopy })) as { ok?: boolean } | undefined;
+        if (res?.ok) return true;
+      } catch { /* listener not ready / no offscreen */ }
+      await new Promise((r) => setTimeout(r, 120));
+    }
+  } catch {
+    /* offscreen unavailable */
   }
   return false;
 }

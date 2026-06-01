@@ -43,6 +43,7 @@ const ko: Record<string, string> = {
   'ctx.open': 'SnapPrompt 열기',
   'omni.default': '프롬프트 검색 — 선택하면 클립보드에 복사돼요',
   'omni.copied': '복사',
+  'omni.cantCopy': '이 페이지에선 복사할 수 없어요. 일반 웹페이지에서 sp를 사용하세요.',
 
   // popup
   'popup.search': '프롬프트 검색...',
@@ -298,6 +299,7 @@ const en: Record<string, string> = {
   'ctx.open': 'Open SnapPrompt',
   'omni.default': 'Search your prompts — pick one to copy it',
   'omni.copied': 'Copied',
+  'omni.cantCopy': "Can't copy on this page. Use sp on a regular web page.",
 
   'popup.search': 'Search prompts...',
   'popup.openWindow': 'Open in window',
