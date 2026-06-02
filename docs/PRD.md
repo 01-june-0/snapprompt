@@ -4,12 +4,13 @@
 
 | 항목 | 값 |
 | --- | --- |
-| 문서 버전 | 0.2 |
-| 작성일 | 2026-05-29 |
-| 상태 | 스펙 확정, Phase 1 진행 준비 |
+| 문서 버전 | 1.0 |
+| 작성일 | 2026-05-29 (최종 갱신 2026-06-01) |
+| 상태 | v1.0.0 구현 완료 · 웹스토어 비공개(Unlisted) 검토 중 |
 | 작성자 | kyocustom@gmail.com |
 
 ### 변경 이력
+- **1.0** (2026-06-01): v1.0.0 출시 기준으로 최신화. 변수 8타입+조건부, 이미지·영상 생성 옵션(파라미터 토글·네거티브·레퍼런스·조립 엔진), 버전 히스토리·A/B 비교·삽입 기록, 표시 모드 3종(팝업/창/사이드 패널, 마지막 모드 기억), 커스텀 i18n 런타임 반영. 옴니박스 키워드는 시도 후 호환성 문제로 제거.
 - **0.2** (2026-05-29): Q1~Q8 결정 확정, 추가 이슈 10건 반영. 이름 SnapPrompt 확정. Fuse.js, 무제한 폴더, 다크 모드, i18n MVP 포함.
 - **0.1** (2026-05-29): 브레인스토밍 결과 초안.
 
@@ -27,16 +28,18 @@ LLM이 일상화되면서 좋은 프롬프트를 발견하는 일이 잦다. 하
 
 ### 1.2 솔루션 요약
 
-웹 어디서든 텍스트를 선택 → 우클릭 또는 단축키로 저장(Snap). LLM 사이트(또는 일반 입력창)에서 단축키 한 번으로 검색 가능한 피커를 띄우고, 변수가 있으면 폼으로 채워서 자동 삽입.
+웹 어디서든 텍스트를 선택 → 우클릭 또는 단축키로 저장(Snap). LLM 사이트(또는 일반 입력창)에서 단축키 한 번으로 검색 가능한 피커를 띄우고, 변수가 있으면 폼으로 채워서 자동 삽입. 이미지·영상 생성 프롬프트는 파라미터 토글·네거티브·레퍼런스까지 함께 조립하며, 편집 이력과 삽입 기록으로 반복 작업을 돕는다.
 
 ### 1.3 차별화 포인트
 
 기존 도구들(AIPRM, PromptBox, TextExpander 등)과의 차이:
 
 - **범용 자동 삽입**: 특정 LLM 사이트가 아닌, 포커스된 모든 입력창에 삽입 가능
-- **`{{변수|기본값}}` 템플릿 + 모달 입력**: 변수 부분만 폼으로 빠르게 채움
+- **강력한 변수 템플릿**: `{{변수|기본값}}` 외에 드롭다운·날짜·숫자·컬러·토글·코드·조건부 블록(`{{#if}}`)까지 8타입, 모달 폼으로 채움
+- **이미지·영상 생성 도메인**: Midjourney·Pika 파라미터 토글, 네거티브 프롬프트, 레퍼런스 이미지를 `[레퍼런스]+[본문]+[파라미터]+[네거티브]`로 자동 조립
+- **반복·이터레이션 지원**: 편집 버전 히스토리·되돌리기·A/B 비교, 삽입 기록과 최근 사용값 재사용
 - **로컬 우선 + JSON 백업**: 외부 서버 의존 없음, 데이터 소유권은 사용자에게
-- **2가지 진입점**: 팝업(검색·복사 중심) + 인라인 피커(빠른 삽입 중심)
+- **여러 표시 모드**: 툴바 팝업 · 분리된 창 · 사이드 패널 (마지막 사용 모드 기억) + 인라인 피커
 - **퍼지 검색**: 오타·일부 단어만 기억나도 찾을 수 있음
 
 ---
@@ -51,6 +54,8 @@ LLM이 일상화되면서 좋은 프롬프트를 발견하는 일이 잦다. 하
 4. 사용자 데이터는 로컬에 저장되고, JSON으로 백업/복원할 수 있다.
 5. 폴더와 태그로 프롬프트를 분류·검색할 수 있다.
 6. 다크/라이트 테마, 한국어/영어 UI를 시스템 설정에 맞춰 자동 제공한다.
+7. 이미지·영상 생성 프롬프트의 파라미터·네거티브·레퍼런스를 한 번에 구성·삽입할 수 있다.
+8. 편집 이력·삽입 기록으로 프롬프트를 반복 개선하고 비교할 수 있다.
 
 ### 2.2 비목표 (Non-Goals, v1 기준)
 
@@ -156,10 +161,11 @@ LLM이 일상화되면서 좋은 프롬프트를 발견하는 일이 잦다. 하
 ```
 [1] 설치 직후 옵션 페이지가 새 탭으로 자동 오픈
 
-[2] 환영 화면
+[2] 환영 화면 (4단계)
    ├─ 1단계: 단축키 설정 안내 (chrome://extensions/shortcuts 링크 + 가이드)
-   ├─ 2단계: 샘플 프롬프트 3개 추가 / 빈 상태로 시작 선택
-   └─ 3단계: 다크 모드, 언어 확인 (자동 감지된 값 표시 + 변경 가능)
+   ├─ 2단계: 샘플 프롬프트 5개 추가 / 빈 상태로 시작 선택
+   ├─ 3단계: 기능 하이라이트 (변수·이미지/영상 옵션·버전 기록·표시 모드)
+   └─ 4단계: 다크 모드, 언어 확인 (자동 감지된 값 표시 + 변경 가능)
 
 [3] "시작하기" → 옵션 페이지 메인으로 전환
 ```
@@ -183,18 +189,19 @@ LLM이 일상화되면서 좋은 프롬프트를 발견하는 일이 잦다. 하
 
 - F2.1 **퍼지 검색** (Fuse.js): 오타·부분 단어 대응. 검색 대상은 제목 + 본문 + 태그
 - F2.2 정렬 옵션: 최근 사용 / 최근 저장 / 자주 쓴 순 / 이름순
-- F2.3 필터: 폴더(트리에서 선택), 태그(다중), 즐겨찾기
+- F2.3 필터: 폴더(트리에서 선택), 태그(다중), 즐겨찾기, 종류(전체 → 일반 → 이미지 → 영상 순환)
 - F2.4 빈 결과 시 "검색 결과 없음 + 새 프롬프트 만들기" CTA
 - F2.5 검색·필터 상태는 팝업 세션 동안 유지, 닫으면 초기화
 
 ### F3. 변수 시스템
 
-- F3.1 변수 문법: `{{변수명}}` 또는 `{{변수명|기본값}}`
-- F3.2 변수 입력 모달: 변수별 input 또는 textarea (본문 컨텍스트에 줄바꿈 포함 시 자동으로 multiline)
-- F3.3 모달 하단에 "미리보기" — 변수 치환된 최종 결과 표시
-- F3.4 변수 없는 프롬프트는 모달 생략하고 바로 복사/삽입
-- F3.5 "마지막 입력값 기억" 옵션 (Phase 2, 데이터 모델은 v1부터 보유)
-- F3.6 모달은 Esc로 취소, Cmd+Enter로 적용
+- F3.1 변수 문법: `{{name}}` · `{{name|기본값}}` · `{{name:type(...)}}`. 타입 8종(text·textarea·number·date·color·select·boolean·code) + 조건부 블록 `{{#if name}}…{{/if}}` (상세 §6.3)
+- F3.2 변수 입력 모달: 타입별 컨트롤(입력·드롭다운·토글·컬러피커 등) 자동 렌더
+- F3.3 모달 하단에 "미리보기" — 변수 치환 + (이미지/영상이면) 파라미터·네거티브까지 조립된 최종 결과 표시
+- F3.4 변수도 없고 이미지/영상도 아닌 프롬프트는 모달 생략하고 바로 복사/삽입
+- F3.5 "마지막 입력값 기억" 옵션(설정) + 변수 모달의 "최근 사용값" 칩(직전 N개 fill-set 재적용)
+- F3.6 변수 프리셋(채움 세트) 저장/적용
+- F3.7 모달은 Esc로 취소, Cmd+Enter로 적용
 
 ### F4. 자동 삽입 (Insert)
 
@@ -253,8 +260,11 @@ LLM이 일상화되면서 좋은 프롬프트를 발견하는 일이 잦다. 하
 - F9.6 테마: 시스템 / 라이트 / 다크
 - F9.7 언어: 시스템 / 한국어 / 영어
 - F9.8 데이터 전체 삭제 (이중 확인)
-- F9.9 사이트별 비활성화 화이트/블랙리스트 (Phase 2)
+- F9.9 사이트별 비활성화 (특정 호스트에서 콘텐츠 스크립트 UI 끄기)
 - F9.10 전체 프롬프트 리스트 (관리 모드, 다중 선택 + 일괄 폴더 이동 / 태그 추가 / 삭제)
+- F9.11 통계 대시보드 (프롬프트/폴더 수, 총 사용 횟수, 많이 쓴 프롬프트)
+- F9.12 기록 탭 (최근 삽입/복사 로그, 항목 복사, 전체 삭제)
+- F9.13 스타터 팩 추가 (이미지·영상·코딩·글쓰기·마케팅·업무 6종, 폴더로 추가 / 중복 방지)
 
 ### F10. 컴포넌트 간 동기화
 
@@ -272,9 +282,9 @@ LLM이 일상화되면서 좋은 프롬프트를 발견하는 일이 잦다. 하
 ### F12. 다국어 (i18n)
 
 - F12.1 v1 지원 언어: 한국어, 영어
-- F12.2 UI 문자열은 `_locales/<lang>/messages.json` 분리
-- F12.3 기본값: 브라우저 `navigator.language` 자동 감지
-- F12.4 옵션에서 수동 변경 가능
+- F12.2 **커스텀 i18n 런타임** 사용 (`src/shared/i18n.ts`의 `t()` + `locale` 시그널). `chrome.i18n.getMessage`는 브라우저 로케일에 고정되어 런타임 전환이 안 되므로 직접 카탈로그(ko/en) 보유
+- F12.3 기본값: 시스템 로케일 자동 감지
+- F12.4 옵션에서 수동 변경 가능 (즉시 리렌더)
 - F12.5 사용자 입력 데이터(프롬프트 본문 등)는 그대로, UI 라벨만 번역
 
 ### F13. 우클릭 컨텍스트 메뉴
@@ -285,9 +295,31 @@ LLM이 일상화되면서 좋은 프롬프트를 발견하는 일이 잦다. 하
 ### F14. 온보딩
 
 - F14.1 첫 설치 시 옵션 페이지가 새 탭으로 자동 오픈
-- F14.2 3단계 가이드 (단축키 안내 → 샘플 추가 선택 → 테마/언어 확인)
-- F14.3 샘플 프롬프트 3개(코드 리뷰, 영어 이메일, 요약) 추가 옵션
-- F14.4 "다시 보지 않기" 후에는 옵션 페이지 일반 뷰로 진입
+- F14.2 4단계 가이드 (단축키 안내 → 샘플 추가 → 기능 하이라이트 → 테마/언어 확인)
+- F14.3 샘플 프롬프트 5개(핵심 요약&할 일, 코드 리뷰, 자연스러운 번역, 이미지 프롬프트, 쉬운 설명) 추가 옵션 — 이미지 샘플은 kind=image + 파라미터/네거티브 포함
+- F14.4 "건너뛰기/완료" 후에는 옵션 페이지 일반 뷰로 진입
+
+### F15. 이미지·영상 생성 옵션
+
+- F15.1 프롬프트 종류(kind): 일반 / 이미지 / 영상. 이미지·영상은 생성 옵션 섹션 노출 + 목록·피커에 🖼/🎬 배지
+- F15.2 파라미터 토글: 행 단위(사용 체크·이름·컨트롤·토큰·값) + 토큰 실시간 미리보기. 프리셋 팩(Midjourney `--ar`·`--v`… / Pika `-ar`·`-camera`…) + 커스텀 추가
+- F15.3 네거티브 프롬프트: 본문과 별도, 출력 방식 선택(라벨 줄 `Negative prompt:` / Midjourney `--no`)
+- F15.4 레퍼런스 이미지: URL + 메모 + 썸네일, 본문 앞에 prepend
+- F15.5 조립 순서: `[레퍼런스] [본문(치환)] [--파라미터] [네거티브]`. 모든 삽입/복사 경로가 `assemblePrompt` 한 곳을 사용
+- F15.6 이미지·영상 프롬프트는 변수가 없어도 삽입 모달을 띄워 파라미터를 그때그때 토글 가능
+
+### F16. 히스토리 / 이터레이션
+
+- F16.1 편집 버전: 저장 시 직전 내용이 바뀌었으면 자동 스냅샷(`Prompt.versions`, 최대 15개)
+- F16.2 편집기에 "변경 기록" — 버전 목록·되돌리기, 두 항목(현재 편집본 포함) 선택 시 좌우 비교(A/B)
+- F16.3 삽입 기록: 삽입/복사 시 최종 텍스트·변수값·사이트를 로그에 기록(전역, 최대 200개)
+- F16.4 변수 모달의 "최근 사용값" 칩(F3.5) + 옵션 "기록" 탭(F9.12)에서 활용
+
+### F17. 표시 모드
+
+- F17.1 세 가지 표시 모드: 툴바 팝업 · 분리된 창(`windows.create`) · 사이드 패널(`sidePanel`)
+- F17.2 헤더의 3-way 전환기로 모드 변경, 현재 모드 강조
+- F17.3 **마지막 사용 모드 기억** — 툴바 아이콘 동작을 모드에 맞게 재구성(default=팝업, window=`onClicked`→창, panel=클릭 시 패널). 설정 `popupMode`에 저장, SW 기동마다 재적용
 
 ---
 
@@ -306,17 +338,49 @@ type Prompt = {
   memo: string | null;
   sourceUrl: string | null;
   favorite: boolean;
+  presets?: VariablePreset[];  // 변수 채움 세트 (F3.6)
+  // 이미지·영상 생성 옵션 (F15) — 없으면 일반 프롬프트
+  kind?: 'general' | 'image' | 'video';
+  negativePrompt?: string | null;
+  negativeStyle?: 'label' | 'mj';
+  params?: ImageParam[];       // 파라미터 토글 목록
+  references?: ReferenceImage[];
+  versions?: PromptVersion[];  // 편집 이력 (F16, 최대 15개)
   createdAt: number;
   updatedAt: number;
   lastUsedAt: number | null;
   useCount: number;
 };
 
+type VariableType =
+  | 'text' | 'textarea' | 'select' | 'date' | 'number' | 'color' | 'boolean' | 'code';
+
 type Variable = {
   name: string;                // {{name|default}}의 name
+  type: VariableType;          // {{name:type(...)}}에서 파싱
   defaultValue: string | null; // {{name|default}}의 default
-  lastValue: string | null;    // F3.5 (Phase 2 사용, 필드는 v1부터 보유)
-  multiline: boolean;          // 여러 줄 입력 여부 (저장 시 자동 판단)
+  options: string[];           // select 옵션 / code 언어
+  lastValue: string | null;    // F3.5 마지막 입력값
+  multiline: boolean;          // 여러 줄 입력 여부
+};
+
+type VariablePreset = { name: string; values: Record<string, string> };
+
+type ImageParam = {
+  id: string; label: string;
+  token: string;               // '{}'가 값 자리, toggle은 값 없는 플래그
+  control: 'select' | 'text' | 'number' | 'toggle';
+  value: string; options?: string[]; enabled: boolean;
+};
+type ReferenceImage = { id: string; url: string; note?: string };
+type PromptVersion = {
+  at: number; title: string; body: string;
+  kind?: Prompt['kind']; negativePrompt?: string | null;
+  negativeStyle?: Prompt['negativeStyle']; params?: ImageParam[]; references?: ReferenceImage[];
+};
+type InsertionRecord = {
+  id: string; promptId: string; at: number; title: string;
+  text: string; values: Record<string, string>; host?: string;
 };
 
 type Folder = {
@@ -328,7 +392,6 @@ type Folder = {
 };
 
 type Settings = {
-  shortcutHints: { picker: string | null; save: string | null }; // 표시용
   floatingButton: boolean;
   backupFrequency: 'off' | 'daily' | 'weekly' | 'monthly'; // 기본 'off'
   lastBackupAt: number | null;
@@ -338,7 +401,8 @@ type Settings = {
   theme: 'system' | 'light' | 'dark';
   language: 'system' | 'ko' | 'en';
   onboardingCompletedAt: number | null;
-  disabledHosts: string[];     // Phase 2
+  disabledHosts: string[];     // 사이트별 비활성화 (F9.9)
+  popupMode: 'default' | 'window' | 'panel'; // 마지막 표시 모드 (F17.3)
 };
 
 type Snapshot = {
@@ -364,6 +428,7 @@ snapprompt:prompts     → Prompt[]
 snapprompt:folders     → Folder[]
 snapprompt:settings    → Settings
 snapprompt:snapshots   → Snapshot[] (최근 7개)
+snapprompt:insertions  → InsertionRecord[] (삽입 로그, 최근 200개)
 snapprompt:meta        → { schemaVersion: 1 }
 ```
 
@@ -454,7 +519,7 @@ snapprompt:meta        → { schemaVersion: 1 }
 │ │ 한국어로 다음 코드를...     │ │
 │ └─────────────────────────────┘ │
 ├─────────────────────────────────┤
-│ ☐ 마지막 입력값 기억 (Phase 2)  │
+│ ☐ 마지막 입력값 기억            │
 │           [취소]   [삽입/복사]  │
 └─────────────────────────────────┘
 ```
@@ -565,13 +630,14 @@ src/
 │  ├─ types.ts            # Prompt, Folder, Settings 등
 │  ├─ store.ts            # storage 추상화 + onChanged 구독
 │  ├─ search.ts           # Fuse.js 래퍼
-│  ├─ variables.ts        # 추출/치환 (`{{name|default}}`)
+│  ├─ variables.ts        # 추출/치환 ({{name:type|default}}, {{#if}})
+│  ├─ assemble.ts         # 최종 텍스트 조립 (레퍼런스+본문+파라미터+네거티브)
+│  ├─ imageparams.ts      # 이미지/영상 파라미터 프리셋 (Midjourney·Pika)
+│  ├─ folders.ts · markdown.ts · backup.ts · id.ts · text.ts · samples.ts · starterpacks.ts
 │  ├─ messaging.ts        # 메시지 프로토콜
-│  ├─ i18n.ts             # chrome.i18n 래퍼
+│  ├─ i18n.ts             # 커스텀 t() 런타임 (ko/en 카탈로그, 런타임 전환)
 │  └─ theme.ts            # 테마 토큰
-├─ _locales/
-│  ├─ en/messages.json
-│  └─ ko/messages.json
+├─ components/            # 공유 컴포넌트 (PromptOptionsEditor · PromptHistory)
 └─ assets/
    └─ icons/
 manifest.json
@@ -588,11 +654,11 @@ tsconfig.json
 | 빌드 | Vite | 빠른 HMR |
 | UI 라이브러리 | Preact | React 호환, 번들 작음 (~3KB) |
 | 상태 관리 | Preact signals | 경량, storage 변경과 결합 용이 |
-| 스타일 | CSS Modules + CSS 변수(테마) | Shadow DOM 안에 주입 |
-| 패키저 | `@crxjs/vite-plugin` 또는 수동 | MV3 친화적 |
+| 스타일 | 일반 CSS + CSS 변수(토큰) | Shadow DOM 안에 주입 |
+| 패키저 | `@crxjs/vite-plugin` | MV3 빌드 |
 | 퍼지 검색 | Fuse.js | ~10KB, 가벼움 |
 | ID 생성 | `crypto.randomUUID()` | 브라우저 내장 |
-| i18n | `chrome.i18n` API | `_locales/<lang>/messages.json` |
+| i18n | 커스텀 `t()` 런타임 | ko/en 카탈로그, 런타임 전환 (chrome.i18n은 로케일 고정이라 미사용) |
 
 ### 8.4 메시지 프로토콜
 
@@ -600,10 +666,13 @@ tsconfig.json
 type Message =
   | { type: 'OPEN_PICKER' }
   | { type: 'SAVE_SELECTION'; text: string; sourceUrl: string }
-  | { type: 'INSERT_TEXT'; text: string }
-  | { type: 'PROMPT_USED'; promptId: string }
+  | { type: 'CAPTURE_AND_SAVE' }
+  | { type: 'INSERT_PROMPT'; promptId: string }
+  | { type: 'PROMPT_USED'; promptId: string; text?: string; values?: Record<string, string>; host?: string }
   | { type: 'BACKUP_NOW' }
-  | { type: 'OPEN_OPTIONS'; section?: string };
+  | { type: 'OPEN_OPTIONS'; section?: string }
+  | { type: 'SET_POPUP_MODE'; mode: 'default' | 'window' | 'panel' }
+  | { type: 'PING' };
 ```
 
 ### 8.5 보안 / 프라이버시
@@ -614,13 +683,14 @@ type Message =
   - 컨텍스트 메뉴를 모든 사이트에서 동작시켜야 함
   - 자동 삽입 피커를 모든 입력창에서 띄워야 함
 - Shadow DOM으로 페이지와 격리 (CSS·이벤트·JS 모두)
-- 사이트별 비활성화 옵션 제공 (Phase 2)
+- 사이트별 비활성화 옵션 제공
+- 원격 코드 미사용(모든 코드 패키지 포함), 데이터 수집·전송 없음
 
 ---
 
-## 9. 단계별 로드맵 (Phase)
+## 9. 단계별 로드맵 (Phase) — *기록용(historical)*
 
-> Q6+Q7 결정에 따라 MVP 범위가 커졌으므로 예상 기간은 3~4주로 조정.
+> ✅ **v1.0.0 기준 아래 Phase 1·2 항목은 모두 구현 완료.** 이후 라운드 A(변수 파워업)·B(빠른 접근)·C(이미지·영상 도메인)·D(히스토리/이터레이션) + 표시 모드 기억 + 종류 필터 + 샘플/스타터팩 강화까지 반영됨. 아래는 초기 계획 기록으로 남겨둠.
 
 ### Phase 1 — MVP (3~4주)
 
@@ -636,8 +706,8 @@ type Message =
 - [P8] 내부 스냅샷 + 롤백 UI
 - [P9] 다크 모드 + 시스템 테마 자동 감지
 - [P10] i18n (한국어/영어)
-- [P11] 옵션 페이지 (탭 7종)
-- [P12] 온보딩 (3단계)
+- [P11] 옵션 페이지 (탭 10종: 일반·통계·기록·프롬프트·폴더·태그·백업·단축키·데이터·정보)
+- [P12] 온보딩 (4단계)
 - [P13] 컴포넌트 간 동기화 (storage.onChanged)
 - [P14] Fuse.js 퍼지 검색
 
@@ -707,7 +777,7 @@ type Message =
 ### B. 참고 기술 자료
 
 - Chrome Extension Manifest V3
-- chrome.contextMenus / chrome.commands / chrome.downloads / chrome.alarms / chrome.i18n
+- chrome.contextMenus / chrome.commands / chrome.downloads / chrome.alarms / chrome.sidePanel / chrome.windows (+ storage·unlimitedStorage·activeTab)
 - `document.execCommand('insertText')` (React/Vue 상태 동기화 위해 필수)
 - Shadow DOM (콘텐츠 스크립트 격리)
 - Fuse.js (퍼지 검색)
