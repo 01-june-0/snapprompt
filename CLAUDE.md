@@ -36,7 +36,7 @@ UI가 바뀌어 README 스크린샷을 갱신할 때는 반드시 아래 순서�
 핵심 원칙: **목업을 실제 UI에 동기화 → 헤드리스로 파일 저장 → README 반영.**
 
 ## 코드 컨벤션 / 주의점
-- **i18n**: `chrome.i18n.getMessage`는 브라우저 로케일 고정이라 사용 안 함. `src/shared/i18n.ts`의 커스텀 `t(key, params?)` + `locale` 시그널을 쓴다. 새 UI 문자열은 ko/en 카탈로그 양쪽에 키 추가. 컴포넌트에서 `t()`를 쓰면 언어 변경 시 자동 리렌더.
+- **i18n (4개국어: ko/en/ja/zh)**: `chrome.i18n.getMessage`는 브라우저 로케일 고정이라 사용 안 함. `src/shared/i18n.ts`의 커스텀 `t(key, params?)` + `locale` 시그널을 쓴다. **새 UI 문자열은 ko/en/ja/zh 네 카탈로그 모두에 키 추가**(`t()`는 누락 시 en→ko 폴백). 날짜/숫자 포맷은 `dateLocale()`(ko-KR/en-US/ja-JP/zh-CN) 사용. 변수 이름 정규식은 한글+CJK(히라가나/가타카나/한자) 허용 → 일/중 변수명 인식. 샘플·스타터팩 내용은 `samples.ts`·`starterpacks.ts`에서 `{ko,en,ja,zh}` Loc로 보유, build 시 `locale.value`로 선택.
 - **콘텐츠 스크립트 격리**: 모든 오버레이 UI는 Shadow DOM 안에 렌더. 디자인 토큰은 `:root, :host` 둘 다에 정의해야 Shadow 내부에서 CSS 변수가 해석됨. 다크는 `[data-theme="dark"], :host([data-theme="dark"])`, 테마 속성은 호스트 엘리먼트에 설정.
 - **변수 문법**: `{{name}}` / `{{name|기본값}}` / `{{name:type(...)}}`. 타입: text·textarea·number·date·color·select. 정규식은 콜론/타입 주변 공백 허용. 파서는 `src/shared/variables.ts`.
 - **삽입 텍스트 조립(Round C)**: 최종 텍스트는 항상 `src/shared/assemble.ts`의 `assemblePrompt(prompt, values)` 한 곳에서 만든다(피커·변수모달·팝업 복사 모두 이걸 호출). 순서: `[레퍼런스 URL] [본문(치환)] [--파라미터] [네거티브]`. 일반 프롬프트는 변수 치환만(기존과 동일). 변수 추출 소스는 `variableSource(prompt)`=본문+네거티브.
