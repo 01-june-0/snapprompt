@@ -12,7 +12,7 @@ import { flattenTree, wouldCycle, folderPath } from '@shared/folders';
 import { search } from '@shared/search';
 import { extractVariables } from '@shared/variables';
 import { STARTER_PACKS, buildPack, type StarterPack } from '@shared/starterpacks';
-import { t, locale } from '@shared/i18n';
+import { t, dateLocale } from '@shared/i18n';
 import { uuid } from '@shared/id';
 import { PromptOptionsEditor, type ImageOptionsValue } from '@/components/PromptOptionsEditor';
 import { PromptHistory } from '@/components/PromptHistory';
@@ -119,7 +119,7 @@ function General({ settings, patch, folders, addPack }: { settings: Settings; pa
         <div class="op-setting">
           <div class="op-setting-info"><div class="op-setting-label">{t('opt.language')}</div><div class="op-setting-hint">{t('opt.language.hint')}</div></div>
           <select class="op-select" value={settings.language} onChange={(e) => patch({ language: (e.target as HTMLSelectElement).value as LanguagePref })}>
-            <option value="system">{t('opt.language.system')}</option><option value="ko">한국어</option><option value="en">English</option>
+            <option value="system">{t('opt.language.system')}</option><option value="ko">한국어</option><option value="en">English</option><option value="ja">日本語</option><option value="zh">中文</option>
           </select>
         </div>
       </div>
@@ -509,7 +509,7 @@ function History({ prompts, flash }: { prompts: Prompt[]; flash: (m: string) => 
               <div style="flex:1;min-width:0">
                 <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
                   <span class="op-row-title">{titleOf(r)}</span>
-                  <span class="op-row-sub">{new Date(r.at).toLocaleString(locale.value === 'ko' ? 'ko-KR' : 'en-US')}</span>
+                  <span class="op-row-sub">{new Date(r.at).toLocaleString(dateLocale())}</span>
                   {r.host && <span class="op-row-sub">· {r.host}</span>}
                 </div>
                 <div style="margin-top:4px;font-family:var(--font-mono);font-size:11.5px;color:var(--text-muted);white-space:pre-wrap;word-break:break-word;max-height:60px;overflow:hidden">{r.text.slice(0, 240)}</div>

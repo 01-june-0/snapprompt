@@ -6,7 +6,7 @@
  */
 import { useState } from 'preact/hooks';
 import type { PromptVersion, Prompt } from '@shared/types';
-import { t, locale } from '@shared/i18n';
+import { t, dateLocale } from '@shared/i18n';
 import { assemblePrompt, synthPrompt } from '@shared/assemble';
 import { firstLine } from '@shared/text';
 
@@ -32,7 +32,7 @@ function rel(at: number): string {
   if (h < 24) return t('hist.hour', [h]);
   const d = Math.floor(h / 24);
   if (d < 30) return t('hist.day', [d]);
-  return new Date(at).toLocaleDateString(locale.value === 'ko' ? 'ko-KR' : 'en-US');
+  return new Date(at).toLocaleDateString(dateLocale());
 }
 
 export function PromptHistory({

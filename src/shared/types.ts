@@ -134,7 +134,7 @@ export interface Folder {
 }
 
 export type ThemePref = 'system' | 'light' | 'dark';
-export type LanguagePref = 'system' | 'ko' | 'en';
+export type LanguagePref = 'system' | 'ko' | 'en' | 'ja' | 'zh';
 export type BackupFrequency = 'off' | 'daily' | 'weekly' | 'monthly';
 export type InsertionMode = 'auto' | 'clipboard-fallback';
 export type SortMode = 'recent-used' | 'recent-saved' | 'most-used' | 'name';

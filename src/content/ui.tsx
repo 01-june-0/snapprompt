@@ -663,7 +663,7 @@ function renderPreview(rawBody: string, values: Record<string, string>, vars: Va
   // Resolve {{#if}} blocks first so the preview reflects the toggles.
   const body = applyConditionals(rawBody, values);
   const parts: preact.ComponentChildren[] = [];
-  const re = /\{\{\s*([a-zA-Z0-9_\-가-힣]+)\s*(?::\s*[a-zA-Z]+\s*(?:\([^)]*\))?)?\s*(?:\|([^}]*))?\s*\}\}/g;
+  const re = /\{\{\s*([a-zA-Z0-9_\-가-힣぀-ゟ゠-ヿ一-鿿]+)\s*(?::\s*[a-zA-Z]+\s*(?:\([^)]*\))?)?\s*(?:\|([^}]*))?\s*\}\}/g;
   let last = 0;
   let m: RegExpExecArray | null;
   const defaults = new Map(vars.map((v) => [v.name, v.defaultValue]));

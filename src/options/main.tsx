@@ -8,7 +8,7 @@ import { getSettings, subscribe } from '@shared/store';
 import { applyTheme, watchSystemTheme } from '@shared/theme';
 import { setLocale } from '@shared/i18n';
 
-function applyPrefs(s: { theme: 'system' | 'light' | 'dark'; language: 'system' | 'ko' | 'en' }) {
+function applyPrefs(s: { theme: 'system' | 'light' | 'dark'; language: 'system' | 'ko' | 'en' | 'ja' | 'zh' }) {
   applyTheme(s.theme);
   setLocale(s.language);
 }

@@ -18,11 +18,11 @@ import type { Variable, VariableType } from './types';
 
 // 1=name  2=type  3=type-arg (select options / code lang)  4=default
 const VAR_RE =
-  /\{\{\s*([a-zA-Z0-9_\-가-힣]+)\s*(?::\s*([a-zA-Z]+)\s*(?:\(([^)]*)\))?)?\s*(?:\|([^}]*))?\s*\}\}/g;
+  /\{\{\s*([a-zA-Z0-9_\-가-힣぀-ゟ゠-ヿ一-鿿]+)\s*(?::\s*([a-zA-Z]+)\s*(?:\(([^)]*)\))?)?\s*(?:\|([^}]*))?\s*\}\}/g;
 
 // {{#if name}} … {{/if}}  (non-nested)
 const IF_RE =
-  /\{\{\s*#if\s+([a-zA-Z0-9_\-가-힣]+)\s*\}\}([\s\S]*?)\{\{\s*\/if\s*\}\}/g;
+  /\{\{\s*#if\s+([a-zA-Z0-9_\-가-힣぀-ゟ゠-ヿ一-鿿]+)\s*\}\}([\s\S]*?)\{\{\s*\/if\s*\}\}/g;
 
 const MULTILINE_HINT = /code|content|text|본문|코드|내용/i;
 const KNOWN_TYPES = ['textarea', 'select', 'date', 'number', 'color', 'code', 'boolean', 'text'];
