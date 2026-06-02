@@ -10,7 +10,7 @@
 | --- | --- |
 | 업로드 패키지 | `snapprompt-1.0.0.zip` (프로젝트 루트, `dist/`를 압축한 것) |
 | 스토어 아이콘 128×128 | `docs/store/store-icon-128.png` (PNG, 둥근 모서리) |
-| 스토어 스크린샷 1280×800 | `docs/store/popup.png · picker.png · vars.png · image.png · history.png` |
+| 스토어 스크린샷 1280×800 | `docs/store/screens/<lang-mode>/` — `ko-light · ko-dark · en-light · en-dark` 각 5장 (popup·picker·vars·image·history) |
 | 작은 프로모 타일 440×280 | `docs/store/promo-small-440x280.jpg` (JPEG, 알파 없음) |
 | 마키 프로모 타일 1400×560 | `docs/store/promo-marquee-1400x560.jpg` (JPEG, 알파 없음) |
 | 개인정보 처리방침 | `docs/PRIVACY.md` → **공개 URL로 호스팅 필요** (아래 3-c) |
@@ -38,9 +38,21 @@
 
 **b. 그래픽** (모두 `docs/store/`에 준비됨)
 - 스토어 아이콘 128×128: `store-icon-128.png`
-- 스크린샷 1280×800 (최대 5장): `popup.png · picker.png · vars.png · image.png · history.png`
+- 스크린샷 1280×800 — 라이트/다크 × 한/영 4세트, 각 5장 (`docs/store/screens/<세트>/`)
+  - `ko-light` · `ko-dark` · `en-light` · `en-dark`
+  - **언어별 등록정보당 한 세트(5장)** 업로드: 한국어 리스팅엔 `ko-*`, 영어 리스팅엔 `en-*`. 라이트/다크는 취향대로 한 테마로 통일 권장(또는 섞어도 무방).
 - 작은 프로모 타일 440×280: `promo-small-440x280.jpg`
 - 마키 프로모 타일 1400×560: `promo-marquee-1400x560.jpg` (검색·카테고리 노출 시 사용, 선택)
+
+> 스크린샷 재생성(테마·언어 자유 조합): `design/shots.html`에 `?theme=light|dark&lang=ko|en#<shot>` 파라미터 지원. shot = popup·picker·vars·image·history.
+> ```bash
+> CHROME="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
+> for lang in ko en; do for mode in light dark; do d="docs/store/screens/$lang-$mode"; mkdir -p "$d"
+>   for s in popup picker vars image history; do
+>     "$CHROME" --headless=new --force-device-scale-factor=1 --window-size=1280x800 \
+>       --screenshot="$d/$s.png" "file://$PWD/design/shots.html?theme=$mode&lang=$lang#$s" --virtual-time-budget=1500
+>   done; done; done
+> ```
 
 **c. 개인정보 처리방침 URL (필수)** — ✅ 준비됨
 - 공개 Gist로 게시 완료. 아래 URL을 그대로 등록:

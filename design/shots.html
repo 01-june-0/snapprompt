@@ -439,12 +439,114 @@ Negative prompt: blurry, text, watermark, low quality</div></div>
 </div>
 
 <script>
+  // English strings for the 5 store frames (popup·picker·vars·image·history).
+  // Keyed by the exact (trimmed) Korean text node → swapped when ?lang=en.
+  const EN = {
+    // popup
+    "프롬프트 검색...": "Search prompts...",
+    "전체 폴더": "All folders",
+    "즐겨찾기": "Favorites",
+    "최근 사용 ▾": "Recent ▾",
+    "전체": "All",
+    "코딩": "Coding",
+    "리뷰": "Review",
+    "영어": "English",
+    "분류 없음": "Uncategorized",
+    "코드 리뷰": "Code review",
+    "로고 디자인": "Logo design",
+    "3줄 요약": "3-line summary",
+    "코드 리뷰 (한국어)": "Code review",
+    "{{언어}}로 다음 코드를 리뷰해줘. 보안·성능·가독성 관점에서...": "Review this {{language}} code — security, performance, readability...",
+    "복사": "Copy",
+    "삽입": "Insert",
+    "로고 디자인 (Midjourney)": "Logo design (Midjourney)",
+    "{{스타일}} 로고, 컨셉은 {{컨셉}}. 메인 컬러 {{메인색}} --ar 1:1 --v 6.1": "{{style}} logo, concept {{concept}}. Main color {{color}} --ar 1:1 --v 6.1",
+    "이미지": "Image",
+    "로고": "Logo",
+    "다음 내용을 핵심만 3줄로 요약해줘...": "Summarize this into 3 key lines...",
+    "요약": "Summary",
+    "새 프롬프트": "New prompt",
+    "12개": "12",
+    // picker
+    "무엇을 도와드릴까요?": "How can I help?",
+    "메시지를 입력하세요…": "Send a message…",
+    "프롬프트 검색하거나 ↑↓로 탐색...": "Search prompts or navigate with ↑↓...",
+    "자주 사용 · 최근 사용": "Frequent · Recent",
+    "{{언어}}로 다음 코드를 리뷰해줘. 보안·성능·가독성...": "Review this {{language}} code — security, performance, readability...",
+    "{{스타일}} 로고, 컨셉은 {{컨셉}} --ar 1:1 --v 6.1...": "{{style}} logo, concept {{concept}} --ar 1:1 --v 6.1...",
+    "탐색": "Navigate",
+    "닫기": "Close",
+    // vars
+    "🖼 로고 디자인 (Midjourney)": "🖼 Logo design (Midjourney)",
+    "3개 변수 채우기": "Fill 3 variables",
+    "최근 사용값": "Recent values",
+    "미니멀 · 친환경 커피": "Minimal · Eco coffee",
+    "레트로 · 게임 스튜디오": "Retro · Game studio",
+    "{{스타일}}": "{{style}}",
+    "미니멀": "Minimal",
+    "{{컨셉}}": "{{concept}}",
+    "친환경 커피 브랜드": "Eco coffee brand",
+    "{{메인색}}": "{{color}}",
+    "파라미터": "Parameters",
+    "화면비": "Aspect ratio",
+    "버전": "Version",
+    "Raw 스타일": "Raw style",
+    "미리보기": "Preview",
+    "스타일 로고, 컨셉은": "style logo, concept",
+    ". 메인 컬러": ". Main color",
+    "취소": "Cancel",
+    // image
+    "이미지·영상 생성 옵션": "Image & video options",
+    "본문": "Body",
+    "{{스타일}} 스타일의 로고. 컨셉은 {{컨셉}}, 메인 컬러 {{메인색}}.": "A {{style}} logo. Concept {{concept}}, main color {{color}}.",
+    "종류": "Kind",
+    "일반": "General",
+    "🖼 이미지": "🖼 Image",
+    "🎬 영상": "🎬 Video",
+    "+ 화면비": "+ Aspect ratio",
+    "+ 버전": "+ Version",
+    "+ 스타일화": "+ Stylize",
+    "+ 카오스": "+ Chaos",
+    "+ Raw 스타일": "+ Raw style",
+    "+ 시드": "+ Seed",
+    "네거티브 프롬프트": "Negative prompt",
+    "출력 미리보기": "Output preview",
+    "{{스타일}} 스타일의 로고. 컨셉은 {{컨셉}}, 메인 컬러 {{메인색}}. --ar 1:1 --v 6.1\nNegative prompt: blurry, text, watermark, low quality": "A {{style}} logo. Concept {{concept}}, main color {{color}}. --ar 1:1 --v 6.1\nNegative prompt: blurry, text, watermark, low quality",
+    "저장": "Save",
+    // history
+    "변경 기록 · 버전 비교": "History · compare versions",
+    "변경 기록": "History",
+    "버전 3개": "3 versions",
+    "현재 (편집 중)": "Current (editing)",
+    "{{언어}}로 다음 코드를 보안·성능·가독성 관점에서 리뷰...": "Review this {{language}} code for security, performance, readability...",
+    "2시간 전": "2h ago",
+    "{{언어}}로 코드를 리뷰해줘. 개선점을 알려줘.": "Review this {{language}} code and suggest improvements.",
+    "되돌리기": "Restore",
+    "어제": "Yesterday",
+    "코드 리뷰해줘: {{code}}": "Review this code: {{code}}",
+    "{{언어}}로 다음 코드를 보안·성능·가독성 관점에서 우선순위와 함께 리뷰해줘.": "Review this {{language}} code for security, performance, and readability, with priorities.",
+  };
+
+  function translateEn(root) {
+    const w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, null);
+    const nodes = [];
+    while (w.nextNode()) nodes.push(w.currentNode);
+    for (const n of nodes) {
+      const k = n.nodeValue.trim();
+      if (k && Object.prototype.hasOwnProperty.call(EN, k)) {
+        n.nodeValue = n.nodeValue.replace(k, EN[k]);
+      }
+    }
+  }
+
   const params = new URLSearchParams(location.search);
-  const shot = (location.hash.replace('#','') || params.get('shot') || 'popup');
-  const theme = params.get('theme') || (shot === 'picker' ? 'dark' : 'light');
-  document.documentElement.dataset.theme = theme;
+  const shot = (location.hash.replace('#', '') || params.get('shot') || 'popup');
+  document.documentElement.dataset.theme = params.get('theme') || 'light';
   const el = document.querySelector(`.frame[data-shot="${shot}"]`);
-  if (el) el.classList.add('active');
+  if (el) {
+    el.classList.add('active');
+    if ((params.get('lang') || 'ko') === 'en') translateEn(el);
+  }
 </script>
 </body>
 </html>
