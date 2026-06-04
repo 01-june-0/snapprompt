@@ -240,6 +240,7 @@ const ko: Record<string, string> = {
   'opt.sites.hint': 'SnapPrompt UI를 끌 사이트 (호스트명)',
   'opt.sites.placeholder': 'example.com',
   'opt.sites.empty': '비활성화한 사이트가 없어요',
+  'opt.sites.quickAdd': '빠른 추가:',
 
   // options backup
   'opt.backup.desc': '내부 스냅샷은 항상 자동, 외부 백업은 선택 사항',
@@ -555,6 +556,7 @@ const en: Record<string, string> = {
   'opt.sites.hint': 'Sites where the SnapPrompt UI is turned off (hostname)',
   'opt.sites.placeholder': 'example.com',
   'opt.sites.empty': 'No disabled sites',
+  'opt.sites.quickAdd': 'Quick add:',
 
   'opt.backup.desc': 'Internal snapshots are automatic; external backup is optional',
   'opt.backup.staleWarn': 'Last external backup was {0} days ago. Consider exporting a JSON backup.',
@@ -719,6 +721,7 @@ const ja: Record<string, string> = {
   'hist.day': '{0}日前', 'hist.recentFills': '最近使った値',
   'opt.sites': 'サイト別に無効化', 'opt.sites.hint': 'SnapPromptのUIをオフにするサイト（ホスト名）', 'opt.sites.placeholder': 'example.com',
   'opt.sites.empty': '無効化したサイトなし',
+  'opt.sites.quickAdd': 'クイック追加:',
   'opt.backup.desc': '内部スナップショットは自動。外部バックアップは任意', 'opt.backup.staleWarn': '前回の外部バックアップから{0}日経過。JSONバックアップをおすすめします。',
   'opt.backup.exportNow': '今すぐエクスポート', 'opt.backup.auto': '自動バックアップ', 'opt.backup.autoHint': '定期的にJSONをダウンロードに保存',
   'opt.backup.freq': 'バックアップ間隔', 'opt.backup.freqHint': '自動バックアップ有効時のみ適用', 'opt.freq.daily': '毎日',
@@ -829,6 +832,7 @@ const zh: Record<string, string> = {
   'hist.day': '{0} 天前', 'hist.recentFills': '最近使用的值',
   'opt.sites': '按站点禁用', 'opt.sites.hint': '关闭 SnapPrompt 界面的站点（主机名）', 'opt.sites.placeholder': 'example.com',
   'opt.sites.empty': '没有禁用的站点',
+  'opt.sites.quickAdd': '快速添加:',
   'opt.backup.desc': '内部快照自动进行；外部备份可选', 'opt.backup.staleWarn': '上次外部备份在 {0} 天前。建议导出一份 JSON 备份。',
   'opt.backup.exportNow': '立即导出', 'opt.backup.auto': '自动备份', 'opt.backup.autoHint': '定期将 JSON 保存到下载文件夹',
   'opt.backup.freq': '备份周期', 'opt.backup.freqHint': '仅在开启自动备份时生效', 'opt.freq.daily': '每天',

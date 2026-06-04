@@ -95,6 +95,13 @@ function TabBtn({ id, tab, set, label }: { id: Tab; tab: Tab; set: (t: Tab) => v
   return <button class={`op-tab${tab === id ? ' active' : ''}`} onClick={() => set(id)}><Dot /> {label}</button>;
 }
 
+/* Common sites where the floating button is often unwanted (NOT enabled by
+   default — only offered as one-click quick-add chips). LLM sites excluded. */
+const SUGGESTED_DISABLE_HOSTS = [
+  'google.com', 'youtube.com', 'x.com', 'facebook.com', 'instagram.com',
+  'naver.com', 'amazon.com', 'netflix.com',
+];
+
 /* ---------- General ---------- */
 function General({ settings, patch, folders, addPack }: { settings: Settings; patch: (p: Partial<Settings>) => void; folders: Folder[]; addPack: (p: StarterPack) => void }) {
   const [host, setHost] = useState('');
@@ -167,6 +174,14 @@ function General({ settings, patch, folders, addPack }: { settings: Settings; pa
           <input class="op-input" style="flex:1" value={host} placeholder={t('opt.sites.placeholder')} onInput={(e) => setHost((e.target as HTMLInputElement).value)} onKeyDown={(e) => e.key === 'Enter' && addHost()} />
           <button class="op-btn primary sm" onClick={addHost}>{t('common.add')}</button>
         </div>
+        {SUGGESTED_DISABLE_HOSTS.some((h) => !settings.disabledHosts.includes(h)) && (
+          <div style="display:flex;align-items:center;flex-wrap:wrap;gap:6px;margin-bottom:10px">
+            <span style="font-size:11px;color:var(--text-muted)">{t('opt.sites.quickAdd')}</span>
+            {SUGGESTED_DISABLE_HOSTS.filter((h) => !settings.disabledHosts.includes(h)).map((h) => (
+              <button class="op-btn secondary sm" key={h} onClick={() => patch({ disabledHosts: [...settings.disabledHosts, h] })}>+ {h}</button>
+            ))}
+          </div>
+        )}
         {settings.disabledHosts.length === 0
           ? <div style="font-size:11px;color:var(--text-muted)">{t('opt.sites.empty')}</div>
           : <div style="display:flex;flex-wrap:wrap;gap:8px">
