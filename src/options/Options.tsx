@@ -96,10 +96,20 @@ function TabBtn({ id, tab, set, label }: { id: Tab; tab: Tab; set: (t: Tab) => v
 }
 
 /* Common sites where the floating button is often unwanted (NOT enabled by
-   default — only offered as one-click quick-add chips). LLM sites excluded. */
+   default — only offered as one-click quick-add chips). LLM sites excluded.
+   Base domains; hostMatches() covers subdomains (e.g. bank.shinhan.com). */
 const SUGGESTED_DISABLE_HOSTS = [
-  'google.com', 'youtube.com', 'x.com', 'facebook.com', 'instagram.com',
-  'naver.com', 'amazon.com', 'netflix.com',
+  // global — search / social / shopping / streaming
+  'google.com', 'youtube.com', 'x.com', 'facebook.com', 'instagram.com', 'amazon.com', 'netflix.com',
+  // Korea — portals & banks
+  'naver.com', 'daum.net', 'nate.com',
+  'kbstar.com', 'shinhan.com', 'wooribank.com', 'hanabank.com', 'nonghyup.com', 'ibk.co.kr', 'kakaobank.com', 'tossbank.com',
+  // Japan — portal & banks
+  'yahoo.co.jp',
+  'bk.mufg.jp', 'smbc.co.jp', 'mizuhobank.co.jp', 'jp-bank.japanpost.jp', 'rakuten-bank.co.jp',
+  // US — portals & banks
+  'yahoo.com', 'msn.com',
+  'chase.com', 'bankofamerica.com', 'wellsfargo.com', 'citi.com', 'usbank.com', 'capitalone.com',
 ];
 
 /* ---------- General ---------- */
