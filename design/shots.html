@@ -81,11 +81,12 @@
   /* ===== faux LLM page ===== */
   .page{position:absolute;inset:0;background:#fff;overflow:hidden}
   [data-theme="dark"] .page{background:#0d1117}
-  .chrome{height:36px;background:#1E293B;display:flex;align-items:center;padding:0 12px;gap:8px}
-  [data-theme="dark"] .chrome{background:#0a0e16}
+  .chrome{height:36px;background:#E2E8F0;border-bottom:1px solid #CBD5E1;display:flex;align-items:center;padding:0 12px;gap:8px}
+  [data-theme="dark"] .chrome{background:#0a0e16;border-bottom-color:transparent}
   .traffic{display:flex;gap:6px}.traffic i{width:11px;height:11px;border-radius:50%;display:block}
   .traffic i:nth-child(1){background:#FF5F57}.traffic i:nth-child(2){background:#FEBC2E}.traffic i:nth-child(3){background:#28C840}
-  .omni{flex:1;height:22px;border-radius:var(--r-sm);background:#0F172A;display:flex;align-items:center;justify-content:center;color:#94A3B8;font-family:var(--mono);font-size:11px}
+  .omni{flex:1;height:22px;border-radius:var(--r-sm);background:#fff;border:1px solid #CBD5E1;display:flex;align-items:center;justify-content:center;color:#64748B;font-family:var(--mono);font-size:11px}
+  [data-theme="dark"] .omni{background:#0F172A;border-color:transparent;color:#94A3B8}
   .pgbody{position:absolute;inset:36px 0 0 0;display:flex;flex-direction:column}
   .pgmain{flex:1;display:flex;flex-direction:column;padding:40px;filter:blur(1px);opacity:.55}
   .greet{font-size:1.5rem;font-weight:var(--w-semi);color:var(--text-secondary);text-align:center;margin:auto 0}
@@ -93,7 +94,7 @@
   .input .ph{flex:1;color:var(--text-disabled);font-size:.8125rem}
   .input .mic,.input .snd{width:30px;height:30px;border-radius:50%;display:grid;place-items:center}
   .input .mic{color:var(--text-muted)}.input .snd{background:var(--accent);color:#fff}
-  .backdrop{position:absolute;inset:36px 0 0 0;background:rgba(15,23,42,.45);backdrop-filter:blur(2px)}
+  .backdrop{position:absolute;inset:36px 0 0 0;background:rgba(226,232,240,.6);backdrop-filter:blur(2px)}
   [data-theme="dark"] .backdrop{background:rgba(0,0,0,.6)}
   .overlay{position:absolute;inset:36px 0 0 0;display:flex;align-items:flex-start;justify-content:center;padding-top:11vh}
 
