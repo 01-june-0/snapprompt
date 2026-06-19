@@ -70,9 +70,15 @@ export default defineManifest({
       description: 'Save selected text as a prompt',
     },
   },
+  // The content script is statically declared only on LLM sites, but it is also
+  // injected on demand (right-click / shortcut, via activeTab) on any other
+  // site. crxjs's ESM loader dynamically imports its real chunks from assets/,
+  // so those chunks must be web-accessible everywhere — otherwise the injected
+  // loader can't import its module and silently fails. (WAR is not a host
+  // permission and does not affect the permission review.)
   web_accessible_resources: [
     {
-      resources: ['src/content/*'],
+      resources: ['src/content/*', 'assets/*'],
       matches: ['<all_urls>'],
     },
   ],

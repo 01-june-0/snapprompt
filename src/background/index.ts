@@ -168,18 +168,33 @@ async function sendToTab(tabId: number, msg: Message) {
   }
 }
 
-/**
- * Make sure the content script is running in `tabId`. On allowed sites it's
- * already there (static/dynamic registration). On any other site we inject it
- * on demand — allowed because the caller is a user gesture (context menu /
- * command) that grants activeTab. Avoids double-injection by pinging first.
- */
-async function ensureContentScript(tabId: number): Promise<void> {
+async function pingTab(tabId: number): Promise<boolean> {
   const pong = (await sendToTab(tabId, { type: 'PING' })) as { ok?: boolean } | undefined;
-  if (pong?.ok) return;
-  if (CS_FILE && chrome.scripting?.executeScript) {
-    await chrome.scripting.executeScript({ target: { tabId }, files: [CS_FILE] }).catch(() => {});
+  return !!pong?.ok;
+}
+
+/**
+ * Make sure the content script is running in `tabId`. On allowed (LLM) sites
+ * it's already there statically. On any other site we inject it on demand —
+ * allowed because the caller is a user gesture (context menu / command) that
+ * grants activeTab. The crxjs content script is an ESM loader that imports its
+ * real module asynchronously, so executeScript resolves BEFORE the message
+ * listener is live; we poll PING until it actually answers before returning,
+ * otherwise the caller's follow-up message races ahead and is dropped.
+ */
+async function ensureContentScript(tabId: number): Promise<boolean> {
+  if (await pingTab(tabId)) return true;
+  if (!(CS_FILE && chrome.scripting?.executeScript)) return false;
+  try {
+    await chrome.scripting.executeScript({ target: { tabId }, files: [CS_FILE] });
+  } catch {
+    return false; // e.g. chrome:// page, web store — injection not allowed
   }
+  for (let i = 0; i < 40; i++) {
+    if (await pingTab(tabId)) return true;
+    await new Promise((r) => setTimeout(r, 50));
+  }
+  return false;
 }
 
 async function openSaveModal(tabId: number, text: string, sourceUrl: string) {
