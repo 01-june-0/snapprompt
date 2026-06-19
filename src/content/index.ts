@@ -12,18 +12,21 @@ import { setLocale } from '@shared/i18n';
 import { getSettings, subscribe } from '@shared/store';
 import { startFocusTracking, isEditable } from './insertion';
 
-// Per-site disable (C1 / F9.9): when the current host is disabled, the content
-// UI (picker, save modal, floating button) stays inert.
-let siteDisabled = false;
+// Allowlist (F9.9): this script is statically declared only on the built-in
+// LLM sites. The passive floating button shows only on hosts the user keeps in
+// allowedHosts (self-gated, so toggling a site off applies immediately). On any
+// other site the script is injected on demand by the background (right-click /
+// shortcut), where explicit actions still run — see the onMessage note below.
+let siteAllowed = false;
 function hostMatches(hosts: string[]): boolean {
   const h = location.hostname;
   return hosts.some((d) => !!d && (h === d || h.endsWith('.' + d)));
 }
 
-// resolve UI language + per-site disable from settings (and keep in sync)
+// resolve UI language + allowlist state from settings (and keep in sync)
 getSettings().then((s) => {
   setLocale(s.language);
-  siteDisabled = hostMatches(s.disabledHosts);
+  siteAllowed = hostMatches(s.allowedHosts);
 });
 
 // Track the page's last-focused editable from the start so the popup can
@@ -95,10 +98,10 @@ function positionFloat() {
   floatingTarget.value = { x, y };
 }
 
-getSettings().then((s) => (floatingEnabled.value = s.floatingButton && !hostMatches(s.disabledHosts)));
+getSettings().then((s) => (floatingEnabled.value = s.floatingButton && hostMatches(s.allowedHosts)));
 subscribe(() => getSettings().then((s) => {
-  floatingEnabled.value = s.floatingButton && !hostMatches(s.disabledHosts);
-  siteDisabled = hostMatches(s.disabledHosts);
+  siteAllowed = hostMatches(s.allowedHosts);
+  floatingEnabled.value = s.floatingButton && siteAllowed;
   setLocale(s.language);
   if (!floatingEnabled.value) { floatEl = null; floatingTarget.value = null; }
 }));
@@ -121,10 +124,9 @@ window.addEventListener('scroll', () => { if (floatEl) positionFloat(); }, true)
 window.addEventListener('resize', () => { if (floatEl) positionFloat(); });
 
 onMessage((msg) => {
-  // On a disabled site, the content UI stays inert (PING still answers).
-  if (siteDisabled && msg.type !== 'PING') {
-    return { ok: false, error: 'disabled on this site' };
-  }
+  // Explicit user actions (picker/save/insert) work wherever the script runs —
+  // including sites injected on demand via the shortcut or right-click. Only the
+  // passive floating button is gated by the allowlist (see floatingEnabled).
   switch (msg.type) {
     case 'OPEN_PICKER':
       ensureMounted();

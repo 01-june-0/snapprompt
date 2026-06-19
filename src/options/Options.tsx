@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'preact/hooks';
-import type { Settings, Prompt, Folder, ThemePref, LanguagePref, BackupFrequency, Snapshot, BackupFile, InsertionRecord } from '@shared/types';
+import type { Settings, Prompt, Folder, ThemePref, LanguagePref, Snapshot, BackupFile, InsertionRecord } from '@shared/types';
+import { DEFAULT_ALLOWED_HOSTS } from '@shared/types';
 import {
   getSettings, setSettings, getPrompts, setPrompts, getFolders, setFolders,
   getSnapshots, restoreSnapshot, subscribe,
@@ -7,7 +8,6 @@ import {
 } from '@shared/store';
 import { applyTheme } from '@shared/theme';
 import { buildBackup, downloadBackup, importBackup, type ImportStrategy } from '@shared/backup';
-import { sendToBackground } from '@shared/messaging';
 import { flattenTree, wouldCycle, folderPath } from '@shared/folders';
 import { search } from '@shared/search';
 import { extractVariables } from '@shared/variables';
@@ -97,32 +97,18 @@ function TabBtn({ id, tab, set, label }: { id: Tab; tab: Tab; set: (t: Tab) => v
 
 /* Common sites where the floating button is often unwanted (NOT enabled by
    default — only offered as one-click quick-add chips). LLM sites excluded.
-   Base domains; hostMatches() covers subdomains (e.g. bank.shinhan.com). */
-const SUGGESTED_DISABLE_HOSTS = [
-  // global — search / social / shopping / streaming
-  'google.com', 'youtube.com', 'x.com', 'facebook.com', 'instagram.com', 'amazon.com', 'netflix.com',
-  // Korea — portals & banks
-  'naver.com', 'daum.net', 'nate.com',
-  'kbstar.com', 'shinhan.com', 'wooribank.com', 'hanabank.com', 'nonghyup.com', 'ibk.co.kr', 'kakaobank.com', 'tossbank.com',
-  // Japan — portal & banks
-  'yahoo.co.jp',
-  'bk.mufg.jp', 'smbc.co.jp', 'mizuhobank.co.jp', 'jp-bank.japanpost.jp', 'rakuten-bank.co.jp',
-  // US — portals & banks
-  'yahoo.com', 'msn.com',
-  'chase.com', 'bankofamerica.com', 'wellsfargo.com', 'citi.com', 'usbank.com', 'capitalone.com',
-];
-
+   one-click chips). Adding a site requests its host permission. */
 /* ---------- General ---------- */
 function General({ settings, patch, folders, addPack }: { settings: Settings; patch: (p: Partial<Settings>) => void; folders: Folder[]; addPack: (p: StarterPack) => void }) {
-  const [host, setHost] = useState('');
-  function addHost() {
-    const h = host.trim().replace(/^https?:\/\//, '').replace(/\/.*$/, '');
-    if (!h || settings.disabledHosts.includes(h)) { setHost(''); return; }
-    patch({ disabledHosts: [...settings.disabledHosts, h] });
-    setHost('');
+  // The floating button is available only on the built-in supported LLM sites
+  // (the extension's static content-script hosts). allowedHosts = which of
+  // those currently show it. Right-click / shortcut work on any site regardless.
+  const inactiveHosts = DEFAULT_ALLOWED_HOSTS.filter((h) => !settings.allowedHosts.includes(h));
+  function addHost(h: string) {
+    if (!settings.allowedHosts.includes(h)) patch({ allowedHosts: [...settings.allowedHosts, h] });
   }
   function removeHost(h: string) {
-    patch({ disabledHosts: settings.disabledHosts.filter((x) => x !== h) });
+    patch({ allowedHosts: settings.allowedHosts.filter((x) => x !== h) });
   }
   return (
     <>
@@ -180,25 +166,21 @@ function General({ settings, patch, folders, addPack }: { settings: Settings; pa
       <div class="op-card" style="padding:16px">
         <div class="op-setting-label">{t('opt.sites')}</div>
         <div class="op-setting-hint" style="margin-bottom:10px">{t('opt.sites.hint')}</div>
-        <div style="display:flex;gap:8px;margin-bottom:10px">
-          <input class="op-input" style="flex:1" value={host} placeholder={t('opt.sites.placeholder')} onInput={(e) => setHost((e.target as HTMLInputElement).value)} onKeyDown={(e) => e.key === 'Enter' && addHost()} />
-          <button class="op-btn primary sm" onClick={addHost}>{t('common.add')}</button>
-        </div>
-        {SUGGESTED_DISABLE_HOSTS.some((h) => !settings.disabledHosts.includes(h)) && (
-          <div style="display:flex;align-items:center;flex-wrap:wrap;gap:6px;margin-bottom:10px">
-            <span style="font-size:11px;color:var(--text-muted)">{t('opt.sites.quickAdd')}</span>
-            {SUGGESTED_DISABLE_HOSTS.filter((h) => !settings.disabledHosts.includes(h)).map((h) => (
-              <button class="op-btn secondary sm" key={h} onClick={() => patch({ disabledHosts: [...settings.disabledHosts, h] })}>+ {h}</button>
-            ))}
-          </div>
-        )}
-        {settings.disabledHosts.length === 0
-          ? <div style="font-size:11px;color:var(--text-muted)">{t('opt.sites.empty')}</div>
-          : <div style="display:flex;flex-wrap:wrap;gap:8px">
-              {settings.disabledHosts.map((h) => (
+        {settings.allowedHosts.length === 0
+          ? <div style="font-size:11px;color:var(--text-muted);margin-bottom:10px">{t('opt.sites.empty')}</div>
+          : <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px">
+              {settings.allowedHosts.map((h) => (
                 <span class="op-tagchip" key={h}>{h}<button onClick={() => removeHost(h)}><Close /></button></span>
               ))}
             </div>}
+        {inactiveHosts.length > 0 && (
+          <div style="display:flex;align-items:center;flex-wrap:wrap;gap:6px">
+            <span style="font-size:11px;color:var(--text-muted)">{t('opt.sites.quickAdd')}</span>
+            {inactiveHosts.map((h) => (
+              <button class="op-btn secondary sm" key={h} onClick={() => addHost(h)}>+ {h}</button>
+            ))}
+          </div>
+        )}
       </div>
     </>
   );
@@ -596,7 +578,7 @@ function Backup({ settings, patch, flash, onRestore }: { settings: Settings; pat
   const [pending, setPending] = useState<{ file: BackupFile; conflicts: number } | null>(null);
   useEffect(() => { getSnapshots().then(setSnaps); }, []);
 
-  async function doExport() { downloadBackup(await buildBackup()); flash(t('opt.backup.toast.exported')); }
+  async function doExport() { downloadBackup(await buildBackup()); patch({ lastBackupAt: Date.now() }); flash(t('opt.backup.toast.exported')); }
   async function doImport(e: Event) {
     const input = e.target as HTMLInputElement;
     const file = input.files?.[0];
@@ -648,23 +630,6 @@ function Backup({ settings, patch, flash, onRestore }: { settings: Settings; pat
         </div>
       )}
       <div class="op-card">
-        <Toggle label={t('opt.backup.auto')} hint={t('opt.backup.autoHint')} checked={settings.backupFrequency !== 'off'} onChange={(v) => patch({ backupFrequency: v ? 'weekly' : 'off' })} />
-        <div class="op-setting">
-          <div class="op-setting-info"><div class="op-setting-label">{t('opt.backup.freq')}</div><div class="op-setting-hint">{t('opt.backup.freqHint')}</div></div>
-          <select class="op-select" value={settings.backupFrequency} disabled={settings.backupFrequency === 'off'} onChange={(e) => patch({ backupFrequency: (e.target as HTMLSelectElement).value as BackupFrequency })}>
-            <option value="daily">{t('opt.freq.daily')}</option><option value="weekly">{t('opt.freq.weekly')}</option><option value="monthly">{t('opt.freq.monthly')}</option>
-          </select>
-        </div>
-        <div class="op-setting">
-          <div class="op-setting-info"><div class="op-setting-label">{t('opt.backup.now')}</div><div class="op-setting-hint">{t('opt.backup.nowHint')}</div></div>
-          <button class="op-btn secondary sm" onClick={async () => {
-            const res = await sendToBackground({ type: 'BACKUP_NOW' });
-            flash(res.ok ? t('opt.backup.toast.now') : (res.error ?? t('opt.backup.toast.nowFail')));
-          }}>{t('opt.backup.nowBtn')}</button>
-        </div>
-      </div>
-
-      <div class="op-card" style="margin-top:16px">
         <div class="op-setting">
           <div class="op-setting-info"><div class="op-setting-label">{t('opt.backup.manual')}</div><div class="op-setting-hint">{t('opt.backup.manualHint')}</div></div>
           <div style="display:flex;gap:8px">

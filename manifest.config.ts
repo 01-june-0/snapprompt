@@ -29,9 +29,27 @@ export default defineManifest({
     service_worker: 'src/background/index.ts',
     type: 'module',
   },
+  // Static content script ONLY on well-known LLM sites (narrow, purpose-tied
+  // host access — no broad <all_urls> or optional broad host pattern). On any
+  // other site, save/picker still work on demand via activeTab + scripting
+  // (right-click / shortcut). Keep in sync with DEFAULT_ALLOWED_HOSTS in
+  // src/shared/types.ts.
   content_scripts: [
     {
-      matches: ['<all_urls>'],
+      matches: [
+        'https://chatgpt.com/*',
+        'https://chat.openai.com/*',
+        'https://claude.ai/*',
+        'https://gemini.google.com/*',
+        'https://aistudio.google.com/*',
+        'https://perplexity.ai/*',
+        'https://www.perplexity.ai/*',
+        'https://copilot.microsoft.com/*',
+        'https://chat.deepseek.com/*',
+        'https://grok.com/*',
+        'https://poe.com/*',
+        'https://chat.mistral.ai/*',
+      ],
       js: ['src/content/index.ts'],
       run_at: 'document_idle',
       all_frames: false,
@@ -39,14 +57,11 @@ export default defineManifest({
   ],
   permissions: [
     'storage',
-    'unlimitedStorage',
     'contextMenus',
-    'downloads',
     'activeTab',
-    'alarms',
+    'scripting',
     'sidePanel',
   ],
-  host_permissions: ['<all_urls>'],
   commands: {
     'open-picker': {
       description: 'Open prompt picker',

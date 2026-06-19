@@ -6,11 +6,10 @@
  * - install → onboarding, schema init
  * - periodic backup alarm (Phase 2 hook) + snapshots
  */
-import { ensureSchema, takeSnapshot, recordUsage, addInsertion, getSettings, setSettings, getPrompts } from '@shared/store';
+import { ensureSchema, recordUsage, addInsertion, getSettings, setSettings, getPrompts } from '@shared/store';
 import { uuid } from '@shared/id';
 import { onMessage } from '@shared/messaging';
 import { setLocale, t } from '@shared/i18n';
-import { maybeAutoBackup, runBackupDownload } from './autobackup';
 import type { Message, PopupMode } from '@shared/types';
 
 const CTX_SAVE = 'snapprompt-save-selection';
@@ -72,6 +71,10 @@ chrome.action.onClicked.addListener(async () => {
   if (popupMode === 'window') await openDetachedWindow();
 });
 
+// Loader path of the content script bundle — used for on-demand injection
+// (right-click / shortcut) on sites outside the static content_scripts list.
+const CS_FILE = chrome.runtime.getManifest().content_scripts?.[0]?.js?.[0];
+
 /* ---------- lifecycle ---------- */
 
 chrome.runtime.onInstalled.addListener(async (details) => {
@@ -92,6 +95,7 @@ chrome.runtime.onStartup.addListener(() => { void buildMenus(); void applyStored
 
 chrome.contextMenus.onClicked.addListener(async (info, tab) => {
   if (!tab?.id) return;
+  await ensureContentScript(tab.id); // works on any site (activeTab grant from the click)
   if (info.menuItemId === CTX_SAVE) {
     await openSaveModal(tab.id, info.selectionText ?? '', info.pageUrl ?? tab.url ?? '');
   } else if (info.menuItemId === CTX_OPEN) {
@@ -108,6 +112,7 @@ chrome.commands.onCommand.addListener(async (command, tab) => {
   }
   if (!tab?.id) return;
 
+  await ensureContentScript(tab.id); // works on any site (activeTab grant from the command)
   if (command === 'open-picker') {
     await sendToTab(tab.id, { type: 'OPEN_PICKER' });
   } else if (command === 'save-selection') {
@@ -146,30 +151,11 @@ onMessage((msg: Message, sender) => {
       return setSettings({ popupMode: msg.mode })
         .then(() => applyActionMode(msg.mode))
         .then(() => ({ ok: true as const }));
-    case 'BACKUP_NOW':
-      // snapshot (internal) + download a JSON backup to the downloads folder
-      return Promise.all([takeSnapshot(), runBackupDownload()]).then(
-        ([, ok]) => (ok ? { ok: true as const } : { ok: false as const, error: '백업할 프롬프트가 없어요' }),
-      );
     case 'PING':
       return { ok: true as const, data: 'pong' };
     default:
       return { ok: false as const, error: 'unhandled message' };
   }
-});
-
-/* ---------- backup: daily snapshot (always) + auto-download (if enabled) ---------- */
-
-chrome.alarms.create('snapprompt-snapshot', { periodInMinutes: 60 * 24 });
-chrome.alarms.onAlarm.addListener(async (alarm) => {
-  if (alarm.name !== 'snapprompt-snapshot') return;
-  await takeSnapshot();
-  await maybeAutoBackup();
-});
-
-// Catch up on a due backup when the browser/extension starts.
-chrome.runtime.onStartup.addListener(() => {
-  void maybeAutoBackup();
 });
 
 /* ---------- helpers ---------- */
@@ -179,6 +165,20 @@ async function sendToTab(tabId: number, msg: Message) {
     return await chrome.tabs.sendMessage(tabId, msg);
   } catch {
     return undefined;
+  }
+}
+
+/**
+ * Make sure the content script is running in `tabId`. On allowed sites it's
+ * already there (static/dynamic registration). On any other site we inject it
+ * on demand — allowed because the caller is a user gesture (context menu /
+ * command) that grants activeTab. Avoids double-injection by pinging first.
+ */
+async function ensureContentScript(tabId: number): Promise<void> {
+  const pong = (await sendToTab(tabId, { type: 'PING' })) as { ok?: boolean } | undefined;
+  if (pong?.ok) return;
+  if (CS_FILE && chrome.scripting?.executeScript) {
+    await chrome.scripting.executeScript({ target: { tabId }, files: [CS_FILE] }).catch(() => {});
   }
 }
 

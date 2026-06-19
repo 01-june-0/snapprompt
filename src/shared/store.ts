@@ -7,6 +7,7 @@
 import {
   STORAGE_KEYS,
   DEFAULT_SETTINGS,
+  DEFAULT_ALLOWED_HOSTS,
   SCHEMA_VERSION,
   MAX_SNAPSHOTS,
   MAX_VERSIONS,
@@ -160,6 +161,14 @@ export async function takeSnapshot(): Promise<void> {
   await setRaw(STORAGE_KEYS.snapshots, next);
 }
 
+/** Take a rollback snapshot if the newest one is older than ~a day. Called on
+ * app open (popup/options) — replaces the former daily alarm (no alarms perm). */
+export async function maybeSnapshot(): Promise<void> {
+  const snaps = await getSnapshots();
+  const newest = snaps[0]?.createdAt ?? 0;
+  if (Date.now() - newest > 24 * 60 * 60 * 1000) await takeSnapshot();
+}
+
 export async function restoreSnapshot(createdAt: number): Promise<boolean> {
   const snapshots = await getSnapshots();
   const snap = snapshots.find((s) => s.createdAt === createdAt);
@@ -172,14 +181,21 @@ export async function restoreSnapshot(createdAt: number): Promise<boolean> {
 
 export async function ensureSchema(): Promise<void> {
   const meta = await getRaw<Meta | null>(STORAGE_KEYS.meta, null);
-  if (!meta) {
-    await setRaw(STORAGE_KEYS.meta, { schemaVersion: SCHEMA_VERSION } as Meta);
-    return;
-  }
-  // future migrations branch on meta.schemaVersion here
-  if (meta.schemaVersion !== SCHEMA_VERSION) {
+  const from = meta?.schemaVersion ?? 0;
+  // v2: blacklist (disabledHosts) → allowlist (allowedHosts); drop downloads/alarms-era fields
+  if (from < 2) await migrateToV2();
+  if (!meta || meta.schemaVersion !== SCHEMA_VERSION) {
     await setRaw(STORAGE_KEYS.meta, { schemaVersion: SCHEMA_VERSION } as Meta);
   }
+}
+
+async function migrateToV2(): Promise<void> {
+  const raw = await getRaw<Record<string, unknown> | null>(STORAGE_KEYS.settings, null);
+  if (!raw) return; // fresh install — DEFAULT_SETTINGS already seeds allowedHosts
+  if (!Array.isArray(raw.allowedHosts)) raw.allowedHosts = [...DEFAULT_ALLOWED_HOSTS];
+  delete raw.disabledHosts;
+  delete raw.backupFrequency;
+  await setRaw(STORAGE_KEYS.settings, raw);
 }
 
 /* ---------- onChanged subscription ---------- */

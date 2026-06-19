@@ -135,7 +135,6 @@ export interface Folder {
 
 export type ThemePref = 'system' | 'light' | 'dark';
 export type LanguagePref = 'system' | 'ko' | 'en' | 'ja' | 'zh';
-export type BackupFrequency = 'off' | 'daily' | 'weekly' | 'monthly';
 export type InsertionMode = 'auto' | 'clipboard-fallback';
 export type SortMode = 'recent-used' | 'recent-saved' | 'most-used' | 'name';
 
@@ -144,7 +143,6 @@ export type PopupMode = 'default' | 'window' | 'panel';
 
 export interface Settings {
   floatingButton: boolean;
-  backupFrequency: BackupFrequency;
   lastBackupAt: number | null;
   defaultFolderId: string | null;
   insertionMode: InsertionMode;
@@ -152,8 +150,8 @@ export interface Settings {
   theme: ThemePref;
   language: LanguagePref;
   onboardingCompletedAt: number | null;
-  /** Hosts where the content-script UI is disabled (Phase 2) */
-  disabledHosts: string[];
+  /** Allowlist: hosts where the content-script UI (floating button/picker) is active. */
+  allowedHosts: string[];
   /** Last-used open mode for the toolbar action (default popup / window / side panel) */
   popupMode: PopupMode;
 }
@@ -173,7 +171,19 @@ export interface BackupFile {
   settings: Partial<Settings>;
 }
 
-export const SCHEMA_VERSION = 1 as const;
+export const SCHEMA_VERSION = 2 as const;
+
+/**
+ * Default allowlist — well-known LLM sites where the content UI is active out of
+ * the box. Keep in sync with the static content_scripts matches in
+ * manifest.config.ts. User-added hosts are appended at runtime (with their own
+ * per-site permission grant).
+ */
+export const DEFAULT_ALLOWED_HOSTS = [
+  'chatgpt.com', 'chat.openai.com', 'claude.ai', 'gemini.google.com',
+  'aistudio.google.com', 'perplexity.ai', 'copilot.microsoft.com',
+  'chat.deepseek.com', 'grok.com', 'poe.com', 'chat.mistral.ai',
+];
 
 export interface Meta {
   schemaVersion: number;
@@ -197,7 +207,6 @@ export const MAX_INSERTIONS = 200;
 
 export const DEFAULT_SETTINGS: Settings = {
   floatingButton: true,
-  backupFrequency: 'off',
   lastBackupAt: null,
   defaultFolderId: null,
   insertionMode: 'auto',
@@ -205,7 +214,7 @@ export const DEFAULT_SETTINGS: Settings = {
   theme: 'system',
   language: 'system',
   onboardingCompletedAt: null,
-  disabledHosts: [],
+  allowedHosts: [...DEFAULT_ALLOWED_HOSTS],
   popupMode: 'default',
 };
 
@@ -219,7 +228,6 @@ export type Message =
   | { type: 'CAPTURE_AND_SAVE' }
   | { type: 'INSERT_PROMPT'; promptId: string }
   | { type: 'PROMPT_USED'; promptId: string; text?: string; values?: Record<string, string>; host?: string }
-  | { type: 'BACKUP_NOW' }
   | { type: 'OPEN_OPTIONS'; section?: string }
   | { type: 'SET_POPUP_MODE'; mode: PopupMode }
   | { type: 'PING' };

@@ -153,7 +153,7 @@ LLM이 일상화되면서 좋은 프롬프트를 발견하는 일이 잦다. 하
 
 [2] 버튼 클릭 → 인라인 피커 발동 (4.3과 동일)
 
-[3] 옵션에서 플로팅 버튼 ON/OFF 가능, 사이트별 비활성화도 가능 (v2)
+[3] 옵션에서 플로팅 버튼 ON/OFF 가능, 활성 사이트(화이트리스트) 추가/제거 가능
 ```
 
 ### 4.5 첫 사용 흐름 (Onboarding)
@@ -243,10 +243,10 @@ LLM이 일상화되면서 좋은 프롬프트를 발견하는 일이 잦다. 하
 - F8.1 수동 export: 옵션 페이지에서 "JSON으로 내보내기"
 - F8.2 수동 import: JSON 파일 업로드 → 미리보기 + 충돌 항목 표시
 - F8.3 **Import 충돌 정책**: 동일 ID 발견 시 항목별로 [건너뛰기 / 덮어쓰기 / 새 ID로 추가] 선택 (또는 전체 일괄 적용)
-- F8.4 **자동 백업 기본값: off**. 옵션에서 켜면 매일 / 매주 / 매월 선택
-- F8.5 백업 ON일 때 `chrome.downloads` API로 다운로드 폴더에 저장
+- F8.4 ~~자동 백업~~ — **제거됨(v1.0.0)**. 웹스토어 최소 권한 정책에 맞춰 `chrome.downloads`/`chrome.alarms` 권한을 없앴다. 수동 export만 제공.
+- F8.5 export는 권한 없이 동작 — Blob + `<a download>` 앵커 클릭으로 다운로드 폴더에 저장(`downloadBackup`).
 - F8.6 백업 파일명: `snapprompt-backup-YYYY-MM-DD.json`
-- F8.7 **내부 스냅샷**: 변경이 있을 때마다 `chrome.storage.local`에 최근 N개(기본 7개) 스냅샷 유지 (롤백용, 항상 동작)
+- F8.7 **내부 스냅샷**: 앱(팝업/옵션) 오픈 시 마지막 스냅샷이 24h 이상 오래됐으면 `chrome.storage.local`에 스냅샷 적재(`maybeSnapshot`), 최근 N개(기본 7개) 유지 (롤백용). alarms 없이 동작.
 - F8.8 옵션에서 스냅샷 목록 보기 + 특정 시점으로 롤백 가능
 - F8.9 마지막 외부 백업이 30일 이상 오래되면 옵션 페이지에 배너로 안내
 
@@ -254,13 +254,13 @@ LLM이 일상화되면서 좋은 프롬프트를 발견하는 일이 잦다. 하
 
 - F9.1 폴더 관리 (트리 뷰, CRUD)
 - F9.2 태그 관리 (목록, 이름변경/병합/삭제)
-- F9.3 백업 설정 (주기, 마지막 백업 시각, 지금 백업하기, 스냅샷 롤백)
+- F9.3 백업 설정 (수동 내보내기/가져오기, 마지막 백업 시각, 스냅샷 롤백 — 자동 백업 주기는 제거됨)
 - F9.4 단축키 안내 (실제 변경은 `chrome://extensions/shortcuts` 링크)
 - F9.5 플로팅 버튼 ON/OFF
 - F9.6 테마: 시스템 / 라이트 / 다크
 - F9.7 언어: 시스템 / 한국어 / 영어
 - F9.8 데이터 전체 삭제 (이중 확인)
-- F9.9 사이트별 비활성화 (특정 호스트에서 콘텐츠 스크립트 UI 끄기)
+- F9.9 **활성 사이트(플로팅 버튼 대상)**: 잘 알려진 LLM 사이트(`DEFAULT_ALLOWED_HOSTS` = 콘텐츠 스크립트 정적 matches)에서만 플로팅 버튼이 뜨며, 옵션에서 사이트별로 on/off 토글. 우클릭/단축키 저장·삽입은 모든 사이트에서 `activeTab` on-demand 주입으로 동작. 광범위 호스트 권한을 두지 않으므로 **임의 사이트 영구 추가는 없음**. — v0.x의 블랙리스트(disabledHosts)에서 전환
 - F9.10 전체 프롬프트 리스트 (관리 모드, 다중 선택 + 일괄 폴더 이동 / 태그 추가 / 삭제)
 - F9.11 통계 대시보드 (프롬프트/폴더 수, 총 사용 횟수, 많이 쓴 프롬프트)
 - F9.12 기록 탭 (최근 삽입/복사 로그, 항목 복사, 전체 삭제)
@@ -393,17 +393,17 @@ type Folder = {
 
 type Settings = {
   floatingButton: boolean;
-  backupFrequency: 'off' | 'daily' | 'weekly' | 'monthly'; // 기본 'off'
   lastBackupAt: number | null;
   defaultFolderId: string | null;
   insertionMode: 'auto' | 'clipboard-fallback';
   rememberVariableValues: boolean;
   theme: 'system' | 'light' | 'dark';
-  language: 'system' | 'ko' | 'en';
+  language: 'system' | 'ko' | 'en' | 'ja' | 'zh';
   onboardingCompletedAt: number | null;
-  disabledHosts: string[];     // 사이트별 비활성화 (F9.9)
+  allowedHosts: string[];      // 활성 사이트 화이트리스트 (F9.9), 기본 = DEFAULT_ALLOWED_HOSTS
   popupMode: 'default' | 'window' | 'panel'; // 마지막 표시 모드 (F17.3)
 };
+// backupFrequency 는 v1.0.0에서 제거(자동 백업 폐지). language 는 4개국어로 확장.
 
 type Snapshot = {
   createdAt: number;
@@ -429,11 +429,11 @@ snapprompt:folders     → Folder[]
 snapprompt:settings    → Settings
 snapprompt:snapshots   → Snapshot[] (최근 7개)
 snapprompt:insertions  → InsertionRecord[] (삽입 로그, 최근 200개)
-snapprompt:meta        → { schemaVersion: 1 }
+snapprompt:meta        → { schemaVersion: 2 }
 ```
 
-- 마이그레이션은 `schemaVersion` 기준으로 분기
-- 권한에 `unlimitedStorage` 포함 → 5MB 제한 해제
+- 마이그레이션은 `schemaVersion` 기준으로 분기 (`ensureSchema`). v2: `disabledHosts`→`allowedHosts`(LLM 시드), `backupFrequency` 제거
+- `unlimitedStorage`는 v1.0.0에서 **제거**(최소 권한). 일반 텍스트 프롬프트 용량상 기본 `chrome.storage.local`로 충분
 
 ### 6.3 변수 추출 규칙
 
@@ -565,20 +565,23 @@ snapprompt:meta        → { schemaVersion: 1 }
   "default_locale": "en",
   "permissions": [
     "storage",
-    "unlimitedStorage",
     "contextMenus",
-    "downloads",
     "activeTab",
     "scripting",
-    "alarms"
+    "sidePanel"
   ],
-  "host_permissions": ["<all_urls>"],
   "background": { "service_worker": "background.js" },
   "action": { "default_popup": "popup.html" },
   "options_page": "options.html",
   "content_scripts": [
     {
-      "matches": ["<all_urls>"],
+      "matches": [
+        "https://chatgpt.com/*", "https://chat.openai.com/*", "https://claude.ai/*",
+        "https://gemini.google.com/*", "https://aistudio.google.com/*",
+        "https://*.perplexity.ai/*", "https://copilot.microsoft.com/*",
+        "https://chat.deepseek.com/*", "https://grok.com/*", "https://poe.com/*",
+        "https://chat.mistral.ai/*"
+      ],
       "js": ["content.js"],
       "run_at": "document_idle",
       "all_frames": false
@@ -591,6 +594,7 @@ snapprompt:meta        → { schemaVersion: 1 }
 }
 ```
 
+> **v1.0.0 권한 최소화(웹스토어 심사 대응 — 2회 반려 후 승인 우선)**: 광범위 `host_permissions: ["<all_urls>"]`·`unlimitedStorage`·`downloads`·`alarms`에 더해 **광범위 `optional_host_permissions(*://*/*)`까지 모두 제거**. 호스트 접근은 콘텐츠 스크립트의 정적 `matches`(=`DEFAULT_ALLOWED_HOSTS`, named LLM 사이트)로만 한정. 그 외 사이트는 우클릭/단축키 사용자 제스처 시 `activeTab`+`scripting.executeScript`로 현재 탭에만 1회 on-demand 주입(백그라운드 자동/임의 주입·동적 등록 없음).
 > `commands`에 `suggested_key`를 일부러 두지 않음 → 사용자가 `chrome://extensions/shortcuts`에서 지정. 온보딩에서 안내.
 
 ### 8.2 모듈 구조
@@ -598,11 +602,9 @@ snapprompt:meta        → { schemaVersion: 1 }
 ```
 src/
 ├─ background/
-│  ├─ index.ts            # 진입점, 메시지 라우터
-│  ├─ commands.ts         # 단축키·컨텍스트 메뉴 핸들러
-│  ├─ backup.ts           # alarms 기반 자동 백업
-│  ├─ snapshots.ts        # 내부 스냅샷 유지
-│  └─ storage.ts          # storage 래퍼, 마이그레이션
+│  ├─ index.ts            # 진입점, 메시지 라우터, 단축키·컨텍스트 메뉴,
+│  │                      #   + 우클릭/단축키 시 현재 탭 on-demand 주입(ensureContentScript, activeTab)
+│  └─ (백업/스냅샷·storage 래퍼는 @shared/store.ts·@shared/backup.ts로 통합. alarms 자동백업 모듈 제거)
 ├─ content/
 │  ├─ index.ts            # 콘텐츠 스크립트 진입점
 │  ├─ shadowRoot.ts       # Shadow DOM 호스트 생성
@@ -669,7 +671,6 @@ type Message =
   | { type: 'CAPTURE_AND_SAVE' }
   | { type: 'INSERT_PROMPT'; promptId: string }
   | { type: 'PROMPT_USED'; promptId: string; text?: string; values?: Record<string, string>; host?: string }
-  | { type: 'BACKUP_NOW' }
   | { type: 'OPEN_OPTIONS'; section?: string }
   | { type: 'SET_POPUP_MODE'; mode: 'default' | 'window' | 'panel' }
   | { type: 'PING' };
@@ -677,14 +678,15 @@ type Message =
 
 ### 8.5 보안 / 프라이버시
 
-- 외부 서버 통신 없음. 모든 데이터 로컬.
-- 자동 백업도 사용자 다운로드 폴더로만.
-- `<all_urls>` 권한 필요성 (스토어 심사용):
-  - 컨텍스트 메뉴를 모든 사이트에서 동작시켜야 함
-  - 자동 삽입 피커를 모든 입력창에서 띄워야 함
+- 외부 서버 통신 없음. 모든 데이터 로컬(`chrome.storage.local`).
+- 백업은 사용자가 수동으로 내보낼 때만, 권한 없이 anchor download로 다운로드 폴더에 저장.
+- **최소 권한 모델(v1.0.0 — 스토어 심사 대응)**: 광범위 `<all_urls>` 제거.
+  - 콘텐츠 스크립트 정적 동작은 잘 알려진 LLM 사이트(`DEFAULT_ALLOWED_HOSTS`)로 한정
+  - 그 외 사이트는 컨텍스트 메뉴·단축키(사용자 제스처) 시 `activeTab` + `scripting.executeScript`로 현재 탭에만 on-demand 주입
+  - 광범위 `optional_host_permissions(*://*/*)`도 두지 않음 → 임의 사이트 영구 추가 기능 없음(승인 우선)
 - Shadow DOM으로 페이지와 격리 (CSS·이벤트·JS 모두)
-- 사이트별 비활성화 옵션 제공
-- 원격 코드 미사용(모든 코드 패키지 포함), 데이터 수집·전송 없음
+- 활성 사이트(화이트리스트) 추가/제거 옵션 제공 — 제거 시 해당 호스트 권한도 회수
+- 원격 코드 미사용(모든 코드 패키지 포함), 데이터 수집·전송·판매 없음
 
 ---
 
@@ -713,11 +715,11 @@ type Message =
 
 ### Phase 2 — 완성도 (2~3주)
 
-- [P15] 자동 백업 (chrome.alarms + downloads)
+- [P15] ~~자동 백업 (chrome.alarms + downloads)~~ — v1.0.0에서 권한 최소화로 제거(수동 export + 앱 오픈 시 스냅샷으로 대체)
 - [P16] 플로팅 버튼 (포커스 감지 + 사이트별 OFF)
 - [P17] 마지막 입력값 기억 (lastValue 활용)
 - [P18] 자주 쓴 순 가중 정렬 알고리즘 튜닝
-- [P19] 사이트별 비활성화 화이트/블랙리스트
+- [P19] 활성 사이트 (v1.0.0: 블랙리스트→named 호스트 토글 전환, 광범위/optional 호스트 권한 없음)
 - [P20] 백업 만료 알림 배너
 
 ### Phase 3 — 확장 (필요 시)
@@ -744,7 +746,7 @@ type Message =
 | ~~Q1~~ | 변수 기본값 문법 | ✅ `{{name|default}}` |
 | ~~Q2~~ | 단축키 기본값 | ✅ 기본값 없음, 사용자 지정 |
 | ~~Q3~~ | 폴더 계층 깊이 | ✅ 무제한 |
-| ~~Q4~~ | 자동 백업 기본 주기 | ✅ off (사용자가 켜야 함) |
+| ~~Q4~~ | 자동 백업 기본 주기 | ✅→폐지: v1.0.0에서 자동 백업 제거(권한 최소화), 수동 export만 |
 | ~~Q5~~ | 검색 방식 | ✅ Fuse.js 퍼지 검색 |
 | ~~Q6+Q7~~ | 다크/폴더/태그 우선순위 | ✅ 모두 MVP 동등 포함 |
 | ~~Q8~~ | 익스텐션 이름 | ✅ SnapPrompt |
@@ -777,7 +779,7 @@ type Message =
 ### B. 참고 기술 자료
 
 - Chrome Extension Manifest V3
-- chrome.contextMenus / chrome.commands / chrome.downloads / chrome.alarms / chrome.sidePanel / chrome.windows (+ storage·unlimitedStorage·activeTab)
+- chrome.contextMenus / chrome.commands / chrome.scripting(executeScript, on-demand) / chrome.sidePanel / chrome.windows (+ storage·activeTab) — *v1.0.0에서 downloads·alarms·unlimitedStorage 및 광범위/optional 호스트 권한 제거*
 - `document.execCommand('insertText')` (React/Vue 상태 동기화 위해 필수)
 - Shadow DOM (콘텐츠 스크립트 격리)
 - Fuse.js (퍼지 검색)
