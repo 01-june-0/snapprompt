@@ -198,3 +198,24 @@ sidePanel: 프롬프트 목록을 브라우저 사이드 패널에 도킹해 띄
 
 데이터 사용: 어떤 사용자 데이터도 수집·전송·판매하지 않습니다. 전부 로컬에만 저장됩니다.
 ```
+
+### 호스트 권한 사용 근거 (Host permission justification)
+> 대시보드 → "개인정보 보호" → "권한 요청 이유" → **호스트 권한 사용 근거** 칸에 붙여넣기. (호스트 권한 = `content_scripts`의 일치 패턴)
+
+**한국어**
+```
+이 확장 프로그램의 호스트 권한은 콘텐츠 스크립트의 일치 패턴(content_scripts matches)이며, 잘 알려진 LLM 채팅 사이트로만 한정됩니다: chatgpt.com, chat.openai.com, claude.ai, gemini.google.com, aistudio.google.com, perplexity.ai, copilot.microsoft.com, chat.deepseek.com, grok.com, poe.com, chat.mistral.ai
+
+이 확장의 단일 목적(저장한 LLM 프롬프트를 입력창에 꺼내 삽입하고, 선택한 텍스트를 프롬프트로 저장)을 수행하려면 위 사이트의 입력 영역에 콘텐츠 스크립트로 접근해야 합니다. 페이지 내용을 외부로 전송하지 않으며, 모든 데이터는 브라우저 로컬(chrome.storage.local)에만 저장됩니다.
+
+광범위 호스트 권한(<all_urls>)이나 optional 호스트 권한은 요청하지 않습니다. 위 목록 외의 사이트에서는 사용자가 우클릭 메뉴나 단축키로 직접 호출한 그 순간에만 activeTab 권한으로 현재 탭에 1회 주입되어 동작하며, 백그라운드에서 자동·상시로 접근하지 않습니다.
+```
+
+**English**
+```
+The host permissions are the content_scripts match patterns, limited to well-known LLM chat sites: chatgpt.com, chat.openai.com, claude.ai, gemini.google.com, aistudio.google.com, perplexity.ai, copilot.microsoft.com, chat.deepseek.com, grok.com, poe.com, chat.mistral.ai
+
+The extension's single purpose — inserting your saved prompts into the chat input and saving selected text as a prompt — requires a content script on these sites' input areas. No page content is transmitted; all data stays local (chrome.storage.local).
+
+No broad host permission (<all_urls>) or optional host permission is requested. On any other site, the script is injected once into the current tab only when you explicitly invoke it via the right-click menu or keyboard shortcut (activeTab), never automatically.
+```
