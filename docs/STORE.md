@@ -13,7 +13,7 @@
 | 스토어 스크린샷 1280×800 | `docs/store/screens/<lang-mode>/` — 4개국어 × 라이트/다크 = 8세트, 각 5장 (popup·picker·vars·image·history). 세트: `ko/en/ja/zh` × `light/dark` |
 | 작은 프로모 타일 440×280 | `docs/store/promo-small-440x280.jpg` (JPEG, 알파 없음) |
 | 마키 프로모 타일 1400×560 | `docs/store/promo-marquee-1400x560.jpg` (JPEG, 알파 없음) |
-| 개인정보 처리방침 | `docs/PRIVACY.md` → **공개 URL로 호스팅 필요** (아래 3-c) |
+| 개인정보 처리방침 URL | <https://gist.github.com/01-june-0/fbb55ecf763df7ea02af4b364e952f79> (공개 Gist, 게시 완료) |
 
 > 그래픽은 `design/promo.html`(아이콘·프로모 타일) + `design/shots.html`(스크린샷)을 헤드리스 Chrome으로 렌더해 생성. 다시 만들려면 각 파일의 캡처 명령 참고.
 
@@ -86,6 +86,12 @@
 ---
 
 # 📋 복사용 등록 텍스트
+
+### 개인정보처리방침 URL (필수 입력)
+> 대시보드 → "개인정보 보호" 탭 → **개인정보처리방침 URL** 칸에 그대로 붙여넣기.
+```
+https://gist.github.com/01-june-0/fbb55ecf763df7ea02af4b364e952f79
+```
 
 ### 이름
 ```
