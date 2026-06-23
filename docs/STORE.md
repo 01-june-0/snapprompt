@@ -141,6 +141,10 @@ SnapPrompt는 흩어진 LLM 프롬프트를 한곳에 모으고, 필요할 때 �
 
 ■ 프라이버시
 · 모든 데이터는 브라우저에 로컬 저장. 수집·전송·추적 없음. JSON 백업/복원과 자동 스냅샷 지원.
+
+■ 설치 안내
+· 설치 시 Chrome이 "ChatGPT·Claude·Gemini 등 여러 사이트에서 데이터 읽기/변경" 권한 동의를 요청합니다 — 해당 LLM 사이트 입력창에 프롬프트를 넣기 위한 것이며, 페이지 내용을 외부로 보내지 않습니다(모든 데이터 로컬 저장).
+· "확장 프로그램 추가"를 눌러 설치하세요. 만약 확장이 '꺼짐'으로 보이면 확장 관리 화면에서 "켜기"를 눌러 활성화하면 됩니다.
 ```
 
 **English**
@@ -172,9 +176,13 @@ SnapPrompt brings your scattered LLM prompts into one place and lets you pull th
 
 ■ Privacy
 · All data stays local in your browser. No collection, transmission, or tracking. JSON backup/restore and automatic snapshots included.
+
+■ Install note
+· On install, Chrome asks to allow "read and change data" on ChatGPT, Claude, Gemini and other LLM sites — this is only to insert prompts into those input fields; no page content is sent anywhere (all data stays local).
+· Click "Add extension" to install. If the extension shows as off, open the extensions page and click "Enable" / turn the toggle on.
 ```
 
-### 단일 목적 문구 (Single purpose)
+### 전용 목적 설명 (Single purpose)
 ```
 LLM 프롬프트를 저장하고, 어떤 웹페이지의 입력창에서든 단축키로 검색해 꺼내 삽입하는 프롬프트 매니저입니다.
 ```
@@ -218,4 +226,41 @@ The host permissions are the content_scripts match patterns, limited to well-kno
 The extension's single purpose — inserting your saved prompts into the chat input and saving selected text as a prompt — requires a content script on these sites' input areas. No page content is transmitted; all data stays local (chrome.storage.local).
 
 No broad host permission (<all_urls>) or optional host permission is requested. On any other site, the script is injected once into the current tab only when you explicitly invoke it via the right-click menu or keyboard shortcut (activeTab), never automatically.
+```
+
+---
+
+# 📣 지인 테스터 안내 문구 (링크 공유 시 함께 전달)
+
+> 카톡/메일 등으로 설치 링크를 보낼 때 아래 문구를 같이 보내면, 권한 동의·활성화 단계에서 당황하지 않습니다.
+
+**한국어**
+```
+[SnapPrompt 테스트 설치 안내]
+
+1) 아래 링크를 Chrome에서 열고 "Chrome에 추가"를 눌러주세요.
+2) 권한 창이 뜨면 "확장 프로그램 추가"를 누르면 됩니다.
+   → "여러 웹 사이트에서 데이터를 읽고 수정" 권한은 ChatGPT·Claude·Gemini 같은
+     LLM 입력창에 프롬프트를 넣기 위한 것이고, 데이터는 전부 내 브라우저에만 저장돼요.
+3) 혹시 확장이 "꺼짐" 상태로 보이면(특히 예전에 한 번 설치했던 경우),
+   확장 관리 화면(chrome://extensions)에서 토글을 켜거나 "켜기"를 눌러 활성화해주세요.
+
+설치 링크: <스토어 링크 붙여넣기>
+처음엔 단축키 설정(chrome://extensions/shortcuts)에서 단축키를 지정하면 더 편합니다.
+```
+
+**English**
+```
+[SnapPrompt — test install guide]
+
+1) Open the link below in Chrome and click "Add to Chrome".
+2) When the permission dialog appears, click "Add extension".
+   → The "read and change data on a number of sites" permission is only for
+     inserting prompts into LLM inputs (ChatGPT, Claude, Gemini, ...). All data
+     stays in your own browser.
+3) If the extension shows as "off" (especially if you installed it before),
+   open chrome://extensions and turn the toggle on / click "Enable".
+
+Install link: <paste store link>
+Tip: set a keyboard shortcut at chrome://extensions/shortcuts for quick access.
 ```
