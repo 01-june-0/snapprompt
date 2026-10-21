@@ -7,7 +7,7 @@
 - `npm run build` — 타입체크(`tsc --noEmit`) + 프로덕션 빌드 → `dist/`
 - `npm run dev` — Vite 개발 서버 (HMR, `dist/`가 localhost 참조)
 - `npm run typecheck`
-- 빌드/타입체크는 항상 프로젝트 디렉터리에서 실행 (cwd가 상위로 리셋될 때가 있음 → `cd /Users/edm/Developer/snapprompt && npm run build`)
+- 빌드/타입체크는 항상 프로젝트 디렉터리에서 실행 (cwd가 상위로 리셋될 때가 있음 → `cd <프로젝트 루트> && npm run build`)
 
 ## 작업 리듬 (필수)
 - **각 기능/라운드를 완결할 때마다 `npm run build`(tsc --noEmit + vite build)로 검증한 뒤 커밋한다.** 빌드가 실패하면 커밋하지 않고 먼저 고친다.
@@ -46,7 +46,7 @@ UI가 바뀌어 README 스크린샷을 갱신할 때는 반드시 아래 순서�
 - **저장소**: `chrome.storage.local` (+ `unlimitedStorage`). 키 네임스페이스/마이그레이션은 `src/shared/store.ts`, 모든 컨텍스트는 `subscribe()`(storage.onChanged)로 동기화.
 - **팝업 모드**: `?mode=window`(분리 창) / `?mode=panel`(사이드 패널) 쿼리로 분기. 삽입 후 닫기는 툴바 팝업만(창/패널은 상주).
 - **권한/호스트(웹스토어 최소권한 — v1.0.0 재설계)**: 광범위 호스트 권한 **전부 미사용** — `<all_urls>`도, 광범위 `optional_host_permissions(*://*/*)`도 없음(2회 반려 → 승인 우선으로 제거). 권한 = `storage·contextMenus·activeTab·scripting·sidePanel`. 콘텐츠 스크립트는 매니페스트 **정적 matches = 잘 알려진 LLM 사이트(=`DEFAULT_ALLOWED_HOSTS`, types.ts)에만**. 그 외 사이트에서는 사용자가 우클릭/단축키로 호출한 순간 background `ensureContentScript`(PING 후 `scripting.executeScript`)가 `activeTab` 권한으로 현재 탭에 1회 주입 → 저장/피커는 어디서나 가능(자동/임의 주입 아님). **임의 사이트를 영구 추가하는 기능은 없음**(optional host 제거로 런타임 origin 요청 불가). 콘텐츠 스크립트는 `siteAllowed`(allowedHosts) 일 때만 **플로팅 버튼** 활성. 옵션 "활성 사이트" = `DEFAULT_ALLOWED_HOSTS` 중 플로팅 버튼 on/off 토글(자유 입력·권한요청 없음, `addHost/removeHost`는 allowedHosts patch만). 설정 키: `allowedHosts`(기본=LLM 시드). `disabledHosts`·`backupFrequency`·`downloads`·`alarms`·`unlimitedStorage`·`syncDynamicSites`(동적 등록)는 제거됨 — 수동 백업은 `downloadBackup`의 anchor download(권한 0), 롤백 스냅샷은 앱 오픈 시 `maybeSnapshot()`(24h). 스키마 v2 마이그레이션은 `ensureSchema`.
-- **git**: 원격 `origin` = github.com/01-june-0/snapprompt (private), HTTPS + gh 토큰. 커밋 메시지 끝에 Co-Authored-By 라인 유지.
+- **git**: 원격 `origin` = github.com/01-june-0/snapprompt (public, MIT). 기여 규칙은 `CONTRIBUTING.md`. 커밋 메시지 끝에 Co-Authored-By 라인 유지.
 
 ## 문서
 - 제품 요구사항: `docs/PRD.md`

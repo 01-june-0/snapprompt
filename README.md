@@ -107,8 +107,8 @@ npm run dev        # Vite 개발 서버 → dist/ 가 HMR 연결됨
 - **TypeScript** + **Vite** + **Preact** + **@preact/signals**
 - **@crxjs/vite-plugin** — Manifest V3 빌드
 - **Fuse.js** — 퍼지 검색
-- `chrome.storage.local` (+ `unlimitedStorage`)
-- 커스텀 i18n 런타임 (ko/en, 런타임 언어 전환)
+- `chrome.storage.local`
+- 커스텀 i18n 런타임 (ko/en/ja/zh, 런타임 언어 전환)
 
 ## 프로젝트 구조
 
@@ -127,6 +127,20 @@ src/
 
 - 제품 요구사항: [docs/PRD.md](docs/PRD.md)
 - 디자인 목업: [design/index.html](design/index.html)
+- 개인정보 처리방침: [docs/PRIVACY.md](docs/PRIVACY.md)
+
+---
+
+## 기여하기
+
+버그 신고, 기능 제안, PR 모두 환영합니다. 시작하기 전에 [CONTRIBUTING.md](CONTRIBUTING.md)와 [행동 강령](CODE_OF_CONDUCT.md)을 읽어 주세요.
+특히 새 UI 문자열은 ko/en/ja/zh 네 카탈로그에 모두 추가해야 하고, 권한을 늘리는 변경은 사유가 필요합니다.
+
+Bug reports, feature ideas, and pull requests are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for setup and conventions.
+
+## 라이선스
+
+[MIT](LICENSE) © 2026 kyocustom
 
 ---
 

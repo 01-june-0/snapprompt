@@ -1,6 +1,6 @@
-# Chrome 웹스토어 비공개(Unlisted) 게시 가이드
+# Chrome 웹스토어 게시 가이드 (메인테이너용)
 
-지인 테스트용으로 SnapPrompt를 웹스토어에 **비공개(Unlisted)** 로 올리는 전체 절차와, 그대로 복사해 쓸 등록 자료입니다.
+SnapPrompt를 Chrome 웹스토어에 올리는 전체 절차와, 그대로 복사해 쓸 등록 자료입니다. 일반 기여에는 필요하지 않습니다.
 
 ---
 
@@ -69,14 +69,14 @@
 
 ## 5. 배포(Distribution) 설정 → 비공개
 - 공개 범위(Visibility)를 **공개 안 함(Unlisted)** 으로 선택
-  - Unlisted = 검색엔 안 뜨고 **링크를 아는 사람만 설치** 가능 → 지인 테스트에 적합
-  - 더 닫고 싶으면 **비공개(Private)** + "신뢰할 수 있는 테스터(trusted testers)"에 지인 Google 계정 이메일 추가
+  - Unlisted = 검색엔 안 뜨고 **링크를 아는 사람만 설치** 가능 → 제한된 테스트에 적합
+  - 더 닫고 싶으면 **비공개(Private)** + "신뢰할 수 있는 테스터(trusted testers)"에 테스터 Google 계정 이메일 추가
 - 지역: 전체 또는 원하는 국가
 
 ## 6. 제출 & 심사
 - **검토를 위해 제출(Submit for review)**.
 - 심사: 보통 수 시간~수 일. named LLM 호스트(콘텐츠 스크립트 matches) 때문에 "호스트 권한 → 자세한 검토" 안내가 떠 조금 더 걸릴 수 있음(아래 "호스트 권한 사용 근거"를 명확히 적으면 통과 수월).
-- 승인되면 항목 URL이 활성화 → 지인에게 그 **링크 공유** → 각자 "Chrome에 추가".
+- 승인되면 항목 URL이 활성화 → 테스터에게 그 **링크 공유** → 각자 "Chrome에 추가".
 
 ## 7. 업데이트 배포
 1. 코드 수정 후 `package.json`의 `version` 올리기 (예: `1.0.0` → `1.0.1`).
@@ -188,7 +188,7 @@ LLM 프롬프트를 저장하고, 어떤 웹페이지의 입력창에서든 단�
 ```
 
 ### 권한별 사유 (Permission justification)
-> ⚠️ v1.0.0에서 **광범위 호스트 권한을 모두 제거**하고 권한을 최소화했습니다. `<all_urls>`도, 광범위 `optional_host_permissions(*://*/*)`도 없습니다. 콘텐츠 스크립트는 잘 알려진 LLM 사이트(아래 named matches)에만 정적으로 동작하며, 그 외 사이트에서는 사용자가 우클릭/단축키로 직접 호출한 순간에만 `activeTab`으로 현재 탭에 한 번 주입됩니다. 이전 거절 사유(불필요 권한·광범위 호스트)를 정면 대응한 구성입니다.
+> ⚠️ v1.0.0에서 **광범위 호스트 권한을 모두 제거**하고 권한을 최소화했습니다. `<all_urls>`도, 광범위 `optional_host_permissions(*://*/*)`도 없습니다. 콘텐츠 스크립트는 잘 알려진 LLM 사이트(아래 named matches)에만 정적으로 동작하며, 그 외 사이트에서는 사용자가 우클릭/단축키로 직접 호출한 순간에만 `activeTab`으로 현재 탭에 한 번 주입됩니다.
 >
 > 호스트 권한(콘텐츠 스크립트 matches)은 아래 LLM 사이트로 한정됩니다: chatgpt.com, chat.openai.com, claude.ai, gemini.google.com, aistudio.google.com, perplexity.ai, copilot.microsoft.com, chat.deepseek.com, grok.com, poe.com, chat.mistral.ai
 ```
@@ -226,41 +226,4 @@ The host permissions are the content_scripts match patterns, limited to well-kno
 The extension's single purpose — inserting your saved prompts into the chat input and saving selected text as a prompt — requires a content script on these sites' input areas. No page content is transmitted; all data stays local (chrome.storage.local).
 
 No broad host permission (<all_urls>) or optional host permission is requested. On any other site, the script is injected once into the current tab only when you explicitly invoke it via the right-click menu or keyboard shortcut (activeTab), never automatically.
-```
-
----
-
-# 📣 지인 테스터 안내 문구 (링크 공유 시 함께 전달)
-
-> 카톡/메일 등으로 설치 링크를 보낼 때 아래 문구를 같이 보내면, 권한 동의·활성화 단계에서 당황하지 않습니다.
-
-**한국어**
-```
-[SnapPrompt 테스트 설치 안내]
-
-1) 아래 링크를 Chrome에서 열고 "Chrome에 추가"를 눌러주세요.
-2) 권한 창이 뜨면 "확장 프로그램 추가"를 누르면 됩니다.
-   → "여러 웹 사이트에서 데이터를 읽고 수정" 권한은 ChatGPT·Claude·Gemini 같은
-     LLM 입력창에 프롬프트를 넣기 위한 것이고, 데이터는 전부 내 브라우저에만 저장돼요.
-3) 혹시 확장이 "꺼짐" 상태로 보이면(특히 예전에 한 번 설치했던 경우),
-   확장 관리 화면(chrome://extensions)에서 토글을 켜거나 "켜기"를 눌러 활성화해주세요.
-
-설치 링크: <스토어 링크 붙여넣기>
-처음엔 단축키 설정(chrome://extensions/shortcuts)에서 단축키를 지정하면 더 편합니다.
-```
-
-**English**
-```
-[SnapPrompt — test install guide]
-
-1) Open the link below in Chrome and click "Add to Chrome".
-2) When the permission dialog appears, click "Add extension".
-   → The "read and change data on a number of sites" permission is only for
-     inserting prompts into LLM inputs (ChatGPT, Claude, Gemini, ...). All data
-     stays in your own browser.
-3) If the extension shows as "off" (especially if you installed it before),
-   open chrome://extensions and turn the toggle on / click "Enable".
-
-Install link: <paste store link>
-Tip: set a keyboard shortcut at chrome://extensions/shortcuts for quick access.
 ```

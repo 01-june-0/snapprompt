@@ -3,6 +3,15 @@
   "version": "1.0.0",
   "description": "웹서핑 중 발견한 LLM 프롬프트를 빠르게 저장하고 꺼내 쓰는 Chrome 익스텐션",
   "type": "module",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/01-june-0/snapprompt.git"
+  },
+  "homepage": "https://github.com/01-june-0/snapprompt#readme",
+  "bugs": {
+    "url": "https://github.com/01-june-0/snapprompt/issues"
+  },
   "private": true,
   "scripts": {
     "dev": "vite",
